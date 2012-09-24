@@ -1,7 +1,10 @@
 #include "MainWindow.h"
+#include "MapWidget.h"
 
 MainWindow::MainWindow()
 {
+    setCentralWidget(new MapWidget());
+
     // show the window
     show();
 }
