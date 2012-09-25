@@ -14,7 +14,10 @@ class MapWidget : public QGLWidget
 
     private:
 
+        QRectF viewRect_;
+
         boost::shared_ptr<QSvgRenderer> baseMapSvg_;
+        QRectF baseMapRect_;
         GLuint baseMapTextureId_;
         bool baseMapTextureBound_;
 
@@ -23,9 +26,11 @@ class MapWidget : public QGLWidget
         void paintGL();
         void resizeGL(int width, int height);
 
+        // setup basic orthographic view
         void setOrthographicView();
 
-        bool loadBaseMapSvg(QString filename);
+        // base map
+        bool loadBaseMapSvg(const char * filename);
         void generateBaseMapTexture(int width, int height);
         void renderBaseMapTexture();
 

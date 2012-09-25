@@ -67,10 +67,7 @@ void MapWidget::setOrthographicView()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    // invert y-axis to put origin at lower-left corner
-    glScalef(1.,-1.,1.);
-
-    gluOrtho2D(0., 1., 0., 1.);
+    gluOrtho2D(viewRect_.left(), viewRect_.right(), viewRect_.bottom(), viewRect_.top());
     glPushMatrix();
 
     glMatrixMode(GL_MODELVIEW); 
@@ -81,10 +78,14 @@ void MapWidget::setOrthographicView()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-bool MapWidget::loadBaseMapSvg(QString filename)
+bool MapWidget::loadBaseMapSvg(const char * filename)
 {
-    boost::shared_ptr<QSvgRenderer> baseMapSvg(new QSvgRenderer(filename));
+    boost::shared_ptr<QSvgRenderer> baseMapSvg(new QSvgRenderer(QString(filename)));
     baseMapSvg_ = baseMapSvg;
+
+    baseMapRect_ = QRectF(QPointF(-107.,37.), QPointF(-93.,25.));
+
+    viewRect_ = baseMapRect_;
 
     return baseMapSvg_->isValid();
 }
@@ -115,18 +116,17 @@ void MapWidget::renderBaseMapTexture()
 
     glBegin(GL_QUADS);
 
-    // note we need to flip the y coordinate since the textures are loaded upside down
-    glTexCoord2f(0.,1.);
-    glVertex2f(0.,0.);
-
-    glTexCoord2f(1.,1.);
-    glVertex2f(1.,0.);
+    glTexCoord2f(0.,0.);
+    glVertex2f(baseMapRect_.left(), baseMapRect_.bottom());
 
     glTexCoord2f(1.,0.);
-    glVertex2f(1.,1.);
+    glVertex2f(baseMapRect_.right(), baseMapRect_.bottom());
 
-    glTexCoord2f(0.,0.);
-    glVertex2f(0.,1.);
+    glTexCoord2f(1.,1.);
+    glVertex2f(baseMapRect_.right(), baseMapRect_.top());
+
+    glTexCoord2f(0.,1.);
+    glVertex2f(baseMapRect_.left(), baseMapRect_.top());
 
     glEnd();
 
