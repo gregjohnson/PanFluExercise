@@ -30,6 +30,10 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
+find_package(GDAL REQUIRED)
+include_directories(${GDAL_INCLUDE_DIR})
+set(LIBS ${LIBS} ${GDAL_LIBRARY})
+
 # process config file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -38,6 +42,7 @@ set(SRCS ${SRCS}
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
+    src/MapShape.cpp
     src/MapWidget.cpp
 )
 

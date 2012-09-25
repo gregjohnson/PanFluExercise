@@ -4,6 +4,9 @@
 #include <QGLWidget>
 #include <QtSvg>
 #include <boost/shared_ptr.hpp>
+#include <map>
+
+class MapShape;
 
 class MapWidget : public QGLWidget
 {
@@ -21,6 +24,8 @@ class MapWidget : public QGLWidget
         GLuint baseMapTextureId_;
         bool baseMapTextureBound_;
 
+        std::map<int, boost::shared_ptr<MapShape> > counties_;
+
         // reimplemented from QGLWidget
         void initializeGL();
         void paintGL();
@@ -34,6 +39,9 @@ class MapWidget : public QGLWidget
         void generateBaseMapTexture(int width, int height);
         void renderBaseMapTexture();
 
+        // counties
+        bool loadCountyShapes();
+        void renderCountyShapes();
 };
 
 #endif

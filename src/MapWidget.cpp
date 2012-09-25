@@ -1,8 +1,10 @@
 #include "MapWidget.h"
+#include "MapShape.h"
 #include "config.h"
 #include "log.h"
 #include <QtOpenGL>
 #include <string>
+#include <ogrsf_frmts.h>
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
@@ -21,6 +23,13 @@ MapWidget::MapWidget()
     if(loadBaseMapSvg(svgFilename.c_str()) != true)
     {
         put_flog(LOG_FATAL, "could not load base map %s", svgFilename.c_str());
+        exit(1);
+    }
+
+    // load county shapes
+    if(loadCountyShapes() != true)
+    {
+        put_flog(LOG_FATAL, "could not load county shapes");
         exit(1);
     }
 }
@@ -46,6 +55,7 @@ void MapWidget::paintGL()
     setOrthographicView();
 
     renderBaseMapTexture();
+    renderCountyShapes();
 }
 
 void MapWidget::resizeGL(int width, int height)
@@ -131,4 +141,75 @@ void MapWidget::renderBaseMapTexture()
     glEnd();
 
     glPopAttrib();
+}
+
+bool MapWidget::loadCountyShapes()
+{
+    OGRRegisterAll();
+
+    std::string filename = std::string(ROOT_DIRECTORY) + "/data/counties/tl_2009_48_county00.shp";
+
+    OGRDataSource * dataSource = OGRSFDriverRegistrar::Open(filename.c_str(), false);
+
+    if(dataSource == NULL)
+    {
+        put_flog(LOG_ERROR, "could not open %s", filename.c_str());
+        return false;
+    }
+
+    OGRLayer * layer = dataSource->GetLayerByName("tl_2009_48_county00");
+
+    layer->ResetReading();
+
+    OGRFeature * feature;
+
+    while((feature = layer->GetNextFeature()) != NULL)
+    {
+        // get county FIPS code
+        int fipsId = feature->GetFieldAsInteger("COUNTYFP00");
+
+        if(fipsId == 0)
+        {
+            put_flog(LOG_WARN, "invalid county");
+        }
+
+        // add a new county to the counties map corresponding to this fipsId
+        boost::shared_ptr<MapShape> county(new MapShape());
+        counties_[fipsId] = county;
+
+        OGRGeometry * geometry = feature->GetGeometryRef();
+
+        if(geometry != NULL && geometry->getGeometryType() == wkbPolygon)
+        {
+            OGRPolygon * polygon = (OGRPolygon *)geometry;
+
+            OGRLinearRing * ring = polygon->getExteriorRing();
+
+            for(int i=0; i<ring->getNumPoints(); i++)
+            {
+                // x is longitude, y latitude
+                county->addVertex(ring->getY(i), ring->getX(i));
+            }
+        }
+        else
+        {
+            put_flog(LOG_WARN, "no polygon geometry");
+        }
+
+        OGRFeature::DestroyFeature(feature);
+    }
+
+    OGRDataSource::DestroyDataSource(dataSource);
+
+    return true;
+}
+
+void MapWidget::renderCountyShapes()
+{
+    std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
+
+    for(iter=counties_.begin(); iter!=counties_.end(); iter++)
+    {
+        iter->second->render();
+    }
 }
