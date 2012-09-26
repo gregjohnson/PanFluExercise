@@ -60,6 +60,7 @@ set(SRCS ${SRCS}
 
 set(MOC_HEADERS ${MOC_HEADERS}
     src/MainWindow.h
+    src/MapWidget.h
 )
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})

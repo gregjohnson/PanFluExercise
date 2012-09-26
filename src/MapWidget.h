@@ -6,16 +6,27 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 
+class EpidemicDataSet;
 class MapShape;
 
 class MapWidget : public QGLWidget
 {
+    Q_OBJECT
+
     public:
 
         MapWidget();
         ~MapWidget();
 
+    public slots:
+
+        void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
+        void setTime(int time);
+
     private:
+
+        boost::shared_ptr<EpidemicDataSet> dataSet_;
+        int time_;
 
         QRectF viewRect_;
 

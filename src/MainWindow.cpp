@@ -4,11 +4,17 @@
 
 MainWindow::MainWindow()
 {
+    // defaults
+    time_ = 0;
+
     // create menus in menu bar
     QMenu * fileMenu = menuBar()->addMenu("&File");
 
-    // create tool bar
+    // create tool bars
     QToolBar * toolbar = addToolBar("toolbar");
+
+    QToolBar * toolbarBottom = new QToolBar("bottom toolbar", this);
+    addToolBar(Qt::BottomToolBarArea, toolbarBottom);
 
     // open content action
     QAction * openDataSetAction = new QAction("Open Data Set", this);
@@ -22,15 +28,40 @@ MainWindow::MainWindow()
     toolbar->addAction(openDataSetAction);
 
     // make a map widget the main view
-    setCentralWidget(new MapWidget());
+    mapWidget_ = new MapWidget();
+    setCentralWidget(mapWidget_);
+
+    // setup time slider and add it to bottom toolbar
+    timeSlider_ = new QSlider(Qt::Horizontal, this);
+    connect(timeSlider_, SIGNAL(valueChanged(int)), this, SLOT(setTime(int)));
+    toolbarBottom->addWidget(timeSlider_);
+
+    // make other signal / slot connections
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), mapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+
+    connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
+
+    connect(this, SIGNAL(timeChanged(int)), mapWidget_, SLOT(setTime(int)));
 
     // show the window
     show();
 }
 
+MainWindow::~MainWindow()
+{
+    delete mapWidget_;
+}
+
 QSize MainWindow::sizeHint() const
 {
     return QSize(1024, 768);
+}
+
+void MainWindow::setTime(int time)
+{
+    time_ = time;
+
+    emit(timeChanged(time_));
 }
 
 void MainWindow::openDataSet()
@@ -48,6 +79,24 @@ void MainWindow::openDataSet()
         else
         {
             dataSet_ = dataSet;
+
+            emit(dataSetChanged(dataSet_));
         }
+    }
+}
+
+void MainWindow::resetTimeSlider()
+{
+    if(dataSet_ != NULL)
+    {
+        timeSlider_->setMinimum(0);
+        timeSlider_->setMaximum(dataSet_->getNumTimes());
+
+        setTime(0);
+    }
+    else
+    {
+        timeSlider_->setMinimum(0);
+        timeSlider_->setMaximum(0);
     }
 }

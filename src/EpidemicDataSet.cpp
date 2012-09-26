@@ -6,6 +6,9 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
 {
     // defaults
     isValid_ = false;
+    numTimes_ = 0;
+    numNodes_ = 0;
+    numStratifications_ = 0;
 
     if(loadNetCdfFile(filename) != true)
     {
@@ -21,6 +24,38 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
 bool EpidemicDataSet::isValid()
 {
     return isValid_;
+}
+
+int EpidemicDataSet::getNumTimes()
+{
+    return numTimes_;
+}
+
+int EpidemicDataSet::getNumNodes()
+{
+    return numNodes_;
+}
+
+int EpidemicDataSet::getNumStratifications()
+{
+    return numStratifications_;
+}
+
+float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return 0.;
+    }
+    else if(nodeIdToIndex_.count(nodeId) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
+        return 0.;
+    }
+
+    // sum over all stratifications
+    return blitz::sum(variables_[varName](time, nodeIdToIndex_[nodeId], blitz::Range::all()));
 }
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
@@ -48,11 +83,11 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         return false;
     }
 
-    int numTimes = timeDim->size();
-    int numNodes = nodesDim->size();
-    int numStratifications = stratificationsDim->size();
+    numTimes_ = timeDim->size();
+    numNodes_ = nodesDim->size();
+    numStratifications_ = stratificationsDim->size();
 
-    put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes, %i stratifications", numTimes, numNodes, numStratifications);
+    put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes, %i stratifications", numTimes_, numNodes_, numStratifications_);
 
     // get the required variables
     NcVar * ncVarIds = ncFile.get_var("ids_data");
@@ -65,13 +100,20 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         return false;
     }
 
-    blitz::Array<int, 1> fipsIds((int *)ncVarIds->values()->base(), blitz::shape(numNodes), blitz::duplicateData);
-    blitz::Array<float, 1> population((float *)ncVarPopulation->values()->base(), blitz::shape(numNodes), blitz::duplicateData);
-    blitz::Array<float, 2> travel((float *)ncVarTravel->values()->base(), blitz::shape(numNodes, numNodes), blitz::duplicateData);
+    blitz::Array<int, 1> fipsIds((int *)ncVarIds->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
+    blitz::Array<float, 1> population((float *)ncVarPopulation->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
+    blitz::Array<float, 2> travel((float *)ncVarTravel->values()->base(), blitz::shape(numNodes_, numNodes_), blitz::duplicateData);
 
-    fipsIds_ = fipsIds;
-    population_ = population;
-    travel_ = travel;
+    // note the use of reference(). an = would make a copy, but we'd have to reshape the lhs first...
+    fipsIds_.reference(fipsIds);
+    population_.reference(population);
+    travel_.reference(travel);
+
+    // create node id to index mapping
+    for(int i=0; i<numNodes_; i++)
+    {
+        nodeIdToIndex_[fipsIds_(i)] = i;
+    }
 
     // get all float variables with dimensions (time, nodes, stratifications)
     for(int i=0; i<ncFile.num_vars(); i++)
@@ -82,9 +124,9 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         {
             put_flog(LOG_INFO, "found variable: %s", ncVar->name());
 
-            blitz::Array<float, 3> var((float *)ncVar->values()->base(), blitz::shape(numTimes, numNodes, numStratifications), blitz::duplicateData);
+            blitz::Array<float, 3> var((float *)ncVar->values()->base(), blitz::shape(numTimes_, numNodes_, numStratifications_), blitz::duplicateData);
 
-            variables_[std::string(ncVar->name())] = var;
+            variables_[std::string(ncVar->name())].reference(var);
         }
     }
 

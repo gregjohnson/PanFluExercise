@@ -17,11 +17,15 @@ class MapShape
 
         void addVertex(double lat, double lon);
 
+        void setColor(float r, float g, float b);
+
         void render();
 
     private:
 
         std::vector<MapVertex> vertices_;
+
+        float r_, g_, b_;
 };
 
 #endif

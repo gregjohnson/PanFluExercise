@@ -1,5 +1,6 @@
 #include "MapWidget.h"
 #include "MapShape.h"
+#include "EpidemicDataSet.h"
 #include "config.h"
 #include "log.h"
 #include <QtOpenGL>
@@ -40,6 +41,33 @@ MapWidget::~MapWidget()
     if(baseMapTextureBound_ == true)
     {
         deleteTexture(baseMapTextureId_);
+    }
+}
+
+void MapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
+{
+    dataSet_ = dataSet;
+}
+
+void MapWidget::setTime(int time)
+{
+    time_ = time;
+
+    // recolor counties
+    if(dataSet_ != NULL)
+    {
+        std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
+
+        for(iter=counties_.begin(); iter!=counties_.end(); iter++)
+        {
+            // get total infected
+            float infected = dataSet_->getValue("infected", time_, iter->first);
+
+            iter->second->setColor(infected / 1000., 0., 0.);
+        }
+
+        // force redraw
+        update();
     }
 }
 
@@ -119,7 +147,9 @@ void MapWidget::generateBaseMapTexture(int width, int height)
 
 void MapWidget::renderBaseMapTexture()
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
+    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT);
+
+    glColor4f(1,1,1,1);
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, baseMapTextureId_);
