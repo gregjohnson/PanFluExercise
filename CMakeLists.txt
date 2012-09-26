@@ -8,6 +8,9 @@ set(CMAKE_CXX_FLAGS "-Wall")
 # keep the library path in installed executables
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+# path for additional modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+
 # find and setup Qt4
 # see http://cmake.org/cmake/help/cmake2.6docs.html#module:FindQt4 for details
 set(QT_USE_QTOPENGL TRUE)
@@ -34,11 +37,20 @@ find_package(GDAL REQUIRED)
 include_directories(${GDAL_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GDAL_LIBRARY})
 
+find_package(NetCDF REQUIRED)
+include_directories(${NetCDF_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${NetCDF_LIBRARIES})
+
+find_package(Blitz REQUIRED)
+include_directories(${Blitz_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${BLITZ_LIBRARIES})
+
 # process config file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(SRCS ${SRCS}
+    src/EpidemicDataSet.cpp
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
