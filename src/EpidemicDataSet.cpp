@@ -52,6 +52,20 @@ float EpidemicDataSet::getPopulation(int nodeId)
     return population_(nodeIdToIndex_[nodeId]);
 }
 
+std::vector<std::string> EpidemicDataSet::getVariableNames()
+{
+    std::vector<std::string> variableNames;
+
+    std::map<std::string, blitz::Array<float, 3> >::iterator iter;
+
+    for(iter=variables_.begin(); iter!=variables_.end(); iter++)
+    {
+        variableNames.push_back(iter->first);
+    }
+
+    return variableNames;
+}
+
 float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
 {
     if(variables_.count(varName) == 0)
@@ -59,14 +73,21 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
         put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
         return 0.;
     }
-    else if(nodeIdToIndex_.count(nodeId) == 0)
+    else if(nodeId != NODES_ALL && nodeIdToIndex_.count(nodeId) == 0)
     {
         put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
         return 0.;
     }
 
     // sum over all stratifications
-    return blitz::sum(variables_[varName](time, nodeIdToIndex_[nodeId], blitz::Range::all()));
+    if(nodeId != NODES_ALL)
+    {
+        return blitz::sum(variables_[varName](time, nodeIdToIndex_[nodeId], blitz::Range::all()));
+    }
+    else
+    {
+        return blitz::sum(variables_[varName](time, blitz::Range::all(), blitz::Range::all()));
+    }
 }
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)

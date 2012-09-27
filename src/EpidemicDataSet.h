@@ -2,7 +2,10 @@
 #define EPIDEMIC_DATA_SET_H
 
 #include <map>
+#include <vector>
 #include <blitz/array.h>
+
+#define NODES_ALL -1
 
 class EpidemicDataSet
 {
@@ -17,6 +20,8 @@ class EpidemicDataSet
         int getNumStratifications();
 
         float getPopulation(int nodeId);
+
+        std::vector<std::string> getVariableNames();
 
         float getValue(std::string varName, int time, int nodeId);
 

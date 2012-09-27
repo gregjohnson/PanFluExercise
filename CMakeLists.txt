@@ -2,6 +2,11 @@ project(PanFluExercise)
 
 cmake_minimum_required(VERSION 2.4.0)
 
+# needed for VTK library
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 # show all warnings
 set(CMAKE_CXX_FLAGS "-Wall")
 
@@ -45,11 +50,17 @@ find_package(Blitz REQUIRED)
 include_directories(${Blitz_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${BLITZ_LIBRARIES})
 
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+set(LIBS ${LIBS} QVTK vtkCharts)
+
 # process config file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(SRCS ${SRCS}
+    src/ChartWidget.cpp
+    src/ChartWidgetLine.cpp
     src/ColorMap.cpp
     src/EpidemicDataSet.cpp
     src/log.cpp

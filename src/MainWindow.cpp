@@ -36,8 +36,15 @@ MainWindow::MainWindow()
     connect(timeSlider_, SIGNAL(valueChanged(int)), this, SLOT(setTime(int)));
     toolbarBottom->addWidget(timeSlider_);
 
+    // chart dock
+    QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
+    chartDockWidget->setWidget(&chartWidget_);
+    addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
+
     // make other signal / slot connections
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), mapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+
+    connect(this, SIGNAL(dataSetChanged()), this, SLOT(updateChartWidget()));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
 
@@ -99,4 +106,40 @@ void MainWindow::resetTimeSlider()
         timeSlider_->setMinimum(0);
         timeSlider_->setMaximum(0);
     }
+}
+
+void MainWindow::updateChartWidget()
+{
+    // clear current plots
+    chartWidget_.clear();
+
+    // set x-axis label
+    std::string xAxisLabel("Time (days)");
+    chartWidget_.setXAxisLabel(xAxisLabel);
+
+    // set y-axis label
+    std::string yAxisLabel("Population");
+    chartWidget_.setYAxisLabel(yAxisLabel);
+
+    if(dataSet_ != NULL)
+    {
+        std::vector<std::string> variableNames; // = dataSet_->getVariableNames();
+
+        variableNames.push_back("infected");
+
+        for(unsigned int i=0; i<variableNames.size(); i++)
+        {
+            // plot the variable
+            chartWidget_.getLine(i)->setColor(1.,0.,0.);
+            chartWidget_.getLine(i)->setWidth(2.);
+            chartWidget_.getLine(i)->setLabel(variableNames[i].c_str());
+
+            for(int t=0; t<dataSet_->getNumTimes(); t++)
+            {
+                chartWidget_.getLine(i)->addPoint(t, dataSet_->getValue(variableNames[i], t, NODES_ALL));
+            }
+        }
+    }
+
+    chartWidget_.resetBounds();
 }

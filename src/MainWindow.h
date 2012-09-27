@@ -1,6 +1,7 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
+#include "ChartWidget.h"
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
 
@@ -33,11 +34,13 @@ class MainWindow : public QMainWindow {
 
         MapWidget * mapWidget_;
         QSlider * timeSlider_;
+        ChartWidget chartWidget_;
 
     private slots:
 
         void openDataSet();
         void resetTimeSlider();
+        void updateChartWidget();
 };
 
 #endif
