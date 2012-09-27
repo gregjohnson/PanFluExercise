@@ -27,7 +27,29 @@ void MapShape::setColor(float r, float g, float b)
     b_ = b;
 }
 
-void MapShape::render()
+void MapShape::renderBoundary()
+{
+    glPushAttrib(GL_CURRENT_BIT);
+
+    glColor4f(0.,0.,0.,1.);
+
+    glPushMatrix();
+    glTranslatef(0.,0.,0.2);
+
+    glBegin(GL_LINE_STRIP);
+
+    for(unsigned int i=0; i<vertices_.size(); i++)
+    {
+        glVertex2d(vertices_[i].lon, vertices_[i].lat);
+    }
+
+    glEnd();
+
+    glPopMatrix();
+    glPopAttrib();
+}
+
+void MapShape::renderFilled()
 {
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
 

@@ -16,6 +16,8 @@ class EpidemicDataSet
         int getNumNodes();
         int getNumStratifications();
 
+        float getPopulation(int nodeId);
+
         float getValue(std::string varName, int time, int nodeId);
 
     private:

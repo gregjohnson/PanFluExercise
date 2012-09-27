@@ -50,6 +50,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(SRCS ${SRCS}
+    src/ColorMap.cpp
     src/EpidemicDataSet.cpp
     src/log.cpp
     src/main.cpp

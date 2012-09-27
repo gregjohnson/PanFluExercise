@@ -19,7 +19,8 @@ class MapShape
 
         void setColor(float r, float g, float b);
 
-        void render();
+        void renderBoundary();
+        void renderFilled();
 
     private:
 

@@ -1,6 +1,7 @@
 #ifndef MAP_WIDGET_H
 #define MAP_WIDGET_H
 
+#include "ColorMap.h"
 #include <QGLWidget>
 #include <QtSvg>
 #include <boost/shared_ptr.hpp>
@@ -25,17 +26,24 @@ class MapWidget : public QGLWidget
 
     private:
 
+        // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
 
+        // window view rectangle
         QRectF viewRect_;
 
+        // base map information
         boost::shared_ptr<QSvgRenderer> baseMapSvg_;
         QRectF baseMapRect_;
         GLuint baseMapTextureId_;
         bool baseMapTextureBound_;
 
+        // county shapes
         std::map<int, boost::shared_ptr<MapShape> > counties_;
+
+        // color map for county shapes
+        ColorMap countiesColorMap_;
 
         // reimplemented from QGLWidget
         void initializeGL();

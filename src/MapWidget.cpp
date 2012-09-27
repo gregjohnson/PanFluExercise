@@ -33,6 +33,9 @@ MapWidget::MapWidget()
         put_flog(LOG_FATAL, "could not load county shapes");
         exit(1);
     }
+
+    // default counties color map
+    countiesColorMap_.setColorMap(0., 0.01);
 }
 
 MapWidget::~MapWidget()
@@ -61,9 +64,13 @@ void MapWidget::setTime(int time)
         for(iter=counties_.begin(); iter!=counties_.end(); iter++)
         {
             // get total infected
-            float infected = dataSet_->getValue("infected", time_, iter->first);
+            float infectedFraction = dataSet_->getValue("infected", time_, iter->first) / dataSet_->getPopulation(iter->first);
 
-            iter->second->setColor(infected / 1000., 0., 0.);
+            // map to color
+            float r, g, b;
+            countiesColorMap_.getColor3(infectedFraction, r, g, b);
+
+            iter->second->setColor(r, g, b);
         }
 
         // force redraw
@@ -240,6 +247,11 @@ void MapWidget::renderCountyShapes()
 
     for(iter=counties_.begin(); iter!=counties_.end(); iter++)
     {
-        iter->second->render();
+        iter->second->renderBoundary();
+    }
+
+    for(iter=counties_.begin(); iter!=counties_.end(); iter++)
+    {
+        iter->second->renderFilled();
     }
 }

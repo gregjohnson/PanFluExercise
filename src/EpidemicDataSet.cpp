@@ -41,6 +41,17 @@ int EpidemicDataSet::getNumStratifications()
     return numStratifications_;
 }
 
+float EpidemicDataSet::getPopulation(int nodeId)
+{
+    if(nodeIdToIndex_.count(nodeId) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
+        return 0.;
+    }
+
+    return population_(nodeIdToIndex_[nodeId]);
+}
+
 float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
 {
     if(variables_.count(varName) == 0)
