@@ -90,7 +90,7 @@ void MainWindow::resetTimeSlider()
     if(dataSet_ != NULL)
     {
         timeSlider_->setMinimum(0);
-        timeSlider_->setMaximum(dataSet_->getNumTimes());
+        timeSlider_->setMaximum(dataSet_->getNumTimes() - 1);
 
         setTime(0);
     }
