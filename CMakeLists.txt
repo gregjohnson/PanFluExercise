@@ -62,6 +62,7 @@ set(SRCS ${SRCS}
     src/ChartWidget.cpp
     src/ChartWidgetLine.cpp
     src/ColorMap.cpp
+    src/EpidemicChartWidget.cpp
     src/EpidemicDataSet.cpp
     src/log.cpp
     src/main.cpp
@@ -71,6 +72,7 @@ set(SRCS ${SRCS}
 )
 
 set(MOC_HEADERS ${MOC_HEADERS}
+    src/EpidemicChartWidget.h
     src/MainWindow.h
     src/MapWidget.h
 )

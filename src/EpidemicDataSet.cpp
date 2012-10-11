@@ -1,6 +1,9 @@
 #include "EpidemicDataSet.h"
-#include <netcdfcpp.h>
+#include "config.h"
 #include "log.h"
+#include <netcdfcpp.h>
+#include <fstream>
+#include <boost/tokenizer.hpp>
 
 EpidemicDataSet::EpidemicDataSet(const char * filename)
 {
@@ -18,6 +21,44 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
     else
     {
         isValid_ = true;
+
+        // read node name data
+        std::string nodeNameFilename = std::string(ROOT_DIRECTORY) + "/data/fips_county_names_HSRs.csv";
+        std::ifstream in(nodeNameFilename.c_str());
+
+        if(in.is_open() != true)
+        {
+            put_flog(LOG_ERROR, "could not load file %s", nodeNameFilename.c_str());
+            return;
+        }
+
+        // use boost tokenizer to parse the file
+        typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+        std::vector<std::string> vec;
+        std::string line;
+
+        while(getline(in, line))
+        {
+            Tokenizer tok(line);
+
+            vec.assign(tok.begin(), tok.end());
+
+            if(vec.size() != 3)
+            {
+                put_flog(LOG_ERROR, "number of values != 3, == %i", vec.size());
+                return;
+            }
+
+            // nodeId -> name mapping
+            nodeIdToName_[atoi(vec[0].c_str())] = vec[1];
+
+            // nodeId -> group name mapping
+            nodeIdToGroupName_[atoi(vec[0].c_str())] = vec[2];
+
+            // group name -> nodeIds indexing
+            groupNameToNodeIds_[vec[2]].push_back(atoi(vec[0].c_str()));
+        }
     }
 }
 
@@ -52,6 +93,17 @@ float EpidemicDataSet::getPopulation(int nodeId)
     return population_(nodeIdToIndex_[nodeId]);
 }
 
+std::string EpidemicDataSet::getNodeName(int nodeId)
+{
+    if(nodeIdToName_.count(nodeId) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map nodeId %i to a name", nodeId);
+        return std::string("");
+    }
+
+    return nodeIdToName_[nodeId];
+}
+
 std::vector<std::string> EpidemicDataSet::getVariableNames()
 {
     std::vector<std::string> variableNames;
@@ -64,6 +116,25 @@ std::vector<std::string> EpidemicDataSet::getVariableNames()
     }
 
     return variableNames;
+}
+
+std::vector<int> EpidemicDataSet::getNodeIds()
+{
+    std::vector<int> nodeIds(nodeIds_.begin(), nodeIds_.end());
+
+    return nodeIds;
+}
+
+std::vector<std::string> EpidemicDataSet::getGroupNames()
+{
+    std::vector<std::string> groupNames;
+
+    for(std::map<std::string, std::vector<int> >::iterator it=groupNameToNodeIds_.begin(); it!=groupNameToNodeIds_.end(); it++)
+    {
+        groupNames.push_back(it->first);
+    }
+
+    return groupNames;
 }
 
 float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
@@ -88,6 +159,31 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
     {
         return blitz::sum(variables_[varName](time, blitz::Range::all(), blitz::Range::all()));
     }
+}
+
+float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return 0.;
+    }
+    else if(groupNameToNodeIds_.count(groupName) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map group name %s to node ids", groupName.c_str());
+        return 0.;
+    }
+
+    std::vector<int> nodeIds = groupNameToNodeIds_[groupName];
+
+    float value = 0.;
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        value += getValue(varName, time, nodeIds[i]);
+    }
+
+    return value;
 }
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)

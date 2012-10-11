@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "MapWidget.h"
 #include "EpidemicDataSet.h"
+#include "EpidemicChartWidget.h"
 
 MainWindow::MainWindow()
 {
@@ -38,13 +39,34 @@ MainWindow::MainWindow()
 
     // chart dock
     QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
-    chartDockWidget->setWidget(&chartWidget_);
+    chartDockWidget->setWidget(new EpidemicChartWidget(this));
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
+
+    // chart docks for specific counties
+
+    // Travis
+    chartDockWidget = new QDockWidget("Chart", this);
+    EpidemicChartWidget * epidemicChartWidget = new EpidemicChartWidget(this);
+    epidemicChartWidget->setNodeId(453);
+    chartDockWidget->setWidget(epidemicChartWidget);
+    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
+
+    // Harris
+    chartDockWidget = new QDockWidget("Chart", this);
+    epidemicChartWidget = new EpidemicChartWidget(this);
+    epidemicChartWidget->setNodeId(201);
+    chartDockWidget->setWidget(epidemicChartWidget);
+    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
+
+    // El Paso
+    chartDockWidget = new QDockWidget("Chart", this);
+    epidemicChartWidget = new EpidemicChartWidget(this);
+    epidemicChartWidget->setNodeId(141);
+    chartDockWidget->setWidget(epidemicChartWidget);
+    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), mapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
-
-    connect(this, SIGNAL(dataSetChanged()), this, SLOT(updateChartWidget()));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
 
@@ -106,40 +128,4 @@ void MainWindow::resetTimeSlider()
         timeSlider_->setMinimum(0);
         timeSlider_->setMaximum(0);
     }
-}
-
-void MainWindow::updateChartWidget()
-{
-    // clear current plots
-    chartWidget_.clear();
-
-    // set x-axis label
-    std::string xAxisLabel("Time (days)");
-    chartWidget_.setXAxisLabel(xAxisLabel);
-
-    // set y-axis label
-    std::string yAxisLabel("Population");
-    chartWidget_.setYAxisLabel(yAxisLabel);
-
-    if(dataSet_ != NULL)
-    {
-        std::vector<std::string> variableNames; // = dataSet_->getVariableNames();
-
-        variableNames.push_back("infected");
-
-        for(unsigned int i=0; i<variableNames.size(); i++)
-        {
-            // plot the variable
-            chartWidget_.getLine(i)->setColor(1.,0.,0.);
-            chartWidget_.getLine(i)->setWidth(2.);
-            chartWidget_.getLine(i)->setLabel(variableNames[i].c_str());
-
-            for(int t=0; t<dataSet_->getNumTimes(); t++)
-            {
-                chartWidget_.getLine(i)->addPoint(t, dataSet_->getValue(variableNames[i], t, NODES_ALL));
-            }
-        }
-    }
-
-    chartWidget_.resetBounds();
 }

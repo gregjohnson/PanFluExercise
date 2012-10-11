@@ -9,6 +9,8 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
+#define NEW_LINE -1
+
 class ChartWidget : public QVTKWidget
 {
     public:
@@ -27,7 +29,7 @@ class ChartWidget : public QVTKWidget
 
         void resetBounds();
 
-        boost::shared_ptr<ChartWidgetLine> getLine(unsigned int index, CHART_WIDGET_LINE_TYPE lineType = LINE);
+        boost::shared_ptr<ChartWidgetLine> getLine(int index = NEW_LINE, CHART_WIDGET_LINE_TYPE lineType = LINE);
         void clear();
 
     private:

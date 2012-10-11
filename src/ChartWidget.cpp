@@ -57,14 +57,16 @@ void ChartWidget::resetBounds()
     chart_->RecalculateBounds();
 }
 
-boost::shared_ptr<ChartWidgetLine> ChartWidget::getLine(unsigned int index, CHART_WIDGET_LINE_TYPE lineType)
+boost::shared_ptr<ChartWidgetLine> ChartWidget::getLine(int index, CHART_WIDGET_LINE_TYPE lineType)
 {
-    if(index == lines_.size())
+    if(index == NEW_LINE || index == (int)lines_.size())
     {
         boost::shared_ptr<ChartWidgetLine> line(new ChartWidgetLine(this, lineType));
         lines_.push_back(line);
+
+        return line;
     }
-    else if(index > lines_.size())
+    else if(index > (int)lines_.size())
     {
         put_flog(LOG_ERROR, "cannot create new line with index %i", index);
         return boost::shared_ptr<ChartWidgetLine>();

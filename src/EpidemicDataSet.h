@@ -20,10 +20,14 @@ class EpidemicDataSet
         int getNumStratifications();
 
         float getPopulation(int nodeId);
+        std::string getNodeName(int nodeId);
 
+        std::vector<int> getNodeIds();
+        std::vector<std::string> getGroupNames();
         std::vector<std::string> getVariableNames();
 
         float getValue(std::string varName, int time, int nodeId);
+        float getValue(std::string varName, int time, std::string groupName);
 
     private:
 
@@ -41,6 +45,15 @@ class EpidemicDataSet
 
         // maps node id to array index
         std::map<int, int> nodeIdToIndex_;
+
+        // maps node id to name
+        std::map<int, std::string> nodeIdToName_;
+
+        // maps node id to group name
+        std::map<int, std::string> nodeIdToGroupName_;
+
+        // maps group name to node id's
+        std::map<std::string, std::vector<int> > groupNameToNodeIds_;
 
         // all regular variables
         std::map<std::string, blitz::Array<float, 3> > variables_;
