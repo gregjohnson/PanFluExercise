@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "MapWidget.h"
 #include "EpidemicDataSet.h"
+#include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
 
 MainWindow::MainWindow()
@@ -36,6 +37,11 @@ MainWindow::MainWindow()
     timeSlider_ = new QSlider(Qt::Horizontal, this);
     connect(timeSlider_, SIGNAL(valueChanged(int)), this, SLOT(setTime(int)));
     toolbarBottom->addWidget(timeSlider_);
+
+    // info dock
+    QDockWidget * infoDockWidget = new QDockWidget("Info", this);
+    infoDockWidget->setWidget(new EpidemicInfoWidget(this));
+    addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
 
     // chart dock
     QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
