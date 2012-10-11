@@ -203,16 +203,16 @@ bool MapWidget::loadCountyShapes()
     while((feature = layer->GetNextFeature()) != NULL)
     {
         // get county FIPS code
-        int fipsId = feature->GetFieldAsInteger("COUNTYFP00");
+        int nodeId = feature->GetFieldAsInteger("COUNTYFP00");
 
-        if(fipsId == 0)
+        if(nodeId == 0)
         {
             put_flog(LOG_WARN, "invalid county");
         }
 
-        // add a new county to the counties map corresponding to this fipsId
+        // add a new county to the counties map corresponding to this nodeId
         boost::shared_ptr<MapShape> county(new MapShape());
-        counties_[fipsId] = county;
+        counties_[nodeId] = county;
 
         OGRGeometry * geometry = feature->GetGeometryRef();
 

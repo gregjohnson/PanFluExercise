@@ -132,19 +132,19 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         return false;
     }
 
-    blitz::Array<int, 1> fipsIds((int *)ncVarIds->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
+    blitz::Array<int, 1> nodeIds((int *)ncVarIds->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
     blitz::Array<float, 1> population((float *)ncVarPopulation->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
     blitz::Array<float, 2> travel((float *)ncVarTravel->values()->base(), blitz::shape(numNodes_, numNodes_), blitz::duplicateData);
 
     // note the use of reference(). an = would make a copy, but we'd have to reshape the lhs first...
-    fipsIds_.reference(fipsIds);
+    nodeIds_.reference(nodeIds);
     population_.reference(population);
     travel_.reference(travel);
 
     // create node id to index mapping
     for(int i=0; i<numNodes_; i++)
     {
-        nodeIdToIndex_[fipsIds_(i)] = i;
+        nodeIdToIndex_[nodeIds_(i)] = i;
     }
 
     // get all float variables with dimensions (time, nodes, stratifications)

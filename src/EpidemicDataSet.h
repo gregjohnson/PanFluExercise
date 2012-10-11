@@ -35,7 +35,7 @@ class EpidemicDataSet
         int numStratifications_;
 
         // special variables
-        blitz::Array<int, 1> fipsIds_;
+        blitz::Array<int, 1> nodeIds_;
         blitz::Array<float, 1> population_;
         blitz::Array<float, 2> travel_;
 
