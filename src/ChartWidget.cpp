@@ -32,6 +32,11 @@ vtkSmartPointer<vtkChartXY> ChartWidget::getChart()
     return chart_;
 }
 
+void ChartWidget::setTitle(std::string title)
+{
+    chart_->SetTitle(title);
+}
+
 void ChartWidget::setXAxisLabel(std::string label)
 {
     chart_->GetAxis(vtkAxis::BOTTOM)->SetTitle(label);

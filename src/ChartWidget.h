@@ -19,6 +19,8 @@ class ChartWidget : public QVTKWidget
 
         vtkSmartPointer<vtkChartXY> getChart();
 
+        void setTitle(std::string title);
+
         void setXAxisLabel(std::string label);
         void setYAxisLabel(std::string label);
         void setRightYAxisLabel(std::string label);
