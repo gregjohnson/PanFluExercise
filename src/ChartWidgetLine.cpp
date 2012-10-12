@@ -2,6 +2,11 @@
 #include "ChartWidget.h"
 #include "log.h"
 #include <vtkFloatArray.h>
+#include <vtkColorSeries.h>
+#include <vtkPlotStacked.h>
+#include <vtkStringArray.h>
+#include <vtkPen.h>
+#include <sstream>
 
 ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE lineType)
 {
@@ -30,6 +35,21 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
         plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::POINTS);
 
         plot_->SetMarkerStyle(vtkPlotPoints::CIRCLE);
+    }
+    else if(lineType == STACKED)
+    {
+        // todo: this should actually be a vtkChart::STACKED chart, but the legends and tooltips are broken for that...
+        plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::BAR);
+
+        // since we have to use a bar chart, for now set the outline to NO_PEN
+        // and the bar width to 1 to emulate a stacked line chart
+        plot_->GetPen()->SetLineType(vtkPen::NO_PEN);
+        parent->getChart()->SetBarWidthFraction(1.);
+
+        // set color series
+        vtkSmartPointer<vtkColorSeries> colorSeries = vtkSmartPointer<vtkColorSeries>::New();
+        colorSeries->SetColorScheme(vtkColorSeries::SPECTRUM);
+        ((vtkPlotStacked *)plot_)->SetColorSeries(colorSeries);
     }
     else
     {
@@ -71,11 +91,53 @@ void ChartWidgetLine::setLabel(const char * label)
     plot_->SetLabel(label);
 }
 
+void ChartWidgetLine::setLabels(std::vector<std::string> labels)
+{
+    vtkSmartPointer<vtkStringArray> vtkLabels = vtkSmartPointer<vtkStringArray>::New();
+
+    for(unsigned int i=0; i<labels.size(); i++)
+    {
+        vtkLabels->InsertNextValue(labels[i]);
+    }
+
+    plot_->SetLabels(vtkLabels);
+}
+
 void ChartWidgetLine::addPoint(double x, double y)
 {
     int i = table_->InsertNextBlankRow();
     table_->SetValue(i, 0, x);
     table_->SetValue(i, 1, y);
+
+    // have to manually mark the table as modified... seems like this should be done automatically for us
+    table_->Modified();
+
+    parent_->update();
+}
+
+void ChartWidgetLine::addPoints(double x, std::vector<double> ys)
+{
+    // make sure we have the correct number of columns
+    while((int)ys.size() + 1 > table_->GetNumberOfColumns())
+    {
+        std::ostringstream oss;
+        oss << "Y" << table_->GetNumberOfColumns();
+
+        // additional y array
+        vtkSmartPointer<vtkFloatArray> arrY = vtkSmartPointer<vtkFloatArray>::New();
+        arrY->SetName(oss.str().c_str());
+        table_->AddColumn(arrY);
+
+        plot_->SetInputArray(table_->GetNumberOfColumns() - 1, oss.str().c_str());
+    }
+
+    int i = table_->InsertNextBlankRow();
+    table_->SetValue(i, 0, x);
+
+    for(unsigned int j=0; j<ys.size(); j++)
+    {
+        table_->SetValue(i, j+1, ys[j]);
+    }
 
     // have to manually mark the table as modified... seems like this should be done automatically for us
     table_->Modified();

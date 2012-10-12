@@ -4,8 +4,9 @@
 #include <vtkSmartPointer.h>
 #include <vtkPlotPoints.h>
 #include <vtkTable.h>
+#include <vector>
 
-enum CHART_WIDGET_LINE_TYPE { LINE, POINTS };
+enum CHART_WIDGET_LINE_TYPE { LINE, POINTS, STACKED };
 
 class ChartWidget;
 
@@ -20,7 +21,9 @@ class ChartWidgetLine
         void setColor(float r, float g, float b);
         void setWidth(float w);
         void setLabel(const char * label);
+        void setLabels(std::vector<std::string> labels);
         void addPoint(double x, double y);
+        void addPoints(double x, std::vector<double> ys);
         void addPoint(double y);
 
         void setAxesToBottomRight();
