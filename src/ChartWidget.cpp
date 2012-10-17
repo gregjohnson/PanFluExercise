@@ -55,6 +55,9 @@ void ChartWidget::setRightYAxisLabel(std::string label)
 void ChartWidget::resetBounds()
 {
     chart_->RecalculateBounds();
+
+    // need to do a render for new bounds take effect
+    view_->GetRenderWindow()->Render();
 }
 
 boost::shared_ptr<ChartWidgetLine> ChartWidget::getLine(int index, CHART_WIDGET_LINE_TYPE lineType)
