@@ -20,7 +20,7 @@ EpidemicInfoWidget::EpidemicInfoWidget(MainWindow * mainWindow)
     summaryLayout->addRow(new QLabel("Num timesteps"), &numTimesLabel_);
 
     numNodesLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    summaryLayout->addRow(new QLabel("Num nodes"), &numNodesLabel_);
+    summaryLayout->addRow(new QLabel("Num counties"), &numNodesLabel_);
 
     numStratificationsLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
     summaryLayout->addRow(new QLabel("Num stratifications"), &numStratificationsLabel_);
