@@ -33,9 +33,10 @@ MainWindow::MainWindow()
     mapWidget_ = new MapWidget();
     setCentralWidget(mapWidget_);
 
-    // setup time slider and add it to bottom toolbar
+    // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
     connect(timeSlider_, SIGNAL(valueChanged(int)), this, SLOT(setTime(int)));
+    toolbarBottom->addWidget(new QLabel("Time"));
     toolbarBottom->addWidget(timeSlider_);
 
     // info dock
