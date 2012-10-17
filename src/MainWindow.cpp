@@ -23,11 +23,18 @@ MainWindow::MainWindow()
     openDataSetAction->setStatusTip("Open data set");
     connect(openDataSetAction, SIGNAL(triggered()), this, SLOT(openDataSet()));
 
+    // new chart action
+    QAction * newChartAction = new QAction("New Chart", this);
+    newChartAction->setStatusTip("New chart");
+    connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
+
     // add actions to menus
     fileMenu->addAction(openDataSetAction);
+    fileMenu->addAction(newChartAction);
 
     // add actions to toolbar
     toolbar->addAction(openDataSetAction);
+    toolbar->addAction(newChartAction);
 
     // make a map widget the main view
     mapWidget_ = new MapWidget();
@@ -44,33 +51,14 @@ MainWindow::MainWindow()
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
 
-    // chart dock
+    // chart docks
     QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
     chartDockWidget->setWidget(new EpidemicChartWidget(this));
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
-    // chart docks for specific counties
-
-    // Travis
     chartDockWidget = new QDockWidget("Chart", this);
-    EpidemicChartWidget * epidemicChartWidget = new EpidemicChartWidget(this);
-    epidemicChartWidget->setNodeId(453);
-    chartDockWidget->setWidget(epidemicChartWidget);
-    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
-
-    // Harris
-    chartDockWidget = new QDockWidget("Chart", this);
-    epidemicChartWidget = new EpidemicChartWidget(this);
-    epidemicChartWidget->setNodeId(201);
-    chartDockWidget->setWidget(epidemicChartWidget);
-    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
-
-    // El Paso
-    chartDockWidget = new QDockWidget("Chart", this);
-    epidemicChartWidget = new EpidemicChartWidget(this);
-    epidemicChartWidget->setNodeId(141);
-    chartDockWidget->setWidget(epidemicChartWidget);
-    addDockWidget(Qt::RightDockWidgetArea, chartDockWidget);
+    chartDockWidget->setWidget(new EpidemicChartWidget(this));
+    addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), mapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
@@ -118,6 +106,25 @@ void MainWindow::openDataSet()
 
             emit(dataSetChanged(dataSet_));
         }
+    }
+}
+
+void MainWindow::newChart()
+{
+    QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
+
+    EpidemicChartWidget * epidemicChartWidget = new EpidemicChartWidget(this);
+
+    chartDockWidget->setWidget(epidemicChartWidget);
+
+    addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
+
+    chartDockWidget->setFloating(true);
+
+    if(dataSet_ != NULL)
+    {
+        epidemicChartWidget->setDataSet(dataSet_);
+        epidemicChartWidget->setTime(time_);
     }
 }
 

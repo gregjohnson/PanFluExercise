@@ -37,6 +37,7 @@ class MainWindow : public QMainWindow {
     private slots:
 
         void openDataSet();
+        void newChart();
         void resetTimeSlider();
 };
 
