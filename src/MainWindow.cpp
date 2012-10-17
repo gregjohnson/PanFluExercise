@@ -18,7 +18,7 @@ MainWindow::MainWindow()
     QToolBar * toolbarBottom = new QToolBar("bottom toolbar", this);
     addToolBar(Qt::BottomToolBarArea, toolbarBottom);
 
-    // open content action
+    // open data set action
     QAction * openDataSetAction = new QAction("Open Data Set", this);
     openDataSetAction->setStatusTip("Open data set");
     connect(openDataSetAction, SIGNAL(triggered()), this, SLOT(openDataSet()));
