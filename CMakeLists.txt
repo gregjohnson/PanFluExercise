@@ -1,4 +1,4 @@
-project(PanFluExercise)
+project(Exercise)
 
 cmake_minimum_required(VERSION 2.4.0)
 
@@ -9,9 +9,6 @@ endif(COMMAND cmake_policy)
 
 # show all warnings
 set(CMAKE_CXX_FLAGS "-Wall")
-
-# keep the library path in installed executables
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # path for additional modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
@@ -77,14 +74,82 @@ set(MOC_HEADERS ${MOC_HEADERS}
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})
 
-add_executable(exercise ${SRCS} ${MOC_OUTFILES})
+add_executable(exercise MACOSX_BUNDLE WIN32
+    ${SRCS} ${MOC_OUTFILES})
 
 target_link_libraries(exercise ${LIBS})
 
 # install executable
 INSTALL(TARGETS exercise
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION bin COMPONENT Runtime
+    BUNDLE DESTINATION . COMPONENT Runtime
 )
 
-# install data files
-INSTALL(DIRECTORY data DESTINATION .)
+
+# on Apple platform make the .app bundle; on Windows make the installer
+if(APPLE OR WIN32)
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Exercise.")
+    set(CPACK_PACKAGE_EXECUTABLES "exercise" "Exercise")
+    set(CPACK_PACKAGE_NAME "Exercise")
+    set(CPACK_PACKAGE_VENDOR "The University of Texas at Austin")
+    set(CPACK_PACKAGE_VERSION_MAJOR 0)
+    set(CPACK_PACKAGE_VERSION_MINOR 1)
+    set(CPACK_PACKAGE_VERSION_PATCH 0)
+
+    if(APPLE)
+        set(APPS "\${CMAKE_INSTALL_PREFIX}/Exercise.app")
+
+        # Qt plugins and qt.conf required so we don't accidentally dynamically link against system-installed Qt libraries
+        SET(PLUGIN_DEST_DIR Exercise.app/Contents/MacOS)
+        SET(QTCONF_DEST_DIR Exercise.app/Contents/Resources)
+
+        SET(DATA_DEST_DIR Exercise.app/Contents/Resources)
+    elseif(WIN32)
+        set(APPS "\${CMAKE_INSTALL_PREFIX}/bin/Exercise.exe")
+
+        # Qt plugins and qt.conf required so we don't accidentally dynamically link against system-installed Qt libraries
+        SET(PLUGIN_DEST_DIR bin)
+        SET(QTCONF_DEST_DIR bin)
+        SET(DATA_DEST_DIR .)
+    endif()
+
+    INSTALL(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${PLUGIN_DEST_DIR}/plugins COMPONENT Runtime)
+
+    INSTALL(CODE "
+        file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${QTCONF_DEST_DIR}/qt.conf\" \"\")
+        " COMPONENT Runtime)
+
+    # install data files
+    INSTALL(DIRECTORY data DESTINATION ${DATA_DEST_DIR} COMPONENT Runtime)
+
+    if(APPLE)
+        # directories to look for dependencies
+        set(DEPENDENCY_DIRS ${VTK_LIBRARY_DIRS})
+    elseif(WIN32)
+        # directories to look for dependencies
+        set(DEPENDENCY_DIRS ${QT_BINARY_DIR})
+
+        include(InstallRequiredSystemLibraries)
+    endif()
+
+    INSTALL(CODE "
+        file(GLOB_RECURSE QTPLUGINS \"\${CMAKE_INSTALL_PREFIX}/${PLUGIN_DEST_DIR}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        include(BundleUtilities)
+        fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DEPENDENCY_DIRS}\")
+        " COMPONENT Runtime)
+
+    # to create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" for example
+    # where CPackConfig.cmake is created by including CPack
+    if(APPLE)
+        set(CPACK_BINARY_DRAGNDROP ON)
+    elseif(WIN32)
+        set(CPACK_BINARY_NSIS ON)
+    endif()
+
+    include(CPack)
+else()
+    # Linux
+
+    # install data files
+    INSTALL(DIRECTORY data DESTINATION . COMPONENT Runtime)
+endif()
