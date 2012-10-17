@@ -1,5 +1,5 @@
 #include "EpidemicDataSet.h"
-#include "config.h"
+#include "main.h"
 #include "log.h"
 #include <netcdfcpp.h>
 #include <fstream>
@@ -23,7 +23,7 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
         isValid_ = true;
 
         // read node name data
-        std::string nodeNameFilename = std::string(ROOT_DIRECTORY) + "/data/fips_county_names_HSRs.csv";
+        std::string nodeNameFilename = g_dataDirectory + "/fips_county_names_HSRs.csv";
         std::ifstream in(nodeNameFilename.c_str());
 
         if(in.is_open() != true)

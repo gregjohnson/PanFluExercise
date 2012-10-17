@@ -54,10 +54,6 @@ find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 set(LIBS ${LIBS} QVTK vtkCharts)
 
-# process config file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 set(SRCS ${SRCS}
     src/ChartWidget.cpp
     src/ChartWidgetLine.cpp

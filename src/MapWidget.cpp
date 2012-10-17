@@ -1,7 +1,7 @@
 #include "MapWidget.h"
 #include "MapShape.h"
 #include "EpidemicDataSet.h"
-#include "config.h"
+#include "main.h"
 #include "log.h"
 #include <QtOpenGL>
 #include <string>
@@ -19,7 +19,7 @@ MapWidget::MapWidget()
     baseMapTextureBound_ = false;
 
     // load base map
-    std::string svgFilename = std::string(ROOT_DIRECTORY) + "/data/basemap.svg";
+    std::string svgFilename = g_dataDirectory + "/basemap.svg";
 
     if(loadBaseMapSvg(svgFilename.c_str()) != true)
     {
@@ -184,7 +184,7 @@ bool MapWidget::loadCountyShapes()
 {
     OGRRegisterAll();
 
-    std::string filename = std::string(ROOT_DIRECTORY) + "/data/counties/tl_2009_48_county00.shp";
+    std::string filename = g_dataDirectory + "/counties/tl_2009_48_county00.shp";
 
     OGRDataSource * dataSource = OGRSFDriverRegistrar::Open(filename.c_str(), false);
 
