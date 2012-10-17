@@ -5,6 +5,12 @@
 #include <vector>
 #include <blitz/array.h>
 
+// must be defined at compile time, and match definition of EpidemicDataSet::stratificationNames_, stratifications_
+// stratifications: [age group][risk group][vaccinated]
+#define NUM_STRATIFICATION_DIMENSIONS 3
+
+#define STRATIFICATIONS_ALL -1
+
 #define NODES_ALL -1
 
 class EpidemicDataSet
@@ -19,6 +25,9 @@ class EpidemicDataSet
         int getNumNodes();
         int getNumStratifications();
 
+        static std::vector<std::string> getStratificationNames();
+        static std::vector<std::vector<std::string> > getStratifications();
+
         float getPopulation(int nodeId);
         std::string getNodeName(int nodeId);
 
@@ -26,8 +35,8 @@ class EpidemicDataSet
         std::vector<std::string> getGroupNames();
         std::vector<std::string> getVariableNames();
 
-        float getValue(std::string varName, int time, int nodeId);
-        float getValue(std::string varName, int time, std::string groupName);
+        float getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues=std::vector<int>());
 
     private:
 
@@ -37,6 +46,10 @@ class EpidemicDataSet
         int numTimes_;
         int numNodes_;
         int numStratifications_;
+
+        // stratification details; for now these need to be hardcoded
+        static std::vector<std::string> stratificationNames_;
+        static std::vector<std::vector<std::string> > stratifications_;
 
         // special variables
         blitz::Array<int, 1> nodeIds_;
@@ -56,7 +69,7 @@ class EpidemicDataSet
         std::map<std::string, std::vector<int> > groupNameToNodeIds_;
 
         // all regular variables
-        std::map<std::string, blitz::Array<float, 3> > variables_;
+        std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> > variables_;
 
         bool loadNetCdfFile(const char * filename);
 };

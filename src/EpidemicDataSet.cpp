@@ -5,6 +5,9 @@
 #include <fstream>
 #include <boost/tokenizer.hpp>
 
+std::vector<std::string> EpidemicDataSet::stratificationNames_;
+std::vector<std::vector<std::string> > EpidemicDataSet::stratifications_;
+
 EpidemicDataSet::EpidemicDataSet(const char * filename)
 {
     // defaults
@@ -82,6 +85,47 @@ int EpidemicDataSet::getNumStratifications()
     return numStratifications_;
 }
 
+std::vector<std::string> EpidemicDataSet::getStratificationNames()
+{
+    // one time only: initialize stratification data
+    if(stratificationNames_.size() == 0)
+    {
+        stratificationNames_.push_back("age group");
+        stratificationNames_.push_back("risk group");
+        stratificationNames_.push_back("vaccinated");
+    }
+
+    return stratificationNames_;
+}
+
+std::vector<std::vector<std::string> > EpidemicDataSet::getStratifications()
+{
+    // one time only: initialize stratification data
+    if(stratifications_.size() == 0)
+    {
+        std::vector<std::string> ageGroups;
+        ageGroups.push_back("0-4 years");
+        ageGroups.push_back("5-24 years");
+        ageGroups.push_back("25-49 years");
+        ageGroups.push_back("50-64 years");
+        ageGroups.push_back("65+ years");
+
+        std::vector<std::string> riskGroups;
+        riskGroups.push_back("low risk");
+        riskGroups.push_back("high risk");
+
+        std::vector<std::string> vaccinationGroups;
+        vaccinationGroups.push_back("unvaccinated");
+        vaccinationGroups.push_back("vaccinated");
+
+        stratifications_.push_back(ageGroups);
+        stratifications_.push_back(riskGroups);
+        stratifications_.push_back(vaccinationGroups);
+    }
+
+    return stratifications_;
+}
+
 float EpidemicDataSet::getPopulation(int nodeId)
 {
     if(nodeIdToIndex_.count(nodeId) == 0)
@@ -108,7 +152,7 @@ std::vector<std::string> EpidemicDataSet::getVariableNames()
 {
     std::vector<std::string> variableNames;
 
-    std::map<std::string, blitz::Array<float, 3> >::iterator iter;
+    std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> >::iterator iter;
 
     for(iter=variables_.begin(); iter!=variables_.end(); iter++)
     {
@@ -137,7 +181,7 @@ std::vector<std::string> EpidemicDataSet::getGroupNames()
     return groupNames;
 }
 
-float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
+float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues)
 {
     if(variables_.count(varName) == 0)
     {
@@ -150,18 +194,39 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId)
         return 0.;
     }
 
-    // sum over all stratifications
+    // the full domain
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> lowerBound = variables_[varName].lbound();
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> upperBound = variables_[varName].ubound();
+
+    // limit by time
+    lowerBound(0) = upperBound(0) = time;
+
+    // limit by node
     if(nodeId != NODES_ALL)
     {
-        return blitz::sum(variables_[varName](time, nodeIdToIndex_[nodeId], blitz::Range::all()));
+        lowerBound(1) = upperBound(1) = nodeIdToIndex_[nodeId];
     }
-    else
+
+    // limit by stratification values
+    for(unsigned int i=0; i<stratificationValues.size(); i++)
     {
-        return blitz::sum(variables_[varName](time, blitz::Range::all(), blitz::Range::all()));
+        if(stratificationValues[i] != STRATIFICATIONS_ALL)
+        {
+            lowerBound(2+i) = upperBound(2+i) = stratificationValues[i];
+        }
     }
+
+    // the subdomain
+    blitz::RectDomain<2+NUM_STRATIFICATION_DIMENSIONS> subdomain(lowerBound, upperBound);
+
+    // form an array over the domain
+    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> varSubdomain = variables_[varName](subdomain);
+
+    // and return the sum
+    return blitz::sum(varSubdomain);
 }
 
-float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName)
+float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues)
 {
     if(variables_.count(varName) == 0)
     {
@@ -180,7 +245,7 @@ float EpidemicDataSet::getValue(std::string varName, int time, std::string group
 
     for(unsigned int i=0; i<nodeIds.size(); i++)
     {
-        value += getValue(varName, time, nodeIds[i]);
+        value += getValue(varName, time, nodeIds[i], stratificationValues);
     }
 
     return value;
@@ -217,6 +282,20 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 
     put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes, %i stratifications", numTimes_, numNodes_, numStratifications_);
 
+    // make sure number of stratifications matches our expectation...
+    int numExpectedStratifications = 1;
+
+    for(unsigned int i=0; i<NUM_STRATIFICATION_DIMENSIONS; i++)
+    {
+        numExpectedStratifications *= stratifications_[i].size();
+    }
+
+    if(numStratifications_ != numExpectedStratifications)
+    {
+        put_flog(LOG_FATAL, "got %i stratifications, expected %i", numStratifications_, numExpectedStratifications);
+        return false;
+    }
+
     // get the required variables
     NcVar * ncVarIds = ncFile.get_var("ids_data");
     NcVar * ncVarPopulation = ncFile.get_var("population_data");
@@ -252,7 +331,17 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         {
             put_flog(LOG_INFO, "found variable: %s", ncVar->name());
 
-            blitz::Array<float, 3> var((float *)ncVar->values()->base(), blitz::shape(numTimes_, numNodes_, numStratifications_), blitz::duplicateData);
+            // full shape
+            blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> shape;
+            shape(0) = numTimes_;
+            shape(1) = numNodes_;
+
+            for(int j=0; j<NUM_STRATIFICATION_DIMENSIONS; j++)
+            {
+                shape(2 + j) = stratifications_[j].size();
+            }
+
+            blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> var((float *)ncVar->values()->base(), shape, blitz::duplicateData);
 
             variables_[std::string(ncVar->name())].reference(var);
         }

@@ -8,7 +8,7 @@
 class MainWindow;
 class EpidemicDataSet;
 
-class EpidemicChartWidget : public ChartWidget
+class EpidemicChartWidget : public QMainWindow
 {
     Q_OBJECT
 
@@ -21,18 +21,43 @@ class EpidemicChartWidget : public ChartWidget
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         void setTime(int time);
         void setNodeId(int nodeId);
+        void setVariable(std::string variable);
+
+        void setStratifyByIndex(int index);
+        void setStratificationValues(std::vector<int> stratificationValues);
 
         void update();
 
     private:
 
+        // the chart widget
+        ChartWidget chartWidget_;
+
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
         int nodeId_;
+        std::string variable_;
+
+        // stratification
+        int stratifyByIndex_;
+        std::vector<int> stratificationValues_;
 
         // time indicator line
         boost::shared_ptr<ChartWidgetLine> timeIndicator_;
+
+        // UI elements
+        QComboBox nodeComboBox_;
+        QComboBox variableComboBox_;
+        QComboBox stratifyByComboBox_;
+        std::vector<QComboBox *> stratificationValueComboBoxes_;
+
+    private slots:
+
+        void setNodeChoice(int choiceIndex);
+        void setVariableChoice(int choiceIndex);
+        void setStratifyByChoice(int choiceIndex);
+        void changedStratificationValueChoice();
 };
 
 #endif
