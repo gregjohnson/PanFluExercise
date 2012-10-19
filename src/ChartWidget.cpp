@@ -4,6 +4,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderWindow.h>
 #include <vtkContextScene.h>
+#include <vtkContextMouseEvent.h>
 #include <vtkAxis.h>
 
 ChartWidget::ChartWidget()
@@ -20,6 +21,12 @@ ChartWidget::ChartWidget()
 
     // show legend
     chart_->SetShowLegend(true);
+
+    // don't allow zooming out beyond range of data
+    chart_->SetForceAxesToBounds(true);
+
+    // right button zooms (instead of selects)
+    chart_->SetActionToButton(vtkChart::ZOOM, vtkContextMouseEvent::RIGHT_BUTTON);
 }
 
 QSize ChartWidget::sizeHint() const

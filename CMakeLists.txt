@@ -94,7 +94,7 @@ if(APPLE OR WIN32)
     set(CPACK_PACKAGE_VENDOR "The University of Texas at Austin")
     set(CPACK_PACKAGE_VERSION_MAJOR 0)
     set(CPACK_PACKAGE_VERSION_MINOR 1)
-    set(CPACK_PACKAGE_VERSION_PATCH 0)
+    set(CPACK_PACKAGE_VERSION_PATCH 1)
 
     if(APPLE)
         set(APPS "\${CMAKE_INSTALL_PREFIX}/Exercise.app")
