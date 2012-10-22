@@ -63,6 +63,8 @@ set(SRCS ${SRCS}
     src/MainWindow.cpp
     src/MapShape.cpp
     src/MapWidget.cpp
+    src/Parameters.cpp
+    src/ParametersWidget.cpp
 )
 
 set(MOC_HEADERS ${MOC_HEADERS}
@@ -70,6 +72,7 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicInfoWidget.h
     src/MainWindow.h
     src/MapWidget.h
+    src/ParametersWidget.h
 )
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})

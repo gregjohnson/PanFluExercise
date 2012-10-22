@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "MapWidget.h"
 #include "EpidemicDataSet.h"
+#include "ParametersWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
 
@@ -46,10 +47,18 @@ MainWindow::MainWindow()
     toolbarBottom->addWidget(new QLabel("Time"));
     toolbarBottom->addWidget(timeSlider_);
 
+    // parameters dock
+    QDockWidget * parametersDockWidget = new QDockWidget("Parameters", this);
+    parametersDockWidget->setWidget(new ParametersWidget());
+    addDockWidget(Qt::LeftDockWidgetArea, parametersDockWidget);
+
     // info dock
     QDockWidget * infoDockWidget = new QDockWidget("Info", this);
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
+
+    // tabify parameters and info docks
+    tabifyDockWidget(parametersDockWidget, infoDockWidget);
 
     // chart docks
     QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
