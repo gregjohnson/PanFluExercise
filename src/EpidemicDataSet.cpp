@@ -21,48 +21,17 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
         put_flog(LOG_ERROR, "could not load file %s", filename);
         return;
     }
-    else
+
+    // load node name and group data
+    std::string nodeNameGroupFilename = g_dataDirectory + "/fips_county_names_HSRs.csv";
+
+    if(loadNodeNameGroupFile(nodeNameGroupFilename.c_str()) != true)
     {
-        isValid_ = true;
-
-        // read node name data
-        std::string nodeNameFilename = g_dataDirectory + "/fips_county_names_HSRs.csv";
-        std::ifstream in(nodeNameFilename.c_str());
-
-        if(in.is_open() != true)
-        {
-            put_flog(LOG_ERROR, "could not load file %s", nodeNameFilename.c_str());
-            return;
-        }
-
-        // use boost tokenizer to parse the file
-        typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
-
-        std::vector<std::string> vec;
-        std::string line;
-
-        while(getline(in, line))
-        {
-            Tokenizer tok(line);
-
-            vec.assign(tok.begin(), tok.end());
-
-            if(vec.size() != 3)
-            {
-                put_flog(LOG_ERROR, "number of values != 3, == %i", vec.size());
-                return;
-            }
-
-            // nodeId -> name mapping
-            nodeIdToName_[atoi(vec[0].c_str())] = vec[1];
-
-            // nodeId -> group name mapping
-            nodeIdToGroupName_[atoi(vec[0].c_str())] = vec[2];
-
-            // group name -> nodeIds indexing
-            groupNameToNodeIds_[vec[2]].push_back(atoi(vec[0].c_str()));
-        }
+        put_flog(LOG_ERROR, "could not load file %s", nodeNameGroupFilename.c_str());
+        return;
     }
+
+    isValid_ = true;
 }
 
 bool EpidemicDataSet::isValid()
@@ -345,6 +314,52 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 
             variables_[std::string(ncVar->name())].reference(var);
         }
+    }
+
+    return true;
+}
+
+bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
+{
+    std::ifstream in(filename);
+
+    if(in.is_open() != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename);
+        return false;
+    }
+
+    // clear existing entries
+    nodeIdToName_.clear();
+    nodeIdToGroupName_.clear();
+    groupNameToNodeIds_.clear();
+
+    // use boost tokenizer to parse the file
+    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+    std::vector<std::string> vec;
+    std::string line;
+
+    while(getline(in, line))
+    {
+        Tokenizer tok(line);
+
+        vec.assign(tok.begin(), tok.end());
+
+        if(vec.size() != 3)
+        {
+            put_flog(LOG_ERROR, "number of values != 3, == %i", vec.size());
+            return false;
+        }
+
+        // nodeId -> name mapping
+        nodeIdToName_[atoi(vec[0].c_str())] = vec[1];
+
+        // nodeId -> group name mapping
+        nodeIdToGroupName_[atoi(vec[0].c_str())] = vec[2];
+
+        // group name -> nodeIds indexing
+        groupNameToNodeIds_[vec[2]].push_back(atoi(vec[0].c_str()));
     }
 
     return true;

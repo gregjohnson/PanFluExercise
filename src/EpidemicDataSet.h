@@ -72,6 +72,7 @@ class EpidemicDataSet
         std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> > variables_;
 
         bool loadNetCdfFile(const char * filename);
+        bool loadNodeNameGroupFile(const char * filename);
 };
 
 #endif
