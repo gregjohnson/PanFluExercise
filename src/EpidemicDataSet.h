@@ -52,9 +52,11 @@ class EpidemicDataSet
         static std::vector<std::vector<std::string> > stratifications_;
 
         // special variables
-        blitz::Array<int, 1> nodeIds_;
         blitz::Array<float, 1> population_;
         blitz::Array<float, 2> travel_;
+
+        // node id's
+        std::vector<int> nodeIds_;
 
         // maps node id to array index
         std::map<int, int> nodeIdToIndex_;

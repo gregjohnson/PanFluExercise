@@ -16,18 +16,18 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
     numNodes_ = 0;
     numStratifications_ = 0;
 
-    if(loadNetCdfFile(filename) != true)
-    {
-        put_flog(LOG_ERROR, "could not load file %s", filename);
-        return;
-    }
-
-    // load node name and group data
+    // load node name and group data first
     std::string nodeNameGroupFilename = g_dataDirectory + "/fips_county_names_HSRs.csv";
 
     if(loadNodeNameGroupFile(nodeNameGroupFilename.c_str()) != true)
     {
         put_flog(LOG_ERROR, "could not load file %s", nodeNameGroupFilename.c_str());
+        return;
+    }
+
+    if(loadNetCdfFile(filename) != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename);
         return;
     }
 
@@ -133,9 +133,7 @@ std::vector<std::string> EpidemicDataSet::getVariableNames()
 
 std::vector<int> EpidemicDataSet::getNodeIds()
 {
-    std::vector<int> nodeIds(nodeIds_.begin(), nodeIds_.end());
-
-    return nodeIds;
+    return nodeIds_;
 }
 
 std::vector<std::string> EpidemicDataSet::getGroupNames()
@@ -251,6 +249,13 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 
     put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes, %i stratifications", numTimes_, numNodes_, numStratifications_);
 
+    // make sure number of nodes matches our expectation...
+    if(numNodes_ != (int)nodeIds_.size())
+    {
+        put_flog(LOG_FATAL, "got %i nodes, expected %i", numNodes_, nodeIds_.size());
+        return false;
+    }
+
     // make sure number of stratifications matches our expectation...
     int numExpectedStratifications = 1;
 
@@ -266,30 +271,21 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
     }
 
     // get the required variables
-    NcVar * ncVarIds = ncFile.get_var("ids_data");
     NcVar * ncVarPopulation = ncFile.get_var("population_data");
     NcVar * ncVarTravel = ncFile.get_var("travel_data");
 
-    if(!ncVarIds->is_valid() || !ncVarPopulation->is_valid() || !ncVarTravel->is_valid())
+    if(!ncVarPopulation->is_valid() || !ncVarTravel->is_valid())
     {
         put_flog(LOG_FATAL, "could not find a required variable");
         return false;
     }
 
-    blitz::Array<int, 1> nodeIds((int *)ncVarIds->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
     blitz::Array<float, 1> population((float *)ncVarPopulation->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
     blitz::Array<float, 2> travel((float *)ncVarTravel->values()->base(), blitz::shape(numNodes_, numNodes_), blitz::duplicateData);
 
     // note the use of reference(). an = would make a copy, but we'd have to reshape the lhs first...
-    nodeIds_.reference(nodeIds);
     population_.reference(population);
     travel_.reference(travel);
-
-    // create node id to index mapping
-    for(int i=0; i<numNodes_; i++)
-    {
-        nodeIdToIndex_[nodeIds_(i)] = i;
-    }
 
     // get all float variables with dimensions (time, nodes, stratifications)
     for(int i=0; i<ncFile.num_vars(); i++)
@@ -330,6 +326,8 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
     }
 
     // clear existing entries
+    nodeIds_.clear();
+    nodeIdToIndex_.clear();
     nodeIdToName_.clear();
     nodeIdToGroupName_.clear();
     groupNameToNodeIds_.clear();
@@ -339,6 +337,8 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
 
     std::vector<std::string> vec;
     std::string line;
+
+    int index = 0;
 
     while(getline(in, line))
     {
@@ -352,6 +352,12 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
             return false;
         }
 
+        // nodeId vector
+        nodeIds_.push_back(atoi(vec[0].c_str()));
+
+        // nodeId -> index mapping
+        nodeIdToIndex_[atoi(vec[0].c_str())] = index;
+
         // nodeId -> name mapping
         nodeIdToName_[atoi(vec[0].c_str())] = vec[1];
 
@@ -360,6 +366,8 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
 
         // group name -> nodeIds indexing
         groupNameToNodeIds_[vec[2]].push_back(atoi(vec[0].c_str()));
+
+        index++;
     }
 
     return true;
