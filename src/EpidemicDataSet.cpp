@@ -338,6 +338,9 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
     std::vector<std::string> vec;
     std::string line;
 
+    // read (and ignore) header
+    getline(in, line);
+
     int index = 0;
 
     while(getline(in, line))
