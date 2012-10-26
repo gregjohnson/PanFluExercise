@@ -176,6 +176,11 @@ void EpidemicChartWidget::update()
             chartWidget_.setTitle(dataSet_->getNodeName(nodeId_) + std::string(" County"));
         }
 
+        // add a (0,0) point to fix bounds calculations for straight horizontal plots
+        boost::shared_ptr<ChartWidgetLine> line0 = chartWidget_.getLine();
+        line0->setLabel("");
+        line0->addPoint(0, 0);
+
         if(stratifyByIndex_ == -1)
         {
             // no stratifications
