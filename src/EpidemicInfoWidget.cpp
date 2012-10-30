@@ -22,9 +22,6 @@ EpidemicInfoWidget::EpidemicInfoWidget(MainWindow * mainWindow)
     numNodesLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
     summaryLayout->addRow(new QLabel("Num counties"), &numNodesLabel_);
 
-    numStratificationsLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    summaryLayout->addRow(new QLabel("Num stratifications"), &numStratificationsLabel_);
-
     // table view
     tableView_.horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     tableView_.setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -48,13 +45,11 @@ void EpidemicInfoWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
     {
         numTimesLabel_.setNum(dataSet_->getNumTimes());
         numNodesLabel_.setNum(dataSet_->getNumNodes());
-        numStratificationsLabel_.setNum(dataSet_->getNumStratifications());
     }
     else
     {
         numTimesLabel_.setNum(0);
         numNodesLabel_.setNum(0);
-        numStratificationsLabel_.setNum(0);
     }
 
     // update table

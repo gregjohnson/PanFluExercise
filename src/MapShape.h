@@ -17,6 +17,9 @@ class MapShape
 
         void addVertex(double lat, double lon);
 
+        void setCentroid(double lat, double lon);
+        void getCentroid(double &lat, double &lon);
+
         void setColor(float r, float g, float b);
 
         void renderBoundary();
@@ -25,6 +28,9 @@ class MapShape
     private:
 
         std::vector<MapVertex> vertices_;
+
+        // centroid; must be set, is not computed automatically
+        double centroidLat_, centroidLon_;
 
         float r_, g_, b_;
 };

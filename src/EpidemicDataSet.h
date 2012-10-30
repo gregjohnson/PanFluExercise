@@ -5,9 +5,10 @@
 #include <vector>
 #include <blitz/array.h>
 
-// must be defined at compile time, and match definition of EpidemicDataSet::stratificationNames_, stratifications_
+// must be defined at compile time, and match definition in stratifications file
 // stratifications: [age group][risk group][vaccinated]
 #define NUM_STRATIFICATION_DIMENSIONS 3
+#define STRATIFICATIONS_FILENAME "stratifications.csv"
 
 #define STRATIFICATIONS_ALL -1
 
@@ -23,7 +24,6 @@ class EpidemicDataSet
 
         int getNumTimes();
         int getNumNodes();
-        int getNumStratifications();
 
         static std::vector<std::string> getStratificationNames();
         static std::vector<std::vector<std::string> > getStratifications();
@@ -35,8 +35,12 @@ class EpidemicDataSet
         std::vector<std::string> getGroupNames();
         std::vector<std::string> getVariableNames();
 
+        float getTravel(int nodeId0, int nodeId1);
+
         float getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues=std::vector<int>());
+
+        bool copyVariableToNewTimeStep(std::string varName);
 
     private:
 
@@ -45,15 +49,10 @@ class EpidemicDataSet
         // dimensionality
         int numTimes_;
         int numNodes_;
-        int numStratifications_;
 
-        // stratification details; for now these need to be hardcoded
+        // stratification details
         static std::vector<std::string> stratificationNames_;
         static std::vector<std::vector<std::string> > stratifications_;
-
-        // special variables
-        blitz::Array<float, 1> population_;
-        blitz::Array<float, 2> travel_;
 
         // node id's
         std::vector<int> nodeIds_;
@@ -70,11 +69,18 @@ class EpidemicDataSet
         // maps group name to node id's
         std::map<std::string, std::vector<int> > groupNameToNodeIds_;
 
+        // node -> node travel fractions
+        blitz::Array<float, 2> travel_;
+
         // all regular variables
         std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> > variables_;
 
         bool loadNetCdfFile(const char * filename);
+        static bool loadStratificationsFile();
         bool loadNodeNameGroupFile(const char * filename);
+        bool loadNodePopulationFile(const char * filename);
+        bool loadNodePopulationSecondStratificationFile(const char * filename);
+        bool loadNodeTravelFile(const char * filename);
 };
 
 #endif

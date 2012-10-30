@@ -3,6 +3,8 @@
 
 MapShape::MapShape()
 {
+    // defaults
+    centroidLat_ = centroidLon_ = 0.;
     r_ = g_ = b_ = 1.;
 }
 
@@ -18,6 +20,18 @@ void MapShape::addVertex(double lat, double lon)
     v.lon = lon;
 
     vertices_.push_back(v);
+}
+
+void MapShape::setCentroid(double lat, double lon)
+{
+    centroidLat_ = lat;
+    centroidLon_ = lon;
+}
+
+void MapShape::getCentroid(double &lat, double &lon)
+{
+    lat = centroidLat_;
+    lon = centroidLon_;
 }
 
 void MapShape::setColor(float r, float g, float b)

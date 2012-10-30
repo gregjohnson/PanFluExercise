@@ -14,9 +14,15 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
     isValid_ = false;
     numTimes_ = 0;
     numNodes_ = 0;
-    numStratifications_ = 0;
 
-    // load node name and group data first
+    // load stratifications data
+    if(loadStratificationsFile() != true)
+    {
+        put_flog(LOG_ERROR, "could not load stratifications file");
+        return;
+    }
+
+    // load node name and group data
     std::string nodeNameGroupFilename = g_dataDirectory + "/fips_county_names_HSRs.csv";
 
     if(loadNodeNameGroupFile(nodeNameGroupFilename.c_str()) != true)
@@ -25,10 +31,43 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
         return;
     }
 
+    // population data
+    std::string nodePopulationFilename = g_dataDirectory + "/fips_age_group_populations.csv";
+
+    if(loadNodePopulationFile(nodePopulationFilename.c_str()) != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", nodePopulationFilename.c_str());
+        return;
+    }
+
+    std::string nodePopulationSecondStratificationFilename = g_dataDirectory + "/age_groups_low_risk_fraction.csv";
+
+    if(loadNodePopulationSecondStratificationFile(nodePopulationSecondStratificationFilename.c_str()) != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", nodePopulationSecondStratificationFilename.c_str());
+        return;
+    }
+
+    // travel data
+    std::string nodeTravelFilename = g_dataDirectory + "/county_travel_fractions.csv";
+
+    if(loadNodeTravelFile(nodeTravelFilename.c_str()) != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", nodeTravelFilename.c_str());
+        return;
+    }
+
+    // data set
     if(loadNetCdfFile(filename) != true)
     {
         put_flog(LOG_ERROR, "could not load file %s", filename);
         return;
+    }
+
+    // todo: for now, duplicate population data over all times, since this isn't stored in the data set
+    for(int time=1; time<numTimes_; time++)
+    {
+        copyVariableToNewTimeStep("population");
     }
 
     isValid_ = true;
@@ -49,19 +88,14 @@ int EpidemicDataSet::getNumNodes()
     return numNodes_;
 }
 
-int EpidemicDataSet::getNumStratifications()
-{
-    return numStratifications_;
-}
-
 std::vector<std::string> EpidemicDataSet::getStratificationNames()
 {
-    // one time only: initialize stratification data
     if(stratificationNames_.size() == 0)
     {
-        stratificationNames_.push_back("age group");
-        stratificationNames_.push_back("risk group");
-        stratificationNames_.push_back("vaccinated");
+        if(loadStratificationsFile() != true)
+        {
+            put_flog(LOG_ERROR, "could not load stratifications file");
+        }
     }
 
     return stratificationNames_;
@@ -69,27 +103,12 @@ std::vector<std::string> EpidemicDataSet::getStratificationNames()
 
 std::vector<std::vector<std::string> > EpidemicDataSet::getStratifications()
 {
-    // one time only: initialize stratification data
-    if(stratifications_.size() == 0)
+    if(stratificationNames_.size() == 0)
     {
-        std::vector<std::string> ageGroups;
-        ageGroups.push_back("0-4 years");
-        ageGroups.push_back("5-24 years");
-        ageGroups.push_back("25-49 years");
-        ageGroups.push_back("50-64 years");
-        ageGroups.push_back("65+ years");
-
-        std::vector<std::string> riskGroups;
-        riskGroups.push_back("low risk");
-        riskGroups.push_back("high risk");
-
-        std::vector<std::string> vaccinationGroups;
-        vaccinationGroups.push_back("unvaccinated");
-        vaccinationGroups.push_back("vaccinated");
-
-        stratifications_.push_back(ageGroups);
-        stratifications_.push_back(riskGroups);
-        stratifications_.push_back(vaccinationGroups);
+        if(loadStratificationsFile() != true)
+        {
+            put_flog(LOG_ERROR, "could not load stratifications file");
+        }
     }
 
     return stratifications_;
@@ -103,7 +122,7 @@ float EpidemicDataSet::getPopulation(int nodeId)
         return 0.;
     }
 
-    return population_(nodeIdToIndex_[nodeId]);
+    return getValue("population", 0, nodeId);
 }
 
 std::string EpidemicDataSet::getNodeName(int nodeId)
@@ -146,6 +165,17 @@ std::vector<std::string> EpidemicDataSet::getGroupNames()
     }
 
     return groupNames;
+}
+
+float EpidemicDataSet::getTravel(int nodeId0, int nodeId1)
+{
+    if(nodeIdToIndex_.count(nodeId0) == 0 || nodeIdToIndex_.count(nodeId1) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map a nodeId to an index for: %i, %i", nodeId0, nodeId1);
+        return 0.;
+    }
+
+    return travel_(nodeIdToIndex_[nodeId0], nodeIdToIndex_[nodeId1]);
 }
 
 float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues)
@@ -218,6 +248,42 @@ float EpidemicDataSet::getValue(std::string varName, int time, std::string group
     return value;
 }
 
+bool EpidemicDataSet::copyVariableToNewTimeStep(std::string varName)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return false;
+    }
+
+    // get current shape of variable
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> shape = variables_[varName].shape();
+
+    // add a time step
+    shape(0) = shape(0) + 1;
+
+    // resize variable for the new shape
+    variables_[varName].resizeAndPreserve(shape);
+
+    // copy data to the new time step
+
+    // the full domain
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> lowerBound = variables_[varName].lbound();
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> upperBound = variables_[varName].ubound();
+
+    // domain for previous time and new time
+    lowerBound(0) = upperBound(0) = variables_[varName].extent(0) - 2;
+    blitz::RectDomain<2+NUM_STRATIFICATION_DIMENSIONS> subdomain0(lowerBound, upperBound);
+
+    lowerBound(0) = upperBound(0) = variables_[varName].extent(0) - 1;
+    blitz::RectDomain<2+NUM_STRATIFICATION_DIMENSIONS> subdomain1(lowerBound, upperBound);
+
+    // make the copy
+    variables_[varName](subdomain1) = variables_[varName](subdomain0);
+
+    return true;
+}
+
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
     // change netcdf library error behavior
@@ -244,17 +310,15 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
     }
 
     numTimes_ = timeDim->size();
-    numNodes_ = nodesDim->size();
-    numStratifications_ = stratificationsDim->size();
 
-    put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes, %i stratifications", numTimes_, numNodes_, numStratifications_);
-
-    // make sure number of nodes matches our expectation...
-    if(numNodes_ != (int)nodeIds_.size())
+    // make sure we have the expected number of nodes
+    if(nodesDim->size() != numNodes_)
     {
-        put_flog(LOG_FATAL, "got %i nodes, expected %i", numNodes_, nodeIds_.size());
+        put_flog(LOG_FATAL, "got %i nodes, expected %i", nodesDim->size(), numNodes_);
         return false;
     }
+
+    put_flog(LOG_DEBUG, "file contains %i timesteps, %i nodes", numTimes_, numNodes_);
 
     // make sure number of stratifications matches our expectation...
     int numExpectedStratifications = 1;
@@ -264,28 +328,11 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
         numExpectedStratifications *= stratifications_[i].size();
     }
 
-    if(numStratifications_ != numExpectedStratifications)
+    if(stratificationsDim->size() != numExpectedStratifications)
     {
-        put_flog(LOG_FATAL, "got %i stratifications, expected %i", numStratifications_, numExpectedStratifications);
+        put_flog(LOG_FATAL, "got %i stratifications, expected %i", stratificationsDim->size(), numExpectedStratifications);
         return false;
     }
-
-    // get the required variables
-    NcVar * ncVarPopulation = ncFile.get_var("population_data");
-    NcVar * ncVarTravel = ncFile.get_var("travel_data");
-
-    if(!ncVarPopulation->is_valid() || !ncVarTravel->is_valid())
-    {
-        put_flog(LOG_FATAL, "could not find a required variable");
-        return false;
-    }
-
-    blitz::Array<float, 1> population((float *)ncVarPopulation->values()->base(), blitz::shape(numNodes_), blitz::duplicateData);
-    blitz::Array<float, 2> travel((float *)ncVarTravel->values()->base(), blitz::shape(numNodes_, numNodes_), blitz::duplicateData);
-
-    // note the use of reference(). an = would make a copy, but we'd have to reshape the lhs first...
-    population_.reference(population);
-    travel_.reference(travel);
 
     // get all float variables with dimensions (time, nodes, stratifications)
     for(int i=0; i<ncFile.num_vars(); i++)
@@ -315,6 +362,57 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
     return true;
 }
 
+bool EpidemicDataSet::loadStratificationsFile()
+{
+    std::string filename = g_dataDirectory + "/" + STRATIFICATIONS_FILENAME;
+
+    std::ifstream in(filename.c_str());
+
+    if(in.is_open() != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename.c_str());
+        return false;
+    }
+
+    // clear existing entries
+    stratificationNames_.clear();
+    stratifications_.clear();
+
+    // use boost tokenizer to parse the file
+    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+    std::vector<std::string> vec;
+    std::string line;
+
+    // read names of stratifications
+    getline(in, line);
+    Tokenizer tok(line);
+    vec.assign(tok.begin(), tok.end());
+
+    // make sure this matches what we expect
+    if(vec.size() != NUM_STRATIFICATION_DIMENSIONS)
+    {
+        put_flog(LOG_ERROR, "got %i stratification dimensions, expected %i", vec.size(), NUM_STRATIFICATION_DIMENSIONS);
+        return false;
+    }
+
+    stratificationNames_ = vec;
+
+    // read stratification value names
+    for(unsigned int i=0; i<NUM_STRATIFICATION_DIMENSIONS; i++)
+    {
+        vec.clear();
+
+        getline(in, line);
+        Tokenizer tok(line);
+        vec.assign(tok.begin(), tok.end());
+
+        stratifications_.push_back(vec);
+    }
+
+    return true;
+}
+
 bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
 {
     std::ifstream in(filename);
@@ -326,6 +424,7 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
     }
 
     // clear existing entries
+    numNodes_ = 0;
     nodeIds_.clear();
     nodeIdToIndex_.clear();
     nodeIdToName_.clear();
@@ -355,23 +454,270 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
             return false;
         }
 
+        int nodeId = atoi(vec[0].c_str());
+
         // nodeId vector
-        nodeIds_.push_back(atoi(vec[0].c_str()));
+        nodeIds_.push_back(nodeId);
 
         // nodeId -> index mapping
-        nodeIdToIndex_[atoi(vec[0].c_str())] = index;
+        nodeIdToIndex_[nodeId] = index;
 
         // nodeId -> name mapping
-        nodeIdToName_[atoi(vec[0].c_str())] = vec[1];
+        nodeIdToName_[nodeId] = vec[1];
 
         // nodeId -> group name mapping
-        nodeIdToGroupName_[atoi(vec[0].c_str())] = vec[2];
+        nodeIdToGroupName_[nodeId] = vec[2];
 
         // group name -> nodeIds indexing
-        groupNameToNodeIds_[vec[2]].push_back(atoi(vec[0].c_str()));
+        groupNameToNodeIds_[vec[2]].push_back(nodeId);
 
         index++;
     }
+
+    numNodes_ = index;
+
+    return true;
+}
+
+bool EpidemicDataSet::loadNodePopulationFile(const char * filename)
+{
+    // make sure we have appropriate number of stratifications
+    if(stratifications_.size() < 1)
+    {
+        put_flog(LOG_ERROR, "need at least 1 stratification, got %i", stratifications_.size());
+        return false;
+    }
+
+    std::ifstream in(filename);
+
+    if(in.is_open() != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename);
+        return false;
+    }
+
+    // full shape of population variable: [time][node][stratifications...]
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> shape;
+    shape(0) = 1; // one time step
+    shape(1) = numNodes_;
+
+    for(int j=0; j<NUM_STRATIFICATION_DIMENSIONS; j++)
+    {
+        shape(2 + j) = stratifications_[j].size();
+    }
+
+    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> population(shape);
+
+    population = 0.;
+
+    // the data file contains population data stratified only by the first stratification
+    // stratification values of 0 are assumed for all other stratifications
+
+    // use boost tokenizer to parse the file
+    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+    std::vector<std::string> vec;
+    std::string line;
+
+    // read (and ignore) header
+    getline(in, line);
+
+    while(getline(in, line))
+    {
+        Tokenizer tok(line);
+
+        vec.assign(tok.begin(), tok.end());
+
+        if(vec.size() != 1+stratifications_[0].size())
+        {
+            put_flog(LOG_ERROR, "number of values != %i, == %i", 1+stratifications_[0].size(), vec.size());
+            return false;
+        }
+
+        int time = 0;
+        int nodeId = atoi(vec[0].c_str());
+
+        if(nodeIdToIndex_.count(nodeId) == 0)
+        {
+            put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
+            return false;
+        }
+
+        int nodeIndex = nodeIdToIndex_[nodeId];
+
+        for(int i=0; i<(int)stratifications_[0].size(); i++)
+        {
+            // array position; all indices initialized to 0
+            blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> index(0);
+
+            index(0) = time;
+            index(1) = nodeIndex;
+            index(2) = i;
+
+            // all other stratification indices are zero
+
+            population(index) = atof(vec[1+i].c_str());
+        }
+    }
+
+    // add to regular variables map
+    variables_["population"].reference(population);
+
+    return true;
+}
+
+bool EpidemicDataSet::loadNodePopulationSecondStratificationFile(const char * filename)
+{
+    // load data file indicating fractional split for the second stratification
+    // stratification values of 0 are assumed for all subsequent stratifications
+
+    // make sure we have appropriate number of stratifications
+    if(stratifications_.size() < 2)
+    {
+        put_flog(LOG_ERROR, "need at least 2 stratifications, got %i", stratifications_.size());
+        return false;
+    }
+
+    // the second stratification should be of size 2
+    if(stratifications_[1].size() != 2)
+    {
+        put_flog(LOG_ERROR, "expected 2 stratifications, got %i", stratifications_[1].size());
+        return false;
+    }
+
+    std::ifstream in(filename);
+
+    if(in.is_open() != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename);
+        return false;
+    }
+
+    // use boost tokenizer to parse the file
+    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+    std::vector<std::string> vec;
+    std::string line;
+
+    // read (and ignore) header
+    getline(in, line);
+
+    // read data (one line)
+    getline(in, line);
+
+    Tokenizer tok(line);
+
+    vec.assign(tok.begin(), tok.end());
+
+    if(vec.size() != stratifications_[0].size())
+    {
+        put_flog(LOG_ERROR, "number of values != %i, == %i", stratifications_[0].size(), vec.size());
+        return false;
+    }
+
+    int time = 0;
+
+    for(int i=0; i<(int)nodeIds_.size(); i++)
+    {
+        int nodeId = nodeIds_[i];
+
+        if(nodeIdToIndex_.count(nodeId) == 0)
+        {
+            put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
+            return false;
+        }
+
+        int nodeIndex = nodeIdToIndex_[nodeId];
+
+        for(int j=0; j<(int)stratifications_[0].size(); j++)
+        {
+            // get total value over the first stratification
+            std::vector<int> stratificationValues(NUM_STRATIFICATION_DIMENSIONS, STRATIFICATIONS_ALL);
+            stratificationValues[0] = j;
+
+            float total = getValue("population", time, nodeId, stratificationValues);
+
+            float fraction0 = atof(vec[j].c_str());
+
+            float value0 = total * fraction0;
+            float value1 = total * (1. - fraction0);
+
+            // array position; all indices initialized to 0
+            blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> index(0);
+
+            index(0) = time;
+            index(1) = nodeIndex;
+            index(2) = j;
+
+            index(3) = 0;
+            variables_["population"](index) = value0;
+
+            index(3) = 1;
+            variables_["population"](index) = value1;
+        }
+    }
+
+    return true;
+}
+
+bool EpidemicDataSet::loadNodeTravelFile(const char * filename)
+{
+    std::ifstream in(filename);
+
+    if(in.is_open() != true)
+    {
+        put_flog(LOG_ERROR, "could not load file %s", filename);
+        return false;
+    }
+
+    // full shape of travel variable: [node][node]
+    blitz::TinyVector<float, 2> shape;
+    shape(0) = numNodes_;
+    shape(1) = numNodes_;
+
+    blitz::Array<float, 2> travel(shape);
+
+    travel = 0.;
+
+    // use boost tokenizer to parse the file
+    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+    std::vector<std::string> vec;
+    std::string line;
+
+    // read (and ignore) header
+    getline(in, line);
+
+    int index = 0;
+
+    while(getline(in, line))
+    {
+        Tokenizer tok(line);
+
+        vec.assign(tok.begin(), tok.end());
+
+        if((int)vec.size() != numNodes_)
+        {
+            put_flog(LOG_ERROR, "number of values != %i, == %i", numNodes_, vec.size());
+            return false;
+        }
+
+        for(int i=0; i<(int)vec.size(); i++)
+        {
+            travel(index, i) = atof(vec[i].c_str());
+        }
+
+        index++;
+    }
+
+    // we should have read numNodes_ lines
+    if(index != numNodes_)
+    {
+        put_flog(LOG_ERROR, "expected %i lines, read %i", numNodes_, index);
+        return false;
+    }
+
+    travel_.reference(travel);
 
     return true;
 }

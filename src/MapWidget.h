@@ -61,6 +61,9 @@ class MapWidget : public QGLWidget
         // counties
         bool loadCountyShapes();
         void renderCountyShapes();
+
+        // travel between counties
+        void renderCountyTravel();
 };
 
 #endif
