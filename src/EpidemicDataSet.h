@@ -18,7 +18,7 @@ class EpidemicDataSet
 {
     public:
 
-        EpidemicDataSet(const char * filename);
+        EpidemicDataSet(const char * filename=NULL);
 
         bool isValid();
 

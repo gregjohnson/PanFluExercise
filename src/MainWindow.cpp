@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "MapWidget.h"
+#include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
 #include "EpidemicInfoWidget.h"
@@ -19,6 +20,11 @@ MainWindow::MainWindow()
     QToolBar * toolbarBottom = new QToolBar("bottom toolbar", this);
     addToolBar(Qt::BottomToolBarArea, toolbarBottom);
 
+    // new simulation action
+    QAction * newSimulationAction = new QAction("New Simulation", this);
+    newSimulationAction->setStatusTip("New simulation");
+    connect(newSimulationAction, SIGNAL(triggered()), this, SLOT(newSimulation()));
+
     // open data set action
     QAction * openDataSetAction = new QAction("Open Data Set", this);
     openDataSetAction->setStatusTip("Open data set");
@@ -30,10 +36,12 @@ MainWindow::MainWindow()
     connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
 
     // add actions to menus
+    fileMenu->addAction(newSimulationAction);
     fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
 
     // add actions to toolbar
+    toolbar->addAction(newSimulationAction);
     toolbar->addAction(openDataSetAction);
     toolbar->addAction(newChartAction);
 
@@ -95,6 +103,15 @@ void MainWindow::setTime(int time)
     time_ = time;
 
     emit(timeChanged(time_));
+}
+
+void MainWindow::newSimulation()
+{
+    boost::shared_ptr<EpidemicSimulation> simulation(new EpidemicSimulation());
+
+    dataSet_ = simulation;
+
+    emit(dataSetChanged(dataSet_));
 }
 
 void MainWindow::openDataSet()

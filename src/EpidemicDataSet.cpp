@@ -12,7 +12,7 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
 {
     // defaults
     isValid_ = false;
-    numTimes_ = 0;
+    numTimes_ = 1;
     numNodes_ = 0;
 
     // load stratifications data
@@ -58,16 +58,19 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
     }
 
     // data set
-    if(loadNetCdfFile(filename) != true)
+    if(filename != NULL)
     {
-        put_flog(LOG_ERROR, "could not load file %s", filename);
-        return;
-    }
+        if(loadNetCdfFile(filename) != true)
+        {
+            put_flog(LOG_ERROR, "could not load file %s", filename);
+            return;
+        }
 
-    // todo: for now, duplicate population data over all times, since this isn't stored in the data set
-    for(int time=1; time<numTimes_; time++)
-    {
-        copyVariableToNewTimeStep("population");
+        // todo: for now, duplicate population data over all times, since this isn't stored in the data set
+        for(int time=1; time<numTimes_; time++)
+        {
+            copyVariableToNewTimeStep("population");
+        }
     }
 
     isValid_ = true;

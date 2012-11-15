@@ -58,6 +58,7 @@ set(SRCS ${SRCS}
     src/EpidemicChartWidget.cpp
     src/EpidemicDataSet.cpp
     src/EpidemicInfoWidget.cpp
+    src/EpidemicSimulation.cpp
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
