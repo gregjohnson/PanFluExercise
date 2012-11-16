@@ -102,6 +102,10 @@ void MainWindow::setTime(int time)
 {
     time_ = time;
 
+    // make sure the time slider has the correct value
+    // Qt makes sure this won't result in infinite recursion
+    timeSlider_->setValue(time_);
+
     emit(timeChanged(time_));
 }
 
