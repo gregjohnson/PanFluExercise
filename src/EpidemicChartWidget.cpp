@@ -79,6 +79,10 @@ EpidemicChartWidget::EpidemicChartWidget(MainWindow * mainWindow)
 
 void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
+    // keep track of old selections
+    int oldNodeId = nodeId_;
+    std::string oldVariable = variable_;
+
     dataSet_ = dataSet;
 
     // refresh node and variable selections
@@ -104,6 +108,20 @@ void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
         {
             variableComboBox_.addItem(variables[i].c_str(), variables[i].c_str());
         }
+    }
+
+    // try to update new selections to match previous ones
+    int newNodeIndex = nodeComboBox_.findData(oldNodeId);
+    int newVariableIndex = variableComboBox_.findData(oldVariable.c_str());
+
+    if(newNodeIndex != -1)
+    {
+        nodeComboBox_.setCurrentIndex(newNodeIndex);
+    }
+
+    if(newVariableIndex != -1)
+    {
+        variableComboBox_.setCurrentIndex(newVariableIndex);
     }
 
     update();
