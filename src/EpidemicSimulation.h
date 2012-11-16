@@ -9,6 +9,8 @@ class EpidemicSimulation : public EpidemicDataSet
 
         EpidemicSimulation();
 
+        void evolve();
+
     private:
 
 };

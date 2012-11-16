@@ -2,5 +2,9 @@
 
 EpidemicSimulation::EpidemicSimulation()
 {
+}
+
+void EpidemicSimulation::evolve()
+{
 
 }
