@@ -19,6 +19,7 @@ class EpidemicDataSet
     public:
 
         EpidemicDataSet(const char * filename=NULL);
+        virtual ~EpidemicDataSet() { }
 
         bool isValid();
 
@@ -42,7 +43,7 @@ class EpidemicDataSet
 
         bool copyVariableToNewTimeStep(std::string varName);
 
-    private:
+    protected:
 
         bool isValid_;
 
