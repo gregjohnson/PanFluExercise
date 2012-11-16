@@ -198,6 +198,13 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::
     blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> lowerBound = variables_[varName].lbound();
     blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> upperBound = variables_[varName].ubound();
 
+    // make sure this variable is valid for the specified time
+    if(time < lowerBound(0) || time > upperBound(0))
+    {
+        put_flog(LOG_WARN, "variable %s not valid for time %i", varName.c_str(), time);
+        return 0.;
+    }
+
     // limit by time
     lowerBound(0) = upperBound(0) = time;
 
