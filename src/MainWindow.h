@@ -1,6 +1,9 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
+// delay between moving to next timestep when playing
+#define PLAY_TIMESTEPS_TIMER_DELAY_MILLISECONDS 100
+
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
 
@@ -25,6 +28,9 @@ class MainWindow : public QMainWindow {
     public slots:
 
         void setTime(int time);
+        bool previousTimestep();
+        void playTimesteps(bool set=true);
+        bool nextTimestep();
 
     private:
 
@@ -33,6 +39,9 @@ class MainWindow : public QMainWindow {
 
         MapWidget * mapWidget_;
         QSlider * timeSlider_;
+
+        QAction * playTimestepsAction_;
+        QTimer playTimestepsTimer_;
 
     private slots:
 

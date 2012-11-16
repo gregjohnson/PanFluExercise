@@ -55,6 +55,25 @@ MainWindow::MainWindow()
     toolbarBottom->addWidget(new QLabel("Time"));
     toolbarBottom->addWidget(timeSlider_);
 
+    // previous timestep button
+    QAction * previousTimestepAction = new QAction(QIcon::fromTheme("media-seek-backward"), "Previous Timestep", this);
+    previousTimestepAction->setStatusTip(tr("Previous timestep"));
+    connect(previousTimestepAction, SIGNAL(triggered()), this, SLOT(previousTimestep()));
+    toolbarBottom->addAction(previousTimestepAction);
+
+    // play timesteps button
+    playTimestepsAction_ = new QAction(QIcon::fromTheme("media-seek-play"), "Play Timesteps", this);
+    playTimestepsAction_->setStatusTip(tr("Play timesteps"));
+    playTimestepsAction_->setCheckable(true);
+    connect(playTimestepsAction_, SIGNAL(toggled(bool)), this, SLOT(playTimesteps(bool)));
+    toolbarBottom->addAction(playTimestepsAction_);
+
+    // next timestep button
+    QAction * nextTimestepAction = new QAction(QIcon::fromTheme("media-seek-forward"), "Next Timestep", this);
+    nextTimestepAction->setStatusTip(tr("Next timestep"));
+    connect(nextTimestepAction, SIGNAL(triggered()), this, SLOT(nextTimestep()));
+    toolbarBottom->addAction(nextTimestepAction);
+
     // parameters dock
     QDockWidget * parametersDockWidget = new QDockWidget("Parameters", this);
     parametersDockWidget->setWidget(new ParametersWidget());
@@ -84,6 +103,8 @@ MainWindow::MainWindow()
 
     connect(this, SIGNAL(timeChanged(int)), mapWidget_, SLOT(setTime(int)));
 
+    connect(&playTimestepsTimer_, SIGNAL(timeout()), this, SLOT(playTimesteps()));
+
     // show the window
     show();
 }
@@ -107,6 +128,99 @@ void MainWindow::setTime(int time)
     timeSlider_->setValue(time_);
 
     emit(timeChanged(time_));
+}
+
+bool MainWindow::previousTimestep()
+{
+    if(dataSet_ != NULL)
+    {
+        int previousTime = time_ - 1;
+
+        bool timeInBounds = true;
+
+        if(previousTime < 0)
+        {
+            timeInBounds = false;
+        }
+
+        if(timeInBounds == true)
+        {
+            setTime(previousTime);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void MainWindow::playTimesteps(bool set)
+{
+    if(set == true)
+    {
+        if(playTimestepsTimer_.isActive() == true)
+        {
+            bool success = nextTimestep();
+
+            if(success != true)
+            {
+                // uncheck the play button
+                playTimestepsAction_->setChecked(false);
+            }
+        }
+        else
+        {
+            // start the timer
+            playTimestepsTimer_.start(PLAY_TIMESTEPS_TIMER_DELAY_MILLISECONDS);
+        }
+    }
+    else
+    {
+        // stop the timer
+        playTimestepsTimer_.stop();
+    }
+}
+
+bool MainWindow::nextTimestep()
+{
+    if(dataSet_ != NULL)
+    {
+        int nextTime = time_ + 1;
+
+        bool timeInBounds = true;
+
+        boost::shared_ptr<EpidemicSimulation> simulation = boost::dynamic_pointer_cast<EpidemicSimulation>(dataSet_);
+
+        if(simulation != NULL)
+        {
+            // the data set is actually a simulation
+
+            if(nextTime >= simulation->getNumTimes())
+            {
+                simulation->evolve();
+
+                // since we've changed the number of timesteps
+                emit(dataSetChanged(dataSet_));
+            }
+        }
+        else
+        {
+            // just a regular data set
+            if(nextTime >= dataSet_->getNumTimes())
+            {
+                timeInBounds = false;
+            }
+        }
+
+        if(timeInBounds == true)
+        {
+            setTime(nextTime);
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void MainWindow::newSimulation()
