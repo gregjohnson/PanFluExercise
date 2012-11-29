@@ -9,6 +9,7 @@
 
 class EpidemicDataSet;
 class MapWidget;
+class EpidemicInitialCasesWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -42,6 +43,8 @@ class MainWindow : public QMainWindow {
 
         QAction * playTimestepsAction_;
         QTimer playTimestepsTimer_;
+
+        EpidemicInitialCasesWidget * initialCasesWidget_;
 
     private slots:
 

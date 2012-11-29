@@ -3,6 +3,7 @@
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
+#include "EpidemicInitialCasesWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
 
@@ -79,12 +80,19 @@ MainWindow::MainWindow()
     parametersDockWidget->setWidget(new ParametersWidget());
     addDockWidget(Qt::LeftDockWidgetArea, parametersDockWidget);
 
+    // initial cases dock
+    initialCasesWidget_ = new EpidemicInitialCasesWidget(this);
+    QDockWidget * initialCasesDockWidget = new QDockWidget("Initial Cases", this);
+    initialCasesDockWidget->setWidget(initialCasesWidget_);
+    addDockWidget(Qt::LeftDockWidgetArea, initialCasesDockWidget);
+
     // info dock
     QDockWidget * infoDockWidget = new QDockWidget("Info", this);
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
 
-    // tabify parameters and info docks
+    // tabify parameters, initial cases, and info docks
+    tabifyDockWidget(parametersDockWidget, initialCasesDockWidget);
     tabifyDockWidget(parametersDockWidget, infoDockWidget);
 
     // chart docks
@@ -197,7 +205,13 @@ bool MainWindow::nextTimestep()
 
             if(nextTime >= simulation->getNumTimes())
             {
-                simulation->evolve();
+                // if this is the first time simulated, set the initial cases
+                if(nextTime == 1)
+                {
+                    initialCasesWidget_->applyCases();
+                }
+
+                simulation->simulate();
 
                 // since we've changed the number of timesteps
                 emit(dataSetChanged(dataSet_));

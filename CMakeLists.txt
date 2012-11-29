@@ -55,9 +55,11 @@ set(SRCS ${SRCS}
     src/ChartWidget.cpp
     src/ChartWidgetLine.cpp
     src/ColorMap.cpp
+    src/EpidemicCasesWidget.cpp
     src/EpidemicChartWidget.cpp
     src/EpidemicDataSet.cpp
     src/EpidemicInfoWidget.cpp
+    src/EpidemicInitialCasesWidget.cpp
     src/EpidemicSimulation.cpp
     src/log.cpp
     src/main.cpp
@@ -71,6 +73,7 @@ set(SRCS ${SRCS}
 set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicChartWidget.h
     src/EpidemicInfoWidget.h
+    src/EpidemicInitialCasesWidget.h
     src/MainWindow.h
     src/MapWidget.h
     src/ParametersWidget.h
