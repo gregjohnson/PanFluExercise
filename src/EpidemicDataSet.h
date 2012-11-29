@@ -17,6 +17,7 @@
 // used for argument expansion
 #include <boost/preprocessor/repetition/enum.hpp>
 #define TEXT(z, n, text) text
+#define VECTOR_TO_ARGS(z, n, text) text[n]
 
 class EpidemicDataSet
 {
