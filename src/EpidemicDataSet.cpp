@@ -258,6 +258,57 @@ float EpidemicDataSet::getValue(std::string varName, int time, std::string group
     return value;
 }
 
+bool EpidemicDataSet::newVariable(std::string varName)
+{
+    if(variables_.count(varName) != 0)
+    {
+        put_flog(LOG_ERROR, "variable %s already exists", varName.c_str());
+        return false;
+    }
+
+    // full shape
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> shape;
+    shape(0) = numTimes_;
+    shape(1) = numNodes_;
+
+    for(int j=0; j<NUM_STRATIFICATION_DIMENSIONS; j++)
+    {
+        shape(2 + j) = stratifications_[j].size();
+    }
+
+    // create the variable
+    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> var(shape);
+
+    // initialize values to zero
+    var = 0.;
+
+    // add the variable to the vector
+    variables_[varName].reference(var);
+
+    return true;
+}
+
+bool EpidemicDataSet::copyVariable(std::string sourceVarName, std::string destVarName)
+{
+    if(variables_.count(sourceVarName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", sourceVarName.c_str());
+        return false;
+    }
+
+    if(variables_.count(destVarName) != 0)
+    {
+        put_flog(LOG_ERROR, "destination variable %s already exists", destVarName.c_str());
+        return false;
+    }
+
+    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> varCopy = variables_[sourceVarName].copy();
+
+    variables_[destVarName].reference(varCopy);
+
+    return true;
+}
+
 bool EpidemicDataSet::copyVariableToNewTimeStep(std::string varName)
 {
     if(variables_.count(varName) == 0)
@@ -292,6 +343,22 @@ bool EpidemicDataSet::copyVariableToNewTimeStep(std::string varName)
     variables_[varName](subdomain1) = variables_[varName](subdomain0);
 
     return true;
+}
+
+blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> EpidemicDataSet::getVariableAtFinalTime(std::string varName)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS>();
+    }
+
+    // this should produce a slice that references the data in the original variable array
+    int finalTime = variables_[varName].extent(0) - 1;
+
+    blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> subVar = variables_[varName](finalTime, blitz::Range::all(), BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, TEXT, blitz::Range::all()));
+
+    return subVar;
 }
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)

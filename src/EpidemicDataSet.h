@@ -14,6 +14,10 @@
 
 #define NODES_ALL -1
 
+// used for argument expansion
+#include <boost/preprocessor/repetition/enum.hpp>
+#define TEXT(z, n, text) text
+
 class EpidemicDataSet
 {
     public:
@@ -41,7 +45,11 @@ class EpidemicDataSet
         float getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues=std::vector<int>());
 
+        bool newVariable(std::string varName);
+        bool copyVariable(std::string sourceVarName, std::string destVarName);
         bool copyVariableToNewTimeStep(std::string varName);
+
+        blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> getVariableAtFinalTime(std::string varName);
 
     protected:
 
