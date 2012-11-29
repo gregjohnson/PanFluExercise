@@ -31,25 +31,25 @@ ParametersWidget::ParametersWidget()
     layout->addRow(new QLabel("tau"), &tau_spinBox_);
     connect(&tau_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setTau(double)));
 
-    kappa_spinBox_.setToolTip("asymptomatic -> treatable infectious transition rate");
+    kappa_spinBox_.setToolTip("asymptomatic -> treatable transition rate");
     kappa_spinBox_.setRange(0., WIDGET_MAX_VALUE);
     kappa_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
     layout->addRow(new QLabel("kappa"), &kappa_spinBox_);
     connect(&kappa_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setKappa(double)));
 
-    chi_spinBox_.setToolTip("time spent before progressing from treatable to untreatable infectious");
+    chi_spinBox_.setToolTip("time spent before progressing from treatable to infectious");
     chi_spinBox_.setRange(0., WIDGET_MAX_VALUE);
     chi_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
     layout->addRow(new QLabel("chi"), &chi_spinBox_);
     connect(&chi_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setChi(double)));
 
-    gamma_spinBox_.setToolTip("asymptomatic or infectious -> recovered transition rate");
+    gamma_spinBox_.setToolTip("asymptomatic, treatable, or infectious -> recovered transition rate");
     gamma_spinBox_.setRange(0., WIDGET_MAX_VALUE);
     gamma_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
     layout->addRow(new QLabel("gamma"), &gamma_spinBox_);
     connect(&gamma_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setGamma(double)));
 
-    nu_spinBox_.setToolTip("asymptomatic or infectious -> deceased transition rate");
+    nu_spinBox_.setToolTip("asymptomatic, treatable, or infectious -> deceased transition rate");
     nu_spinBox_.setRange(0., WIDGET_MAX_VALUE);
     nu_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
     layout->addRow(new QLabel("nu"), &nu_spinBox_);

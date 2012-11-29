@@ -39,16 +39,16 @@ class Parameters
         // exposed -> asymptomatic transition rate
         double tau_;
 
-        // asymptomatic -> treatable infectious transition rate
+        // asymptomatic -> treatable transition rate
         double kappa_;
 
-        // time spent before progressing from treatable to untreatable infectious
+        // time spent before progressing from treatable to infectious
         double chi_;
 
-        // asymptomatic or infectious -> recovered transition rate
+        // asymptomatic, treatable, or infectious -> recovered transition rate
         double gamma_;
 
-        // asymptomatic or infectious -> deceased transition rate
+        // asymptomatic, treatable, or infectious -> deceased transition rate
         // todo: this should be age stratified
         double nu_;
 };
