@@ -80,7 +80,7 @@ void EpidemicInfoWidget::updateModel()
 
     // set headers
     QStringList headers;
-    headers << "County" << "Num infected";
+    headers << "County" << "Num infectious";
     model_.setHorizontalHeaderLabels(headers);
 
     QStandardItem * parentItem = model_.invisibleRootItem();
@@ -94,7 +94,7 @@ void EpidemicInfoWidget::updateModel()
         items << new QStandardItem(QString(dataSet_->getNodeName(nodeIds[i]).c_str()));
 
         QStandardItem * item = new QStandardItem();
-        item->setData(QVariant(dataSet_->getValue("infected", time_, nodeIds[i])), Qt::DisplayRole);
+        item->setData(QVariant(dataSet_->getValue("infectious", time_, nodeIds[i])), Qt::DisplayRole);
         items << item;
 
         parentItem->appendRow(items);

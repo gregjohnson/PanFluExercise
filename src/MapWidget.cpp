@@ -63,12 +63,12 @@ void MapWidget::setTime(int time)
 
         for(iter=counties_.begin(); iter!=counties_.end(); iter++)
         {
-            // get total infected
-            float infectedFraction = dataSet_->getValue("infected", time_, iter->first) / dataSet_->getPopulation(iter->first);
+            // get total infectious
+            float infectiousFraction = dataSet_->getValue("infectious", time_, iter->first) / dataSet_->getPopulation(iter->first);
 
             // map to color
             float r, g, b;
-            countiesColorMap_.getColor3(infectedFraction, r, g, b);
+            countiesColorMap_.getColor3(infectiousFraction, r, g, b);
 
             iter->second->setColor(r, g, b);
         }
@@ -272,8 +272,8 @@ void MapWidget::renderCountyShapes()
 void MapWidget::renderCountyTravel()
 {
     // parameters
-    float infectedTravelerThreshhold = 1.;
-    float infectedTravelerAlphaScale = 100.;
+    float infectiousTravelerThreshhold = 1.;
+    float infectiousTravelerAlphaScale = 100.;
 
     if(dataSet_ == NULL)
     {
@@ -297,10 +297,10 @@ void MapWidget::renderCountyTravel()
         double lat0, lon0;
         iter0->second->getCentroid(lat0, lon0);
 
-        // get number of infected in node0
-        float infectedNode0 = dataSet_->getValue("infected", time_, nodeId0);
+        // get number of infectious in node0
+        float infectiousNode0 = dataSet_->getValue("infectious", time_, nodeId0);
 
-        if(infectedNode0 < infectedTravelerThreshhold)
+        if(infectiousNode0 < infectiousTravelerThreshhold)
         {
             continue;
         }
@@ -316,11 +316,11 @@ void MapWidget::renderCountyTravel()
             {
                 float travel = dataSet_->getTravel(nodeId0, nodeId1);
 
-                float infectedTravelers = infectedNode0 * travel;
+                float infectiousTravelers = infectiousNode0 * travel;
 
-                if(infectedTravelers > infectedTravelerThreshhold)
+                if(infectiousTravelers > infectiousTravelerThreshhold)
                 {
-                    glColor4f(1.,0.,0., infectedTravelers / infectedTravelerAlphaScale);
+                    glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
 
                     glVertex2f(lon0, lat0);
                     glVertex2f(lon1, lat1);
