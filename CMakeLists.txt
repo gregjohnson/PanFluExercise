@@ -51,6 +51,10 @@ find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 set(LIBS ${LIBS} QVTK vtkCharts)
 
+find_package(GSL REQUIRED)
+include_directories(${GSL_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${GSL_LIBRARIES})
+
 set(SRCS ${SRCS}
     src/ChartWidget.cpp
     src/ChartWidgetLine.cpp
@@ -68,6 +72,10 @@ set(SRCS ${SRCS}
     src/MapWidget.cpp
     src/Parameters.cpp
     src/ParametersWidget.cpp
+    src/models/random.cpp
+    src/models/disease/StochasticSEATIRD.cpp
+    src/models/disease/StochasticSEATIRDEvent.cpp
+    src/models/disease/StochasticSEATIRDSchedule.cpp
 )
 
 set(MOC_HEADERS ${MOC_HEADERS}

@@ -6,6 +6,7 @@
 #include "EpidemicInitialCasesWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
+#include "models/disease/StochasticSEATIRD.h"
 
 MainWindow::MainWindow()
 {
@@ -242,7 +243,8 @@ bool MainWindow::nextTimestep()
 
 void MainWindow::newSimulation()
 {
-    boost::shared_ptr<EpidemicSimulation> simulation(new EpidemicSimulation());
+    // use StochasticSEATIRD model
+    boost::shared_ptr<EpidemicSimulation> simulation(new StochasticSEATIRD());
 
     dataSet_ = simulation;
 
