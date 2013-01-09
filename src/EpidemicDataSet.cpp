@@ -241,11 +241,8 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::
     // the subdomain
     blitz::RectDomain<2+NUM_STRATIFICATION_DIMENSIONS> subdomain(lowerBound, upperBound);
 
-    // form an array over the domain
-    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> varSubdomain = variables_[varName](subdomain);
-
-    // and return the sum
-    return blitz::sum(varSubdomain);
+    // return the sum of the array over the subdomain
+    return blitz::sum(variables_[varName](subdomain));
 }
 
 float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues)
