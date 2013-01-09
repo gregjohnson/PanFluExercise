@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <blitz/array.h>
+#include <boost/function.hpp>
 
 // must be defined at compile time, and match definition in stratifications file
 // stratifications: [age group][risk group][vaccinated]
@@ -84,6 +85,9 @@ class EpidemicDataSet
 
         // all regular variables
         std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> > variables_;
+
+        // all derived variables
+        std::map<std::string, boost::function<float (int time, int nodeId, std::vector<int> stratificationValues)> > derivedVariables_;
 
         bool loadNetCdfFile(const char * filename);
         static bool loadStratificationsFile();

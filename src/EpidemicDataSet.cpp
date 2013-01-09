@@ -143,11 +143,20 @@ std::vector<std::string> EpidemicDataSet::getVariableNames()
 {
     std::vector<std::string> variableNames;
 
+    // regular variables
     std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> >::iterator iter;
 
     for(iter=variables_.begin(); iter!=variables_.end(); iter++)
     {
         variableNames.push_back(iter->first);
+    }
+
+    // derived variables
+    std::map<std::string, boost::function<float (int time, int nodeId, std::vector<int> stratificationValues)> >::iterator iter2;
+
+    for(iter2=derivedVariables_.begin(); iter2!=derivedVariables_.end(); iter2++)
+    {
+        variableNames.push_back(iter2->first);
     }
 
     return variableNames;
@@ -183,6 +192,12 @@ float EpidemicDataSet::getTravel(int nodeId0, int nodeId1)
 
 float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues)
 {
+    // handle derived variables
+    if(derivedVariables_.count(varName) > 0)
+    {
+        return derivedVariables_[varName](time, nodeId, stratificationValues);
+    }
+
     if(variables_.count(varName) == 0)
     {
         put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
@@ -235,7 +250,7 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::
 
 float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues)
 {
-    if(variables_.count(varName) == 0)
+    if(variables_.count(varName) == 0 && derivedVariables_.count(varName) == 0)
     {
         put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
         return 0.;
