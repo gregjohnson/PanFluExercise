@@ -187,6 +187,9 @@ void MainWindow::playTimesteps(bool set)
         // stop the timer
         playTimestepsTimer_.stop();
     }
+
+    // wait for any GUI events to be processed
+    QCoreApplication::processEvents();
 }
 
 bool MainWindow::nextTimestep()
