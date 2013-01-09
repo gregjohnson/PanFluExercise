@@ -44,7 +44,7 @@ void EpidemicInitialCasesWidget::applyCases()
             {
                 EpidemicCases cases = casesWidgets_[i]->getCases();
 
-                put_flog(LOG_DEBUG, "exposing %i people in %i, cases.num, cases.nodeId");
+                put_flog(LOG_DEBUG, "exposing %i people in %i", cases.num, cases.nodeId);
 
                 simulation->expose(cases.num, cases.nodeId, cases.stratificationValues);
             }
