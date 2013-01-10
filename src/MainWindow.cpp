@@ -1,5 +1,5 @@
 #include "MainWindow.h"
-#include "MapWidget.h"
+#include "EpidemicMapWidget.h"
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
@@ -48,8 +48,8 @@ MainWindow::MainWindow()
     toolbar->addAction(newChartAction);
 
     // make a map widget the main view
-    mapWidget_ = new MapWidget();
-    setCentralWidget(mapWidget_);
+    epidemicMapWidget_ = new EpidemicMapWidget();
+    setCentralWidget(epidemicMapWidget_);
 
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
@@ -106,11 +106,11 @@ MainWindow::MainWindow()
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
-    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), mapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), epidemicMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
 
-    connect(this, SIGNAL(timeChanged(int)), mapWidget_, SLOT(setTime(int)));
+    connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget_, SLOT(setTime(int)));
 
     connect(&playTimestepsTimer_, SIGNAL(timeout()), this, SLOT(playTimesteps()));
 
@@ -120,7 +120,7 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    delete mapWidget_;
+    delete epidemicMapWidget_;
 }
 
 QSize MainWindow::sizeHint() const

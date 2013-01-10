@@ -8,7 +8,7 @@
 #include <boost/shared_ptr.hpp>
 
 class EpidemicDataSet;
-class MapWidget;
+class EpidemicMapWidget;
 class EpidemicInitialCasesWidget;
 
 class MainWindow : public QMainWindow {
@@ -38,7 +38,7 @@ class MainWindow : public QMainWindow {
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
 
-        MapWidget * mapWidget_;
+        EpidemicMapWidget * epidemicMapWidget_;
         QSlider * timeSlider_;
 
         QAction * playTimestepsAction_;

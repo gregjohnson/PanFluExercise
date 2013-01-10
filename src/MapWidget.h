@@ -22,9 +22,9 @@ class MapWidget : public QGLWidget
     public slots:
 
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
-        void setTime(int time);
+        virtual void setTime(int time);
 
-    private:
+    protected:
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
@@ -45,6 +45,9 @@ class MapWidget : public QGLWidget
         // color map for county shapes
         ColorMap countiesColorMap_;
 
+        // render() method placeholder for derived classes
+        virtual void render() { }
+
         // reimplemented from QGLWidget
         void initializeGL();
         void paintGL();
@@ -61,9 +64,6 @@ class MapWidget : public QGLWidget
         // counties
         bool loadCountyShapes();
         void renderCountyShapes();
-
-        // travel between counties
-        void renderCountyTravel();
 };
 
 #endif
