@@ -21,7 +21,7 @@ class MapWidget : public QGLWidget
 
     public slots:
 
-        void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
+        virtual void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         virtual void setTime(int time);
 
     protected:
