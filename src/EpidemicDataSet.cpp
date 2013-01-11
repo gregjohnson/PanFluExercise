@@ -167,6 +167,17 @@ std::vector<int> EpidemicDataSet::getNodeIds()
     return nodeIds_;
 }
 
+std::vector<int> EpidemicDataSet::getNodeIds(std::string groupName)
+{
+    if(groupNameToNodeIds_.count(groupName) == 0)
+    {
+        put_flog(LOG_ERROR, "could not map group name %s to node ids", groupName.c_str());
+        return std::vector<int>();
+    }
+
+    return groupNameToNodeIds_[groupName];
+}
+
 std::vector<std::string> EpidemicDataSet::getGroupNames()
 {
     std::vector<std::string> groupNames;

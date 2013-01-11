@@ -39,6 +39,7 @@ class EpidemicDataSet
         std::string getNodeName(int nodeId);
 
         std::vector<int> getNodeIds();
+        std::vector<int> getNodeIds(std::string groupName);
         std::vector<std::string> getGroupNames();
         std::vector<std::string> getVariableNames();
 
