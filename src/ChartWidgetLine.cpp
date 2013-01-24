@@ -4,8 +4,12 @@
 #include <vtkFloatArray.h>
 #include <vtkColorSeries.h>
 #include <vtkPlotStacked.h>
+#include <vtkPlotBar.h>
 #include <vtkStringArray.h>
 #include <vtkPen.h>
+#include <vtkDoubleArray.h>
+#include <vtkAxis.h>
+#include <vtkTextProperty.h>
 #include <sstream>
 
 ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE lineType)
@@ -50,6 +54,10 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
         vtkSmartPointer<vtkColorSeries> colorSeries = vtkSmartPointer<vtkColorSeries>::New();
         colorSeries->SetColorScheme(vtkColorSeries::SPECTRUM);
         ((vtkPlotStacked *)plot_)->SetColorSeries(colorSeries);
+    }
+    else if(lineType == BAR)
+    {
+        plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::BAR);
     }
     else
     {
@@ -101,6 +109,27 @@ void ChartWidgetLine::setLabels(std::vector<std::string> labels)
     }
 
     plot_->SetLabels(vtkLabels);
+}
+
+void ChartWidgetLine::setBarLabels(std::vector<std::string> labels)
+{
+    // custom axis labels for bars, starting at i=0, 1, 2, ...
+    vtkSmartPointer<vtkDoubleArray> ticks = vtkSmartPointer<vtkDoubleArray>::New();
+    vtkSmartPointer<vtkStringArray> vtkLabels = vtkSmartPointer<vtkStringArray>::New();
+
+    for(unsigned int i=0; i<labels.size(); i++)
+    {
+        ticks->InsertNextValue(i);
+        vtkLabels->InsertNextValue(labels[i]);
+    }
+
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetTickPositions(ticks);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetTickLabels(vtkLabels);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetOrientation(90);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetVerticalJustification(VTK_TEXT_CENTERED);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetJustification(VTK_TEXT_RIGHT);
+
+    plot_->SetIndexedLabels(vtkLabels);
 }
 
 void ChartWidgetLine::addPoint(double x, double y)

@@ -6,7 +6,7 @@
 #include <vtkTable.h>
 #include <vector>
 
-enum CHART_WIDGET_LINE_TYPE { LINE, POINTS, STACKED };
+enum CHART_WIDGET_LINE_TYPE { LINE, POINTS, STACKED, BAR };
 
 class ChartWidget;
 
@@ -22,6 +22,7 @@ class ChartWidgetLine
         void setWidth(float w);
         void setLabel(const char * label);
         void setLabels(std::vector<std::string> labels);
+        void setBarLabels(std::vector<std::string> labels);
         void addPoint(double x, double y);
         void addPoints(double x, std::vector<double> ys);
         void addPoint(double y);
