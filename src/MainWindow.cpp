@@ -1,11 +1,14 @@
 #include "MainWindow.h"
 #include "EpidemicMapWidget.h"
+#include "StockpileMapWidget.h"
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
 #include "EpidemicInitialCasesWidget.h"
+#include "StockpileNetworkWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
+#include "StockpileChartWidget.h"
 #include "models/disease/StochasticSEATIRD.h"
 
 MainWindow::MainWindow()
@@ -47,9 +50,16 @@ MainWindow::MainWindow()
     toolbar->addAction(openDataSetAction);
     toolbar->addAction(newChartAction);
 
-    // make a map widget the main view
+    // make map widgets the main view
+    QTabWidget * tabWidget = new QTabWidget();
+
     epidemicMapWidget_ = new EpidemicMapWidget();
-    setCentralWidget(epidemicMapWidget_);
+    tabWidget->addTab(epidemicMapWidget_, "Infectious");
+
+    stockpileMapWidget_ = new StockpileMapWidget();
+    tabWidget->addTab(stockpileMapWidget_, "Stockpile");
+
+    setCentralWidget(tabWidget);
 
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
@@ -87,30 +97,41 @@ MainWindow::MainWindow()
     initialCasesDockWidget->setWidget(initialCasesWidget_);
     addDockWidget(Qt::LeftDockWidgetArea, initialCasesDockWidget);
 
+    // stockpile network dock
+    QDockWidget * stockpileNetworkDockWidget = new QDockWidget("Stockpile", this);
+    stockpileNetworkDockWidget->setWidget(new StockpileNetworkWidget(this));
+    addDockWidget(Qt::LeftDockWidgetArea, stockpileNetworkDockWidget);
+
     // info dock
     QDockWidget * infoDockWidget = new QDockWidget("Info", this);
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
 
-    // tabify parameters, initial cases, and info docks
+    // tabify parameters, initial cases, stockpile network, and info docks
     tabifyDockWidget(parametersDockWidget, initialCasesDockWidget);
+    tabifyDockWidget(parametersDockWidget, stockpileNetworkDockWidget);
     tabifyDockWidget(parametersDockWidget, infoDockWidget);
 
     // chart docks
+
+    // an epidemic chart
     QDockWidget * chartDockWidget = new QDockWidget("Chart", this);
     chartDockWidget->setWidget(new EpidemicChartWidget(this));
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
+    // and a stockpile chart
     chartDockWidget = new QDockWidget("Chart", this);
-    chartDockWidget->setWidget(new EpidemicChartWidget(this));
+    chartDockWidget->setWidget(new StockpileChartWidget(this));
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), epidemicMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), stockpileMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
 
     connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget_, SLOT(setTime(int)));
+    connect(this, SIGNAL(timeChanged(int)), stockpileMapWidget_, SLOT(setTime(int)));
 
     connect(&playTimestepsTimer_, SIGNAL(timeout()), this, SLOT(playTimesteps()));
 
@@ -121,6 +142,7 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow()
 {
     delete epidemicMapWidget_;
+    delete stockpileMapWidget_;
 }
 
 QSize MainWindow::sizeHint() const

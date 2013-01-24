@@ -9,6 +9,7 @@
 
 class EpidemicDataSet;
 class EpidemicMapWidget;
+class StockpileMapWidget;
 class EpidemicInitialCasesWidget;
 
 class MainWindow : public QMainWindow {
@@ -39,6 +40,7 @@ class MainWindow : public QMainWindow {
         int time_;
 
         EpidemicMapWidget * epidemicMapWidget_;
+        StockpileMapWidget * stockpileMapWidget_;
         QSlider * timeSlider_;
 
         QAction * playTimestepsAction_;

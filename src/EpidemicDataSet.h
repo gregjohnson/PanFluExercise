@@ -4,7 +4,10 @@
 #include <map>
 #include <vector>
 #include <blitz/array.h>
+#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+
+class StockpileNetwork;
 
 // must be defined at compile time, and match definition in stratifications file
 // stratifications: [age group][risk group][vaccinated]
@@ -36,6 +39,7 @@ class EpidemicDataSet
         static std::vector<std::vector<std::string> > getStratifications();
 
         float getPopulation(int nodeId);
+        float getPopulation(std::vector<int> nodeIds);
         std::string getNodeName(int nodeId);
 
         std::vector<int> getNodeIds();
@@ -53,6 +57,8 @@ class EpidemicDataSet
         bool copyVariableToNewTimeStep(std::string varName);
 
         blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> getVariableAtFinalTime(std::string varName);
+
+        boost::shared_ptr<StockpileNetwork> getStockpileNetwork();
 
     protected:
 
@@ -89,6 +95,9 @@ class EpidemicDataSet
 
         // all derived variables
         std::map<std::string, boost::function<float (int time, int nodeId, std::vector<int> stratificationValues)> > derivedVariables_;
+
+        // stockpile network
+        boost::shared_ptr<StockpileNetwork> stockpileNetwork_;
 
         bool loadNetCdfFile(const char * filename);
         static bool loadStratificationsFile();

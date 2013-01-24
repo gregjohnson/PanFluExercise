@@ -128,6 +128,18 @@ float EpidemicDataSet::getPopulation(int nodeId)
     return getValue("population", 0, nodeId);
 }
 
+float EpidemicDataSet::getPopulation(std::vector<int> nodeIds)
+{
+    float population = 0.;
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        population += getPopulation(nodeIds[i]);
+    }
+
+    return population;
+}
+
 std::string EpidemicDataSet::getNodeName(int nodeId)
 {
     if(nodeIdToName_.count(nodeId) == 0)
@@ -382,6 +394,11 @@ blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> EpidemicDataSet::getVariabl
     blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> subVar = variables_[varName](finalTime, blitz::Range::all(), BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, TEXT, blitz::Range::all()));
 
     return subVar;
+}
+
+boost::shared_ptr<StockpileNetwork> EpidemicDataSet::getStockpileNetwork()
+{
+    return stockpileNetwork_;
 }
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)

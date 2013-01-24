@@ -1,4 +1,5 @@
 #include "EpidemicSimulation.h"
+#include "StockpileNetwork.h"
 #include "log.h"
 
 EpidemicSimulation::EpidemicSimulation()
@@ -14,6 +15,27 @@ EpidemicSimulation::EpidemicSimulation()
 
     // an empty exposed variable
     newVariable("exposed");
+
+    // create basic StockpileNetwork
+    boost::shared_ptr<StockpileNetwork> stockpileNetwork(new StockpileNetwork());
+
+    // add stockpiles for each group
+    std::vector<std::string> groupNames = getGroupNames();
+
+    for(unsigned int i=0; i<groupNames.size(); i++)
+    {
+        boost::shared_ptr<Stockpile> stockpile(new Stockpile(groupNames[i]));
+
+        std::vector<int> nodeIds = getNodeIds(groupNames[i]);
+        stockpile->setNodeIds(nodeIds);
+
+        // todo: for now a default stockpile inventory
+        stockpile->setNum(100000);
+
+        stockpileNetwork->addStockpile(stockpile);
+    }
+
+    stockpileNetwork_ = stockpileNetwork;
 }
 
 int EpidemicSimulation::expose(int num, int nodeId, std::vector<int> stratificationValues)

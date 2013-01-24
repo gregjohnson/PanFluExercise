@@ -73,6 +73,12 @@ set(SRCS ${SRCS}
     src/MapWidget.cpp
     src/Parameters.cpp
     src/ParametersWidget.cpp
+    src/Stockpile.cpp
+    src/StockpileMapWidget.cpp
+    src/StockpileNetwork.cpp
+    src/StockpileWidget.cpp
+    src/StockpileNetworkWidget.cpp
+    src/StockpileChartWidget.cpp
     src/models/random.cpp
     src/models/disease/StochasticSEATIRD.cpp
     src/models/disease/StochasticSEATIRDEvent.cpp
@@ -86,6 +92,10 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/MainWindow.h
     src/MapWidget.h
     src/ParametersWidget.h
+    src/Stockpile.h
+    src/StockpileNetwork.h
+    src/StockpileNetworkWidget.h
+    src/StockpileChartWidget.h
 )
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})
