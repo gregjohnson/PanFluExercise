@@ -35,7 +35,7 @@ MapWidget::MapWidget()
     }
 
     // default counties color map
-    countiesColorMap_.setColorMap(0., 0.01);
+    countiesColorMap_.setColorMap(0., 1.);
 }
 
 MapWidget::~MapWidget()
@@ -69,7 +69,6 @@ void MapWidget::paintGL()
     setOrthographicView();
 
     renderBaseMapTexture();
-    renderCountyShapes();
 
     // other derived class rendering
     render();

@@ -18,7 +18,7 @@ void EpidemicMapWidget::setTime(int time)
 
             // map to color
             float r, g, b;
-            countiesColorMap_.getColor3(infectiousFraction, r, g, b);
+            countiesColorMap_.getColor3(infectiousFraction / 0.01, r, g, b);
 
             iter->second->setColor(r, g, b);
         }
@@ -30,6 +30,7 @@ void EpidemicMapWidget::setTime(int time)
 
 void EpidemicMapWidget::render()
 {
+    renderCountyShapes();
     renderCountyTravel();
 }
 
