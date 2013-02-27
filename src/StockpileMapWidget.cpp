@@ -25,6 +25,14 @@ void StockpileMapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
     }
 }
 
+void StockpileMapWidget::setTime(int time)
+{
+    MapWidget::setTime(time);
+
+    // force redraw
+    update();
+}
+
 void StockpileMapWidget::render()
 {
     if(stockpileNetwork_ != NULL)
@@ -34,7 +42,7 @@ void StockpileMapWidget::render()
         // recolor counties according to stockpile values
         for(unsigned int i=0; i<stockpiles.size(); i++)
         {
-            int num = stockpiles[i]->getNum();
+            int num = stockpiles[i]->getNum(time_);
             std::vector<int> nodeIds = stockpiles[i]->getNodeIds();
 
             float population = dataSet_->getPopulation(nodeIds);

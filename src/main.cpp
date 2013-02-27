@@ -2,14 +2,15 @@
 #include "MainWindow.h"
 #include "log.h"
 #include <QtGui>
+#include <QtNetwork/QTcpSocket>
 
-QApplication * g_app = NULL;
 MainWindow * g_mainWindow = NULL;
 std::string g_dataDirectory;
+DcSocket * g_dcSocket = NULL;
 
 int main(int argc, char * argv[])
 {
-    g_app = new QApplication(argc, argv);
+    QApplication * app = new QApplication(argc, argv);
 
     // get directory of application
     QDir appDirectory = QDir(QCoreApplication::applicationDirPath());
@@ -30,7 +31,46 @@ int main(int argc, char * argv[])
     g_mainWindow = new MainWindow();
 
     // enter Qt event loop
-    g_app->exec();
+    app->exec();
+
+    delete g_mainWindow;
 
     return 0;
+}
+
+bool sendSVGToDisplayCluster(std::string filename, std::string name)
+{
+    if(g_dcSocket == NULL || g_dcSocket->state() != QAbstractSocket::ConnectedState)
+    {
+        put_flog(LOG_ERROR, "error sending SVG stream, socket not connected");
+
+        dcStreamDisconnect(g_dcSocket);
+        g_dcSocket = NULL;
+
+        QMessageBox messageBox;
+        messageBox.setText("Lost connection to DisplayCluster.");
+        messageBox.exec();
+
+        return false;
+    }
+
+    // open file corresponding to URI
+    QFile file(filename.c_str());
+
+    if(file.open(QIODevice::ReadOnly) != true)
+    {
+        put_flog(LOG_ERROR, "could not open file %s", filename.c_str());
+        return false;
+    }
+
+    QByteArray imageData = file.readAll();
+
+    bool success = dcStreamSendSVG(g_dcSocket, name, imageData.constData(), imageData.size());
+
+    if(success != true)
+    {
+        put_flog(LOG_ERROR, "error sending SVG stream");
+    }
+
+    return success;
 }

@@ -64,7 +64,7 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
         put_flog(LOG_ERROR, "unknown lineType");
     }
 
-    plot_->SetInput(table_, 0, 1);
+    plot_->SetInputData(table_, 0, 1);
 
     // set line plot attributes
     plot_->SetColor(0., 0., 0.);
@@ -123,10 +123,9 @@ void ChartWidgetLine::setBarLabels(std::vector<std::string> labels)
         vtkLabels->InsertNextValue(labels[i]);
     }
 
-    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetTickPositions(ticks);
-    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetTickLabels(vtkLabels);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetCustomTickPositions(ticks, vtkLabels);
     parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetOrientation(90);
-    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetVerticalJustification(VTK_TEXT_CENTERED);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetVerticalJustification(VTK_TEXT_TOP);
     parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetJustification(VTK_TEXT_RIGHT);
 
     plot_->SetIndexedLabels(vtkLabels);

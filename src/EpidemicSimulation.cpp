@@ -19,6 +19,11 @@ EpidemicSimulation::EpidemicSimulation()
     // create basic StockpileNetwork
     boost::shared_ptr<StockpileNetwork> stockpileNetwork(new StockpileNetwork());
 
+    // add central stockpile
+    boost::shared_ptr<Stockpile> centralStockpile(new Stockpile("Central"));
+    centralStockpile->setNum(0, 1000000);
+    stockpileNetwork->addStockpile(centralStockpile);
+
     // add stockpiles for each group
     std::vector<std::string> groupNames = getGroupNames();
 
@@ -30,7 +35,7 @@ EpidemicSimulation::EpidemicSimulation()
         stockpile->setNodeIds(nodeIds);
 
         // todo: for now a default stockpile inventory
-        stockpile->setNum(100000);
+        stockpile->setNum(0, 100000);
 
         stockpileNetwork->addStockpile(stockpile);
     }
@@ -48,6 +53,8 @@ void EpidemicSimulation::simulate()
 {
     put_flog(LOG_DEBUG, "");
 
+    numTimes_++;
+
     // copy all variables to a new time
     std::map<std::string, blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> >::iterator iter;
 
@@ -56,7 +63,8 @@ void EpidemicSimulation::simulate()
         copyVariableToNewTimeStep(iter->first);
     }
 
-    numTimes_++;
+    // evolve stockpile network
+    stockpileNetwork_->evolve(numTimes_-1);
 }
 
 int EpidemicSimulation::transition(int num, std::string sourceVarName, std::string destVarName, int nodeId, std::vector<int> stratificationValues)

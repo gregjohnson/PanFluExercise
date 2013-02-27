@@ -49,11 +49,19 @@ set(LIBS ${LIBS} ${BLITZ_LIBRARIES})
 
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
-set(LIBS ${LIBS} QVTK vtkCharts)
+set(LIBS ${LIBS} vtkGUISupportQt vtkChartsCore vtkRenderingCore vtkRenderingFreeTypeOpenGL vtkRenderingVolumeOpenGL vtkViewsContext2D vtkIOExport)
 
 find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${GSL_LIBRARIES})
+
+find_package(DisplayCluster REQUIRED)
+include_directories(${DisplayCluster_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${DisplayCluster_LIBRARIES})
+
+find_package(LibJpegTurbo REQUIRED)
+include_directories(${LibJpegTurbo_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${LibJpegTurbo_LIBRARIES})
 
 set(SRCS ${SRCS}
     src/ChartWidget.cpp
@@ -76,8 +84,10 @@ set(SRCS ${SRCS}
     src/Stockpile.cpp
     src/StockpileMapWidget.cpp
     src/StockpileNetwork.cpp
+    src/StockpileNetworkDistribution.cpp
     src/StockpileWidget.cpp
     src/StockpileNetworkWidget.cpp
+    src/StockpileNetworkDistributionWidget.cpp
     src/StockpileChartWidget.cpp
     src/models/random.cpp
     src/models/disease/StochasticSEATIRD.cpp
@@ -95,6 +105,7 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/Stockpile.h
     src/StockpileNetwork.h
     src/StockpileNetworkWidget.h
+    src/StockpileNetworkDistributionWidget.h
     src/StockpileChartWidget.h
 )
 

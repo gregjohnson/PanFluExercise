@@ -10,6 +10,7 @@
 #include "EpidemicChartWidget.h"
 #include "StockpileChartWidget.h"
 #include "models/disease/StochasticSEATIRD.h"
+#include "main.h"
 
 MainWindow::MainWindow()
 {
@@ -40,10 +41,16 @@ MainWindow::MainWindow()
     newChartAction->setStatusTip("New chart");
     connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
 
+    // connect to DisplayCluster action
+    QAction * connectToDisplayClusterAction = new QAction("Connect to DisplayCluster", this);
+    connectToDisplayClusterAction->setStatusTip("Connect to DisplayCluster");
+    connect(connectToDisplayClusterAction, SIGNAL(triggered()), this, SLOT(connectToDisplayCluster()));
+
     // add actions to menus
     fileMenu->addAction(newSimulationAction);
     fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
+    fileMenu->addAction(connectToDisplayClusterAction);
 
     // add actions to toolbar
     toolbar->addAction(newSimulationAction);
@@ -326,5 +333,24 @@ void MainWindow::resetTimeSlider()
     {
         timeSlider_->setMinimum(0);
         timeSlider_->setMaximum(0);
+    }
+}
+
+void MainWindow::connectToDisplayCluster()
+{
+    bool ok = false;
+
+    QString hostname = QInputDialog::getText(this, "Connect to DisplayCluster", "Hostname:", QLineEdit::Normal, "localhost", &ok);
+
+    if(ok == true && hostname.isEmpty() != true)
+    {
+        g_dcSocket = dcStreamConnect(hostname.toStdString().c_str());
+
+        if(g_dcSocket == NULL)
+        {
+            QMessageBox messageBox;
+            messageBox.setText("Could not connect to DisplayCluster.");
+            messageBox.exec();
+        }
     }
 }

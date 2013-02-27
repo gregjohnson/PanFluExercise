@@ -6,6 +6,8 @@
 #include <QVTKWidget.h>
 #include <vtkContextView.h>
 #include <vtkChartXY.h>
+#include <vtkGL2PSExporter.h>
+#include <QTemporaryFile>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -16,6 +18,7 @@ class ChartWidget : public QVTKWidget
     public:
 
         ChartWidget();
+        ~ChartWidget();
 
         QSize sizeHint() const;
 
@@ -32,13 +35,23 @@ class ChartWidget : public QVTKWidget
         boost::shared_ptr<ChartWidgetLine> getLine(int index = NEW_LINE, CHART_WIDGET_LINE_TYPE lineType = LINE);
         void clear();
 
+        void exportSVGToDisplayCluster();
+
     private:
+
+        // indexing used to identify this chart
+        static int numChartWidgets_;
+        int index_;
 
         // VTK requires we use the vtkSmartPointers for these...
         vtkSmartPointer<vtkContextView> view_;
         vtkSmartPointer<vtkChartXY> chart_;
 
         std::vector<boost::shared_ptr<ChartWidgetLine> > lines_;
+
+        // SVG export
+        vtkSmartPointer<vtkGL2PSExporter> svgExporter_;
+        QTemporaryFile svgTmpFile_;
 };
 
 #endif

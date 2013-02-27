@@ -139,6 +139,8 @@ void EpidemicChartWidget::setTime(int time)
         timeIndicator_->addPoint(time_, 0);
         timeIndicator_->addPoint(time_, 999999999.);
     }
+
+    chartWidget_.exportSVGToDisplayCluster();
 }
 
 void EpidemicChartWidget::setNodeId(int nodeId)

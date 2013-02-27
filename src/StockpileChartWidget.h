@@ -20,6 +20,7 @@ class StockpileChartWidget : public QMainWindow
     public slots:
 
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
+        void setTime(int time);
 
         void update();
 
@@ -30,6 +31,7 @@ class StockpileChartWidget : public QMainWindow
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
+        int time_;
         boost::shared_ptr<StockpileNetwork> stockpileNetwork_;
 };
 

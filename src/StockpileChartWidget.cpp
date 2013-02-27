@@ -7,10 +7,15 @@
 
 StockpileChartWidget::StockpileChartWidget(MainWindow * mainWindow)
 {
+    // defaults
+    time_ = 0;
+
     setCentralWidget(&chartWidget_);
 
     // make connections
     connect((QObject *)mainWindow, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), this, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+
+    connect((QObject *)mainWindow, SIGNAL(timeChanged(int)), this, SLOT(setTime(int)));
 }
 
 void StockpileChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
@@ -35,6 +40,15 @@ void StockpileChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet
     }
 
     update();
+}
+
+void StockpileChartWidget::setTime(int time)
+{
+    time_ = time;
+
+    update();
+
+    chartWidget_.exportSVGToDisplayCluster();
 }
 
 void StockpileChartWidget::update()
@@ -68,7 +82,7 @@ void StockpileChartWidget::update()
         for(unsigned int i=0; i<stockpiles.size(); i++)
         {
             labels.push_back(stockpiles[i]->getName());
-            line->addPoint(i, stockpiles[i]->getNum());
+            line->addPoint(i, stockpiles[i]->getNum(time_));
         }
 
         line->setBarLabels(labels);

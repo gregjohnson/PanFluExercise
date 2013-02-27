@@ -15,10 +15,12 @@ class Stockpile : public QObject
 
         std::string getName();
 
-        int getNum();
+        int getNum(int time);
 
         void setNodeIds(std::vector<int> nodeIds);
         std::vector<int> getNodeIds();
+
+        void copyToNewTimeStep();
 
     signals:
 
@@ -26,15 +28,15 @@ class Stockpile : public QObject
 
     public slots:
 
-        void setNum(int num);
+        void setNum(int time, int num);
 
     private:
 
         // name for the stockpile
         std::string name_;
 
-        // number of available resource
-        int num_;
+        // number of available resource at each timestep
+        std::vector<int> num_;
 
         // nodeIds serviced from this stockpile
         std::vector<int> nodeIds_;

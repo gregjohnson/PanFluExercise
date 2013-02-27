@@ -1,4 +1,6 @@
 #include "ChartWidget.h"
+#include "dcStream.h"
+#include "main.h"
 #include "log.h"
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
@@ -7,8 +9,14 @@
 #include <vtkContextMouseEvent.h>
 #include <vtkAxis.h>
 
+int ChartWidget::numChartWidgets_ = 0;
+
 ChartWidget::ChartWidget()
 {
+    // indexing
+    index_ = numChartWidgets_;
+    numChartWidgets_++;
+
     // setup the view
     view_ = vtkSmartPointer<vtkContextView>::New();
     view_->GetRenderer()->SetBackground(1.,1.,1.);
@@ -27,6 +35,33 @@ ChartWidget::ChartWidget()
 
     // right button zooms (instead of selects)
     chart_->SetActionToButton(vtkChart::ZOOM, vtkContextMouseEvent::RIGHT_BUTTON);
+
+    // create SVG exporter
+    svgExporter_ = vtkSmartPointer<vtkGL2PSExporter>::New();
+    svgExporter_->SetRenderWindow(view_->GetRenderWindow());
+    svgExporter_->SetFileFormatToSVG();
+    svgExporter_->CompressOff();
+    svgExporter_->SetSortToOff();
+    svgExporter_->TextAsPathOn();
+}
+
+ChartWidget::~ChartWidget()
+{
+    // the tempory file doesn't have the extension as written by the SVG exporter
+    // so, we need to delete the file with the extension, too
+    if(svgTmpFile_.fileName().isEmpty() != true)
+    {
+        QFile svgTmpFileOther(svgTmpFile_.fileName() + ".svg");
+
+        if(svgTmpFileOther.exists() == true && svgTmpFileOther.remove() == true)
+        {
+            put_flog(LOG_DEBUG, "removed temporary file %s", svgTmpFileOther.fileName().toStdString().c_str());
+        }
+        else
+        {
+            put_flog(LOG_ERROR, "could not remove temporary file %s", svgTmpFileOther.fileName().toStdString().c_str());
+        }
+    }
 }
 
 QSize ChartWidget::sizeHint() const
@@ -88,4 +123,18 @@ boost::shared_ptr<ChartWidgetLine> ChartWidget::getLine(int index, CHART_WIDGET_
 void ChartWidget::clear()
 {
     lines_.clear();
+}
+
+void ChartWidget::exportSVGToDisplayCluster()
+{
+    if(g_dcSocket != NULL && svgTmpFile_.open())
+    {
+        svgExporter_->SetFilePrefix(svgTmpFile_.fileName().toStdString().c_str());
+        svgExporter_->Write();
+
+        put_flog(LOG_DEBUG, "wrote %s", svgTmpFile_.fileName().toStdString().c_str());
+
+        // now, send it to DisplayCluster
+        sendSVGToDisplayCluster((svgTmpFile_.fileName() + ".svg").toStdString(), (QString("Exercise-") + QString::number(index_)).toStdString());
+    }
 }

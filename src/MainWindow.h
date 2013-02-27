@@ -54,6 +54,7 @@ class MainWindow : public QMainWindow {
         void openDataSet();
         void newChart();
         void resetTimeSlider();
+        void connectToDisplayCluster();
 };
 
 #endif
