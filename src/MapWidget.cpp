@@ -13,8 +13,14 @@
     #include <GL/glu.h>
 #endif
 
+int MapWidget::numMapWidgets_ = 0;
+
 MapWidget::MapWidget()
 {
+    // indexing
+    index_ = numMapWidgets_;
+    numMapWidgets_++;
+
     // defaults
     baseMapTextureBound_ = false;
 
@@ -55,6 +61,42 @@ void MapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 void MapWidget::setTime(int time)
 {
     time_ = time;
+}
+
+void MapWidget::exportSVGToDisplayCluster()
+{
+    if(g_dcSocket != NULL && svgTmpFile_.open())
+    {
+        QSvgGenerator generator;
+        generator.setFileName(svgTmpFile_.fileName());
+        generator.setSize(QSize(1400, 1200));
+        generator.setViewBox(baseMapRect_);
+
+        QPainter painter;
+        painter.begin(&generator);
+
+        // set logical coordinates of the render window
+        painter.setWindow(QRect(QPoint(-107,37), QPoint(-93,25)));
+
+        // draw a black background
+        painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
+        painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
+
+        // render shapes
+        std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
+
+        for(iter=counties_.begin(); iter!=counties_.end(); iter++)
+        {
+            iter->second->renderSVG(&painter);
+        }
+
+        painter.end();
+
+        put_flog(LOG_DEBUG, "wrote %s", svgTmpFile_.fileName().toStdString().c_str());
+
+        // now, send it to DisplayCluster
+        sendSVGToDisplayCluster((svgTmpFile_.fileName()).toStdString(), (QString("ExerciseMap-") + QString::number(index_) + ".svg").toStdString());
+    }
 }
 
 void MapWidget::initializeGL()

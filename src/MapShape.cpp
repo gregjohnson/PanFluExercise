@@ -1,5 +1,6 @@
 #include "MapShape.h"
 #include <QtOpenGL>
+#include <QtGui>
 
 MapShape::MapShape()
 {
@@ -86,4 +87,20 @@ void MapShape::renderFilled()
 
     glPopMatrix();
     glPopAttrib();
+}
+
+void MapShape::renderSVG(QPainter * painter)
+{
+    QVector<QPointF> points;
+
+    for(unsigned int i=0; i<vertices_.size(); i++)
+    {
+        points.push_back(QPointF(vertices_[i].lon, vertices_[i].lat));
+    }
+
+    QPolygonF polygon(points);
+
+    painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, 1.)));
+    painter->setPen(QPen(QBrush(), .01));
+    painter->drawPolygon(polygon);
 }

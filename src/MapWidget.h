@@ -24,7 +24,13 @@ class MapWidget : public QGLWidget
         virtual void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         virtual void setTime(int time);
 
+        void exportSVGToDisplayCluster();
+
     protected:
+
+        // indexing used to identify this map
+        static int numMapWidgets_;
+        int index_;
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
@@ -44,6 +50,9 @@ class MapWidget : public QGLWidget
 
         // color map for county shapes
         ColorMap countiesColorMap_;
+
+        // SVG export
+        QTemporaryFile svgTmpFile_;
 
         // render() method placeholder for derived classes
         virtual void render() { }

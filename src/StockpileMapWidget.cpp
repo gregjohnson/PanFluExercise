@@ -29,12 +29,7 @@ void StockpileMapWidget::setTime(int time)
 {
     MapWidget::setTime(time);
 
-    // force redraw
-    update();
-}
-
-void StockpileMapWidget::render()
-{
+    // do coloring here, since render() won't be called if the map is offscreen (for SVG export)
     if(stockpileNetwork_ != NULL)
     {
         std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork_->getStockpiles();
@@ -62,7 +57,15 @@ void StockpileMapWidget::render()
                 }
             }
         }
-
-        renderCountyShapes();
     }
+
+    // force redraw
+    update();
+
+    exportSVGToDisplayCluster();
+}
+
+void StockpileMapWidget::render()
+{
+    renderCountyShapes();
 }

@@ -25,6 +25,8 @@ void EpidemicMapWidget::setTime(int time)
 
         // force redraw
         update();
+
+        exportSVGToDisplayCluster();
     }
 }
 

@@ -8,6 +8,8 @@ struct MapVertex {
     double lon;
 };
 
+class QPainter;
+
 class MapShape
 {
     public:
@@ -24,6 +26,7 @@ class MapShape
 
         void renderBoundary();
         void renderFilled();
+        void renderSVG(QPainter * painter);
 
     private:
 

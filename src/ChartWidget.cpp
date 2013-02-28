@@ -135,6 +135,6 @@ void ChartWidget::exportSVGToDisplayCluster()
         put_flog(LOG_DEBUG, "wrote %s", svgTmpFile_.fileName().toStdString().c_str());
 
         // now, send it to DisplayCluster
-        sendSVGToDisplayCluster((svgTmpFile_.fileName() + ".svg").toStdString(), (QString("Exercise-") + QString::number(index_)).toStdString());
+        sendSVGToDisplayCluster((svgTmpFile_.fileName() + ".svg").toStdString(), (QString("ExerciseChart-") + QString::number(index_) + ".svg").toStdString());
     }
 }
