@@ -8,6 +8,9 @@ StochasticSEATIRD::StochasticSEATIRD()
 {
     put_flog(LOG_DEBUG, "");
 
+    // defaults
+    cachedTime_ = -1;
+
     // create other required variables for this model
     newVariable("asymptomatic");
     newVariable("treatable");
@@ -36,6 +39,14 @@ StochasticSEATIRD::~StochasticSEATIRD()
 
 int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificationValues)
 {
+    // expose() can be called outside of a simulation before we've simulated any time steps
+    if(cachedTime_ != numTimes_ - 1)
+    {
+        put_flog(LOG_DEBUG, "precomputing (should only happen at the beginning of simulation)");
+
+        precompute(numTimes_ - 1);
+    }
+
     int numExposed = EpidemicSimulation::expose(num, nodeId, stratificationValues);
 
     // create events based on these new exposures
@@ -53,6 +64,9 @@ int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificati
 void StochasticSEATIRD::simulate()
 {
     EpidemicSimulation::simulate();
+
+    // pre-compute some frequently used values
+    precompute(numTimes_ - 1);
 
     double tMax = now_ + 1.0;
 
@@ -217,13 +231,13 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
     double beta = g_parameters.getR0() / g_parameters.getBetaScale();
 
     // todo: need actual value here, should be age-specific
-    double vaccineEffectiveness = 0.;
+    static double vaccineEffectiveness = 0.;
 
     // todo: should be in parameters
-    double sigma[] = {1.00, 0.98, 0.94, 0.91, 0.66};
+    static double sigma[] = {1.00, 0.98, 0.94, 0.91, 0.66};
 
     // todo: should be in parameters
-    double contact[5][5] = {    { 45.1228487783,8.7808312353,11.7757947836,6.10114751268,4.02227175596 },
+    static double contact[5][5] = {    { 45.1228487783,8.7808312353,11.7757947836,6.10114751268,4.02227175596 },
                                 { 8.7808312353,41.2889143668,13.3332813497,7.847051289,4.22656343551 },
                                 { 11.7757947836,13.3332813497,21.4270155984,13.7392636644,6.92483172729 },
                                 { 6.10114751268,7.847051289,13.7392636644,18.0482119252,9.45371062356 },
@@ -231,9 +245,9 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
 
     // make sure we have expected stratifications
     // todo: make these defined elsewhere?
-    int numAgeGroups = 5;
-    int numRiskGroups = 2;
-    int numVaccinatedGroups = 2;
+    static int numAgeGroups = 5;
+    static int numRiskGroups = 2;
+    static int numVaccinatedGroups = 2;
 
     if((int)stratifications_[0].size() != numAgeGroups || (int)stratifications_[1].size() != numRiskGroups || (int)stratifications_[2].size() != numVaccinatedGroups)
     {
@@ -241,22 +255,20 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
         return;
     }
 
+    std::vector<int> toStratificationValues(3);
+
     for(int a=0; a<numAgeGroups; a++)
     {
         for(int r=0; r<numRiskGroups; r++)
         {
             for(int v=0; v<numVaccinatedGroups; v++)
             {
-                std::vector<int> toStratificationValues;
-                toStratificationValues.push_back(a);
-                toStratificationValues.push_back(r);
-                toStratificationValues.push_back(v);
-
-                // current time
-                int time = numTimes_ - 1;
+                toStratificationValues[0] = a;
+                toStratificationValues[1] = r;
+                toStratificationValues[2] = v;
 
                 // fraction of the to group in population; this was cached before
-                double toGroupFraction = getValue("population", time, nodeId, toStratificationValues) / getValue("population", time, nodeId);
+                double toGroupFraction = populations_(nodeIdToIndex_[nodeId], a, r, v) / populationNodes_(nodeIdToIndex_[nodeId]);
 
                 double contactRate = contact[stratificationValues[0]][a];
                 double transmissionRate = (1. - vaccineEffectiveness) * beta * contactRate * sigma[a] * toGroupFraction;
@@ -346,7 +358,7 @@ bool StochasticSEATIRD::nextEvent(int nodeId)
                 // current time
                 int time = numTimes_ - 1;
 
-                int targetPopulationSize = (int)getValue("population", time, nodeId, event.toStratificationValues);
+                int targetPopulationSize = (int)populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]);
 
                 if(event.fromStratificationValues == event.toStratificationValues)
                 {
@@ -395,6 +407,8 @@ void StochasticSEATIRD::travel()
     {
         int sinkNodeId = nodeIds_[sinkNodeIndex];
 
+        double populationSink = populationNodes_(nodeIdToIndex_[sinkNodeId]);
+
         std::vector<double> unvaccinatedProbabilities(numAgeGroups, 0.0);
 
         std::vector<double> ageBasedFlowReductions (5, 1.0);
@@ -405,6 +419,18 @@ void StochasticSEATIRD::travel()
         for(unsigned int sourceNodeIndex=0; sourceNodeIndex < nodeIds_.size(); sourceNodeIndex++)
         {
             int sourceNodeId = nodeIds_[sourceNodeIndex];
+
+            double populationSource = populationNodes_(nodeIdToIndex_[sourceNodeId]);
+
+            // pre-compute some frequently needed quantities
+            std::vector<double> asymptomatics(numAgeGroups);
+            std::vector<double> transmittings(numAgeGroups);
+
+            for(int age=0; age<numAgeGroups; age++)
+            {
+                asymptomatics[age] = getValue("asymptomatic", time, sourceNodeId, std::vector<int>(1,age));
+                transmittings[age] = asymptomatics[age] + getValue("treatable", time, sourceNodeId, std::vector<int>(1,age)) + getValue("infectious", time, sourceNodeId, std::vector<int>(1,age));
+            }
 
             if(sinkNodeId != sourceNodeId)
             {
@@ -424,11 +450,9 @@ void StochasticSEATIRD::travel()
 
                         for(int b=0; b<numAgeGroups; b++)
                         {
-                            std::vector<int> stratificationAgeB(1, b);
+                            double asymptomatic = asymptomatics[b];
 
-                            double asymptomatic = getValue("asymptomatic", time, sourceNodeId, stratificationAgeB);
-
-                            double transmitting = getValue("asymptomatic", time, sourceNodeId, stratificationAgeB) + getValue("treatable", time, sourceNodeId, stratificationAgeB) + getValue("infectious", time, sourceNodeId, stratificationAgeB);
+                            double transmitting = transmittings[b];
 
                             double contactRate = contact[a][b];
 
@@ -436,8 +460,8 @@ void StochasticSEATIRD::travel()
                             numberOfInfectiousContactsJI += asymptomatic * beta * RHO * contactRate * sigma[a] / ageBasedFlowReductions[b];
                         }
 
-                        unvaccinatedProbabilities[a] += travelFractionIJ * numberOfInfectiousContactsIJ / getValue("population", time, sourceNodeId);
-                        unvaccinatedProbabilities[a] += travelFractionJI * numberOfInfectiousContactsJI / getValue("population", time, sinkNodeId);
+                        unvaccinatedProbabilities[a] += travelFractionIJ * numberOfInfectiousContactsIJ / populationSource;
+                        unvaccinatedProbabilities[a] += travelFractionJI * numberOfInfectiousContactsJI / populationSink;
                     }
                 }
             }
@@ -466,7 +490,7 @@ void StochasticSEATIRD::travel()
                     stratificationValues.push_back(r);
                     stratificationValues.push_back(v);
 
-                    int sinkNumSusceptible = (int)(getValue("susceptible", time, sinkNodeId, stratificationValues) + 0.5); // continuity correction
+                    int sinkNumSusceptible = (int)(variables_["susceptible"](time, nodeIdToIndex_[sinkNodeId], a, r, v) + 0.5); // continuity correction
 
                     double numberOfExposures = gsl_ran_binomial(randGenerator_, probability, sinkNumSusceptible);
 
@@ -475,4 +499,49 @@ void StochasticSEATIRD::travel()
             }
         }
     }
+}
+
+void StochasticSEATIRD::precompute(int time)
+{
+    cachedTime_ = time;
+
+    int numAgeGroups = 5;
+    int numRiskGroups = 2;
+    int numVaccinatedGroups = 2;
+
+    blitz::Array<double, 1> populationNodes(numNodes_); // [nodeIndex]
+
+    blitz::TinyVector<int, 1+NUM_STRATIFICATION_DIMENSIONS> shape;
+    shape(0) = numNodes_;
+    shape(1) = numAgeGroups;
+    shape(2) = numRiskGroups;
+    shape(3) = numVaccinatedGroups;
+
+    blitz::Array<double, 1+NUM_STRATIFICATION_DIMENSIONS> populations(shape); // [nodeIndex, a, r, v]
+
+    for(unsigned int i=0; i<nodeIds_.size(); i++)
+    {
+        int nodeId = nodeIds_[i];
+
+        populationNodes((int)i) = getValue("population", time, nodeId);
+
+        for(int a=0; a<numAgeGroups; a++)
+        {
+            for(int r=0; r<numRiskGroups; r++)
+            {
+                for(int v=0; v<numVaccinatedGroups; v++)
+                {
+                    std::vector<int> stratificationValues;
+                    stratificationValues.push_back(a);
+                    stratificationValues.push_back(r);
+                    stratificationValues.push_back(v);
+
+                    populations((int)i, a, r, v) = getValue("population", time, nodeId, stratificationValues);
+                }
+            }
+        }
+    }
+
+    populationNodes_.reference(populationNodes);
+    populations_.reference(populations);
 }

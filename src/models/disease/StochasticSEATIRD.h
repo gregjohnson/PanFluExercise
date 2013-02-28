@@ -35,6 +35,11 @@ class StochasticSEATIRD : public EpidemicSimulation
         // event queue for each nodeId
         std::map<int, std::priority_queue<StochasticSEATIRDEvent, std::vector<StochasticSEATIRDEvent>, StochasticSEATIRDEvent::compareByTime> > eventQueue_;
 
+        // cached values
+        int cachedTime_;
+        blitz::Array<double, 1> populationNodes_;
+        blitz::Array<double, 1+NUM_STRATIFICATION_DIMENSIONS> populations_;
+
         // add an event to the queue
         void addEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
 
@@ -51,6 +56,9 @@ class StochasticSEATIRD : public EpidemicSimulation
 
         // travel between nodes
         void travel();
+
+        // precompute / cache values for each time step
+        void precompute(int time);
 };
 
 #endif
