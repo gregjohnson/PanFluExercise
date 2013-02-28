@@ -223,12 +223,12 @@ float EpidemicDataSet::getValue(const std::string &varName, const int &time, con
 
     if(variables_.count(varName) == 0)
     {
-        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        put_flog(LOG_ERROR, "no such variable %s (nodeId = %i)", varName.c_str(), nodeId);
         return 0.;
     }
     else if(nodeId != NODES_ALL && nodeIdToIndex_.count(nodeId) == 0)
     {
-        put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
+        put_flog(LOG_ERROR, "could not map nodeId %i to an index (varName = %s)", nodeId, varName.c_str());
         return 0.;
     }
 
