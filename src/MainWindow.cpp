@@ -327,7 +327,10 @@ void MainWindow::resetTimeSlider()
         timeSlider_->setMinimum(0);
         timeSlider_->setMaximum(dataSet_->getNumTimes() - 1);
 
-        setTime(0);
+        if(time_ >= dataSet_->getNumTimes())
+        {
+            setTime(0);
+        }
     }
     else
     {
