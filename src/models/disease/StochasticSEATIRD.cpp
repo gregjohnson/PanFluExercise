@@ -95,7 +95,7 @@ float StochasticSEATIRD::getHospitalized(int time, int nodeId, std::vector<int> 
     return hospitalized;
 }
 
-void StochasticSEATIRD::addEvent(int nodeId, StochasticSEATIRDEvent event)
+void StochasticSEATIRD::addEvent(const int &nodeId, const StochasticSEATIRDEvent &event)
 {
     eventQueue_[nodeId].push(event);
 
@@ -105,7 +105,7 @@ void StochasticSEATIRD::addEvent(int nodeId, StochasticSEATIRDEvent event)
     }
 }
 
-void StochasticSEATIRD::initializeExposedTransitions(int nodeId, std::vector<int> stratificationValues, StochasticSEATIRDSchedule schedule)
+void StochasticSEATIRD::initializeExposedTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
 {
     StochasticSEATIRDEvent event;
 
@@ -120,7 +120,7 @@ void StochasticSEATIRD::initializeExposedTransitions(int nodeId, std::vector<int
     initializeAsymptomaticTransitions(nodeId, stratificationValues, schedule);
 }
 
-void StochasticSEATIRD::initializeAsymptomaticTransitions(int nodeId, std::vector<int> stratificationValues, StochasticSEATIRDSchedule schedule)
+void StochasticSEATIRD::initializeAsymptomaticTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
 {
     StochasticSEATIRDEvent event;
 
@@ -153,7 +153,7 @@ void StochasticSEATIRD::initializeAsymptomaticTransitions(int nodeId, std::vecto
     addEvent(nodeId, event);
 }
 
-void StochasticSEATIRD::initializeTreatableTransitions(int nodeId, std::vector<int> stratificationValues, StochasticSEATIRDSchedule schedule)
+void StochasticSEATIRD::initializeTreatableTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
 {
     StochasticSEATIRDEvent event;
 
@@ -186,7 +186,7 @@ void StochasticSEATIRD::initializeTreatableTransitions(int nodeId, std::vector<i
     addEvent(nodeId, event);
 }
 
-void StochasticSEATIRD::initializeInfectiousTransitions(int nodeId, std::vector<int> stratificationValues, StochasticSEATIRDSchedule schedule)
+void StochasticSEATIRD::initializeInfectiousTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
 {
     StochasticSEATIRDEvent event;
 
@@ -211,7 +211,7 @@ void StochasticSEATIRD::initializeInfectiousTransitions(int nodeId, std::vector<
     addEvent(nodeId, event);
 }
 
-void StochasticSEATIRD::initializeContactEvents(int nodeId, std::vector<int> stratificationValues, StochasticSEATIRDSchedule schedule)
+void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
 {
     // todo: beta should be age-specific considering PHA's
     double beta = g_parameters.getR0() / g_parameters.getBetaScale();
