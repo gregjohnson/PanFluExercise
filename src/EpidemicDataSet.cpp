@@ -213,7 +213,7 @@ float EpidemicDataSet::getTravel(int nodeId0, int nodeId1)
     return travel_(nodeIdToIndex_[nodeId0], nodeIdToIndex_[nodeId1]);
 }
 
-float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::vector<int> stratificationValues)
+float EpidemicDataSet::getValue(const std::string &varName, const int &time, const int &nodeId, const std::vector<int> &stratificationValues)
 {
     // handle derived variables
     if(derivedVariables_.count(varName) > 0)
@@ -268,7 +268,7 @@ float EpidemicDataSet::getValue(std::string varName, int time, int nodeId, std::
     return blitz::sum(variables_[varName](subdomain));
 }
 
-float EpidemicDataSet::getValue(std::string varName, int time, std::string groupName, std::vector<int> stratificationValues)
+float EpidemicDataSet::getValue(const std::string &varName, const int &time, const std::string &groupName, const std::vector<int> &stratificationValues)
 {
     if(variables_.count(varName) == 0 && derivedVariables_.count(varName) == 0)
     {
