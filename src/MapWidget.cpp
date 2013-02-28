@@ -237,7 +237,7 @@ bool MapWidget::loadCountyShapes()
         boost::shared_ptr<MapShape> county(new MapShape());
         counties_[nodeId] = county;
 
-        OGRGeometry * geometry = feature->GetGeometryRef();
+        OGRGeometry * geometry = feature->GetGeometryRef()->Simplify(0.01);
 
         if(geometry != NULL && geometry->getGeometryType() == wkbPolygon)
         {
