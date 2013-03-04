@@ -42,13 +42,7 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
     }
     else if(lineType == STACKED)
     {
-        // todo: this should actually be a vtkChart::STACKED chart, but the legends and tooltips are broken for that...
-        plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::BAR);
-
-        // since we have to use a bar chart, for now set the outline to NO_PEN
-        // and the bar width to 1 to emulate a stacked line chart
-        plot_->GetPen()->SetLineType(vtkPen::NO_PEN);
-        parent->getChart()->SetBarWidthFraction(1.);
+        plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::STACKED);
 
         // set color series
         vtkSmartPointer<vtkColorSeries> colorSeries = vtkSmartPointer<vtkColorSeries>::New();
