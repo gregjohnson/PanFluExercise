@@ -67,6 +67,11 @@ StockpileNetworkDistributionWidget::~StockpileNetworkDistributionWidget()
 
 }
 
+void StockpileNetworkDistributionWidget::applied(int clampedQuantity)
+{
+    resultLabel_.setText(resultLabel_.text() + "\nActual quantity: " + QString::number(clampedQuantity));
+}
+
 void StockpileNetworkDistributionWidget::execute()
 {
     // disable the widgets for further modification
@@ -90,4 +95,7 @@ void StockpileNetworkDistributionWidget::execute()
     // update the result label
     QString label = "Executed at time = " + QString::number(time);
     resultLabel_.setText(label);
+
+    // connect signal so we get the clamped quantity when the transfer occurs
+    connect(distribution.get(), SIGNAL(applied(int)), this, SLOT(applied(int)));
 }

@@ -16,6 +16,10 @@ class StockpileNetworkDistributionWidget : public QGroupBox
         StockpileNetworkDistributionWidget(boost::shared_ptr<EpidemicDataSet> dataSet);
         ~StockpileNetworkDistributionWidget();
 
+    public slots:
+
+        void applied(int clampedQuantity);
+
     private:
 
         // data set information

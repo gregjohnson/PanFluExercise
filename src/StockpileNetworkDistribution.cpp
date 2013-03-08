@@ -34,6 +34,9 @@ void StockpileNetworkDistribution::apply(int nowTime)
 
         // save clamped quantity
         clampedQuantity_ = clampedQuantity;
+
+        // emit signal
+        emit(applied(clampedQuantity_));
     }
 
     if(nowTime == time_ + transferTime_)

@@ -1,6 +1,7 @@
 #include "StockpileChartWidget.h"
 #include "EpidemicDataSet.h"
 #include "StockpileNetwork.h"
+#include "StockpileNetworkDistribution.h"
 #include "Stockpile.h"
 #include <string>
 #include <vector>
@@ -70,19 +71,49 @@ void StockpileChartWidget::update()
 
         std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork_->getStockpiles();
 
+        std::vector<boost::shared_ptr<StockpileNetworkDistribution> > pendingDistributions = stockpileNetwork_->getPendingDistributions(time_);
+
         // plot the variable
         boost::shared_ptr<ChartWidgetLine> line = chartWidget_.getLine(NEW_LINE, BAR);
 
-        line->setColor(1.,0.,0.);
-        line->setWidth(2.);
+        // series labels
+        std::vector<std::string> seriesLabels;
+        seriesLabels.push_back("Current");
+        seriesLabels.push_back("Outbound");
+        seriesLabels.push_back("Inbound");
+
+        line->setLabels(seriesLabels);
 
         // labels for each bar
         std::vector<std::string> labels;
 
         for(unsigned int i=0; i<stockpiles.size(); i++)
         {
+            int currentQuantity = stockpiles[i]->getNum(time_);
+            int pendingOutQuantity = 0;
+            int pendingInQuantity = 0;
+
+            for(unsigned int j=0; j<pendingDistributions.size(); j++)
+            {
+                if(pendingDistributions[j]->getSourceStockpile() == stockpiles[i])
+                {
+                    pendingOutQuantity += pendingDistributions[j]->getClampedQuantity();
+                }
+
+                if(pendingDistributions[j]->getDestinationStockpile() == stockpiles[i])
+                {
+                    pendingInQuantity += pendingDistributions[j]->getClampedQuantity();
+                }
+            }
+
+            std::vector<double> points;
+
+            points.push_back(currentQuantity);
+            points.push_back(pendingOutQuantity);
+            points.push_back(pendingInQuantity);
+
             labels.push_back(stockpiles[i]->getName());
-            line->addPoint(i, stockpiles[i]->getNum(time_));
+            line->addPoints(i, points);
         }
 
         line->setBarLabels(labels);

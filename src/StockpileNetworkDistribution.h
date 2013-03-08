@@ -2,16 +2,19 @@
 #define STOCKPILE_NETWORK_DISTRIBUTION_H
 
 #include <boost/shared_ptr.hpp>
+#include <QtGui>
 
 class Stockpile;
 
-class StockpileNetworkDistribution
+class StockpileNetworkDistribution : public QObject
 {
+    Q_OBJECT
+
     public:
 
         StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, int quantity, int transferTime);
 
-        // execute the distribution if nowTime == time_ + transferTime_
+        // execute the distribution if nowTime == time_, time_ + transferTime_
         void apply(int nowTime);
 
         int getTime();
@@ -21,6 +24,10 @@ class StockpileNetworkDistribution
         int getTransferTime();
 
         int getClampedQuantity();
+
+    signals:
+
+        void applied(int clampedQuanity);
 
     private:
 
