@@ -52,6 +52,11 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
     else if(lineType == BAR)
     {
         plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::BAR);
+
+        // set color series
+        vtkSmartPointer<vtkColorSeries> colorSeries = vtkSmartPointer<vtkColorSeries>::New();
+        colorSeries->SetColorScheme(vtkColorSeries::SPECTRUM);
+        ((vtkPlotStacked *)plot_)->SetColorSeries(colorSeries);
     }
     else
     {
