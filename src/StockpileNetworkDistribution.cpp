@@ -31,5 +31,30 @@ void StockpileNetworkDistribution::apply(int nowTime)
 
         // increment destination
         destinationStockpile_->setNum(nowTime, destinationStockpile_->getNum(nowTime) + clampedQuantity);
+int StockpileNetworkDistribution::getTime()
+{
+    return time_;
+}
+
+boost::shared_ptr<Stockpile> StockpileNetworkDistribution::getSourceStockpile()
+{
+    return sourceStockpile_;
+}
+
+boost::shared_ptr<Stockpile> StockpileNetworkDistribution::getDestinationStockpile()
+{
+    return destinationStockpile_;
+}
+
+int StockpileNetworkDistribution::getQuantity()
+{
+    return quantity_;
+}
+
+int StockpileNetworkDistribution::getTransferTime()
+{
+    return transferTime_;
+}
+
     }
 }

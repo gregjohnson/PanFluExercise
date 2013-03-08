@@ -14,6 +14,12 @@ class StockpileNetworkDistribution
         // execute the distribution if nowTime == time_ + transferTime_
         void apply(int nowTime);
 
+        int getTime();
+        boost::shared_ptr<Stockpile> getSourceStockpile();
+        boost::shared_ptr<Stockpile> getDestinationStockpile();
+        int getQuantity();
+        int getTransferTime();
+
     private:
 
         // time at which distribution was executed ("now")
