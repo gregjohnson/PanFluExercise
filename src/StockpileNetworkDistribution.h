@@ -20,6 +20,8 @@ class StockpileNetworkDistribution
         int getQuantity();
         int getTransferTime();
 
+        int getClampedQuantity();
+
     private:
 
         // time at which distribution was executed ("now")
@@ -29,6 +31,9 @@ class StockpileNetworkDistribution
         boost::shared_ptr<Stockpile> destinationStockpile_;
         int quantity_;
         int transferTime_;
+
+        // the actual quantity transferred, clamped based on actual inventory at the time of transfer from source
+        int clampedQuantity_;
 };
 
 #endif

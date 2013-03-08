@@ -4,6 +4,9 @@
 
 StockpileNetworkDistribution::StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, int quantity, int transferTime)
 {
+    // defaults
+    clampedQuantity_ = -1;
+
     time_ = time;
     sourceStockpile_ = sourceStockpile;
     destinationStockpile_ = destinationStockpile;
@@ -13,7 +16,7 @@ StockpileNetworkDistribution::StockpileNetworkDistribution(int time, boost::shar
 
 void StockpileNetworkDistribution::apply(int nowTime)
 {
-    if(nowTime == time_ + transferTime_)
+    if(nowTime == time_)
     {
         int clampedQuantity = quantity_;
 
@@ -24,13 +27,24 @@ void StockpileNetworkDistribution::apply(int nowTime)
             clampedQuantity = sourceStockpile_->getNum(nowTime);
         }
 
-        put_flog(LOG_INFO, "applying distribution: %s --> %s, %i", sourceStockpile_->getName().c_str(), destinationStockpile_->getName().c_str(), clampedQuantity);
+        put_flog(LOG_INFO, "applying distribution (outbound): %s --> %s, %i", sourceStockpile_->getName().c_str(), destinationStockpile_->getName().c_str(), clampedQuantity);
 
         // decrement source
         sourceStockpile_->setNum(nowTime, sourceStockpile_->getNum(nowTime) - clampedQuantity);
 
+        // save clamped quantity
+        clampedQuantity_ = clampedQuantity;
+    }
+
+    if(nowTime == time_ + transferTime_)
+    {
+        put_flog(LOG_INFO, "applying distribution (inbound): %s --> %s, %i", sourceStockpile_->getName().c_str(), destinationStockpile_->getName().c_str(), clampedQuantity_);
+
         // increment destination
-        destinationStockpile_->setNum(nowTime, destinationStockpile_->getNum(nowTime) + clampedQuantity);
+        destinationStockpile_->setNum(nowTime, destinationStockpile_->getNum(nowTime) + clampedQuantity_);
+    }
+}
+
 int StockpileNetworkDistribution::getTime()
 {
     return time_;
@@ -56,5 +70,14 @@ int StockpileNetworkDistribution::getTransferTime()
     return transferTime_;
 }
 
+int StockpileNetworkDistribution::getClampedQuantity()
+{
+    if(clampedQuantity_ == -1)
+    {
+        return quantity_;
+    }
+    else
+    {
+        return clampedQuantity_;
     }
 }
