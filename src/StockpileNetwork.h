@@ -21,6 +21,8 @@ class StockpileNetwork : public QObject
 
         std::vector<boost::shared_ptr<Stockpile> > getStockpiles();
 
+        std::vector<boost::shared_ptr<StockpileNetworkDistribution> > getPendingDistributions(int nowTime);
+
         void evolve(int nowTime);
 
     signals:

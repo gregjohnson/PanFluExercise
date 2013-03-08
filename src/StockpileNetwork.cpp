@@ -25,6 +25,21 @@ std::vector<boost::shared_ptr<Stockpile> > StockpileNetwork::getStockpiles()
     return stockpiles_;
 }
 
+std::vector<boost::shared_ptr<StockpileNetworkDistribution> > StockpileNetwork::getPendingDistributions(int nowTime)
+{
+    std::vector<boost::shared_ptr<StockpileNetworkDistribution> > pendingDistributions;
+
+    for(unsigned int i=0; i<distributions_.size(); i++)
+    {
+        if(nowTime >= distributions_[i]->getTime() && nowTime < distributions_[i]->getTime() + distributions_[i]->getTransferTime())
+        {
+            pendingDistributions.push_back(distributions_[i]);
+        }
+    }
+
+    return pendingDistributions;
+}
+
 void StockpileNetwork::evolve(int nowTime)
 {
     // add new timestep to stockpiles

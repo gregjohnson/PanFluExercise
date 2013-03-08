@@ -72,7 +72,7 @@ void StockpileNetworkDistributionWidget::execute()
     // disable the widgets for further modification
     setEnabled(false);
 
-    // todo: validate quantities here, etc., so we can give the user a bounds error, for example
+    // bounds on transfer quantities taken when transfer is applied; no need to consider here
 
     // the "now" time
     int time = dataSet_->getNumTimes();
