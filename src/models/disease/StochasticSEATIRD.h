@@ -4,7 +4,7 @@
 #include "../../EpidemicSimulation.h"
 #include "StochasticSEATIRDEvent.h"
 #include "StochasticSEATIRDSchedule.h"
-#include <queue>
+#include <boost/heap/pairing_heap.hpp>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -32,8 +32,8 @@ class StochasticSEATIRD : public EpidemicSimulation
         // current time
         double now_;
 
-        // event queue for each nodeId
-        std::map<int, std::priority_queue<StochasticSEATIRDEvent, std::vector<StochasticSEATIRDEvent>, StochasticSEATIRDEvent::compareByTime> > eventQueue_;
+        // event queue for each nodeId and for each (int)time
+        std::map<int, std::map<int, boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> > > > eventQueue_;
 
         // cached values
         int cachedTime_;

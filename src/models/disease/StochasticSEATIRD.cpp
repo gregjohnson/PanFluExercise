@@ -75,7 +75,7 @@ void StochasticSEATIRD::simulate()
     {
         int nodeId = nodeIds_[i];
 
-        while(!eventQueue_[nodeId].empty() && eventQueue_[nodeId].top().time < tMax)
+        while(!eventQueue_[nodeId][(int)now_].empty())
         {
             nextEvent(nodeId);
         }
@@ -111,7 +111,7 @@ float StochasticSEATIRD::getHospitalized(int time, int nodeId, std::vector<int> 
 
 void StochasticSEATIRD::addEvent(const int &nodeId, const StochasticSEATIRDEvent &event)
 {
-    eventQueue_[nodeId].push(event);
+    eventQueue_[nodeId][(int)event.time].push(event);
 
     if(event.fromStratificationValues != event.toStratificationValues)
     {
@@ -297,14 +297,14 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
 
 bool StochasticSEATIRD::nextEvent(int nodeId)
 {
-    if(eventQueue_[nodeId].empty() == true)
+    if(eventQueue_[nodeId][(int)now_].empty() == true)
     {
         return false;
     }
 
     // get and pop first event
-    StochasticSEATIRDEvent event = eventQueue_[nodeId].top();
-    eventQueue_[nodeId].pop();
+    StochasticSEATIRDEvent event = eventQueue_[nodeId][(int)now_].top();
+    eventQueue_[nodeId][(int)now_].pop();
 
     now_ = event.time;
 
