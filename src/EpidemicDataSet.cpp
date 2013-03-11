@@ -232,9 +232,12 @@ float EpidemicDataSet::getValue(const std::string &varName, const int &time, con
         return 0.;
     }
 
+    // the variable we're getting
+    blitz::Array<float, 2+NUM_STRATIFICATION_DIMENSIONS> variable = variables_[varName];
+
     // the full domain
-    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> lowerBound = variables_[varName].lbound();
-    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> upperBound = variables_[varName].ubound();
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> lowerBound = variable.lbound();
+    blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> upperBound = variable.ubound();
 
     // make sure this variable is valid for the specified time
     if(time < lowerBound(0) || time > upperBound(0))
@@ -265,7 +268,7 @@ float EpidemicDataSet::getValue(const std::string &varName, const int &time, con
     blitz::RectDomain<2+NUM_STRATIFICATION_DIMENSIONS> subdomain(lowerBound, upperBound);
 
     // return the sum of the array over the subdomain
-    return blitz::sum(variables_[varName](subdomain));
+    return blitz::sum(variable(subdomain));
 }
 
 float EpidemicDataSet::getValue(const std::string &varName, const int &time, const std::string &groupName, const std::vector<int> &stratificationValues)
