@@ -103,7 +103,6 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/MapWidget.h
     src/ParametersWidget.h
     src/Stockpile.h
-    src/StockpileNetwork.h
     src/StockpileNetworkWidget.h
     src/StockpileNetworkDistribution.h
     src/StockpileNetworkDistributionWidget.h

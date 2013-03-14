@@ -2,9 +2,11 @@
 #define STOCKPILE_NETWORK_DISTRIBUTION_H
 
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include <QtGui>
 
 class Stockpile;
+class StockpileNetwork;
 
 class StockpileNetworkDistribution : public QObject
 {
@@ -13,6 +15,8 @@ class StockpileNetworkDistribution : public QObject
     public:
 
         StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, int quantity, int transferTime);
+
+        void setNetwork(boost::shared_ptr<StockpileNetwork> network);
 
         // execute the distribution if nowTime == time_, time_ + transferTime_
         void apply(int nowTime);
@@ -30,6 +34,9 @@ class StockpileNetworkDistribution : public QObject
         void applied(int clampedQuanity);
 
     private:
+
+        // the network this distribution is associated with; weak_ptr to prevent cyclic references
+        boost::weak_ptr<StockpileNetwork> network_;
 
         // time at which distribution was executed ("now")
         int time_;

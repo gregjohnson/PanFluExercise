@@ -82,7 +82,6 @@ void StockpileNetworkWidget::setTime(int time)
 
     for(unsigned int i=0; i<stockpileWidgets_.size(); i++)
     {
-        // todo: connection with stockpile changed() signal to update stockpile widget UI elements instead?
         stockpileWidgets_[i]->setTime(time);
     }
 }

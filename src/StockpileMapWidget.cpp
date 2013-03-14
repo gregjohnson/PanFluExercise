@@ -11,12 +11,6 @@ void StockpileMapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
     if(dataSet != NULL)
     {
         stockpileNetwork_ = dataSet->getStockpileNetwork();
-
-        // todo: disconnect previous signals/slots
-        if(stockpileNetwork_ != NULL)
-        {
-            connect(stockpileNetwork_.get(), SIGNAL(changed()), this, SLOT(updateGL()));
-        }
     }
     else
     {

@@ -22,10 +22,6 @@ class Stockpile : public QObject
 
         void copyToNewTimeStep();
 
-    signals:
-
-        void changed();
-
     public slots:
 
         void setNum(int time, int num);

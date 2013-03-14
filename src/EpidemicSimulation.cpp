@@ -17,7 +17,7 @@ EpidemicSimulation::EpidemicSimulation()
     newVariable("exposed");
 
     // create basic StockpileNetwork
-    boost::shared_ptr<StockpileNetwork> stockpileNetwork(new StockpileNetwork());
+    boost::shared_ptr<StockpileNetwork> stockpileNetwork(new StockpileNetwork(this));
 
     // add central stockpile
     boost::shared_ptr<Stockpile> centralStockpile(new Stockpile("Central"));
@@ -34,8 +34,8 @@ EpidemicSimulation::EpidemicSimulation()
         std::vector<int> nodeIds = getNodeIds(groupNames[i]);
         stockpile->setNodeIds(nodeIds);
 
-        // todo: for now a default stockpile inventory
-        stockpile->setNum(0, 100000);
+        // default zero stockpile inventory
+        stockpile->setNum(0, 0);
 
         stockpileNetwork->addStockpile(stockpile);
     }

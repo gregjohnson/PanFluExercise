@@ -26,13 +26,6 @@ void StockpileChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet
     if(dataSet != NULL)
     {
         stockpileNetwork_ = dataSet->getStockpileNetwork();
-
-        // todo: disconnect existing signals/slots
-
-        if(stockpileNetwork_ != NULL)
-        {
-            connect(stockpileNetwork_.get(), SIGNAL(changed()), this, SLOT(update()));
-        }
     }
     else
     {
@@ -81,6 +74,7 @@ void StockpileChartWidget::update()
         seriesLabels.push_back("Current");
         seriesLabels.push_back("Outbound");
         seriesLabels.push_back("Inbound");
+        seriesLabels.push_back("Usable");
 
         line->setLabels(seriesLabels);
 
@@ -106,11 +100,21 @@ void StockpileChartWidget::update()
                 }
             }
 
+            int usable = 0;
+
+            std::vector<int> nodeIds = stockpiles[i]->getNodeIds();
+
+            for(unsigned int j=0; j<nodeIds.size(); j++)
+            {
+                usable += stockpileNetwork_->getNodeStockpile(nodeIds[j])->getNum(time_);
+            }
+
             std::vector<double> points;
 
             points.push_back(currentQuantity);
             points.push_back(pendingOutQuantity);
             points.push_back(pendingInQuantity);
+            points.push_back(usable);
 
             labels.push_back(stockpiles[i]->getName());
             line->addPoints(i, points);

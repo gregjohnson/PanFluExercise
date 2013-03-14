@@ -49,6 +49,4 @@ void Stockpile::setNum(int time, int num)
     put_flog(LOG_DEBUG, "%i", num);
 
     num_[time] = num;
-
-    emit(changed());
 }

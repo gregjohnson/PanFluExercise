@@ -15,8 +15,6 @@ StockpileWidget::StockpileWidget(boost::shared_ptr<Stockpile> stockpile)
 
     // current value
     numLabel_.setNum(stockpile->getNum(0));
-
-    // todo: connection with stockpile changed() signal to update UI elements here
 }
 
 void StockpileWidget::setTime(int time)
