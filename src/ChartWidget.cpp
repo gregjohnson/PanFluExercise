@@ -38,7 +38,14 @@ ChartWidget::ChartWidget()
 
     // create SVG exporter
     svgExporter_ = vtkSmartPointer<vtkGL2PSExporter>::New();
-    svgExporter_->SetRenderWindow(view_->GetRenderWindow());
+
+    // use an off-screen constant-sized render window for SVG export
+    svgRenderWindow_ = vtkSmartPointer<vtkRenderWindow>::New();
+    svgRenderWindow_->OffScreenRenderingOn();
+    svgRenderWindow_->SetSize(480, 300);
+
+    svgExporter_->SetRenderWindow(svgRenderWindow_);
+
     svgExporter_->SetFileFormatToSVG();
     svgExporter_->CompressOff();
     svgExporter_->SetSortToOff();
@@ -129,10 +136,19 @@ void ChartWidget::exportSVGToDisplayCluster()
 {
     if(g_dcSocket != NULL && svgTmpFile_.open())
     {
+        // move the renderer to the SVG render window
+        view_->GetRenderWindow()->RemoveRenderer(view_->GetRenderer());
+        svgRenderWindow_->AddRenderer(view_->GetRenderer());
+
+        // write the SVG file
         svgExporter_->SetFilePrefix(svgTmpFile_.fileName().toStdString().c_str());
         svgExporter_->Write();
 
         put_flog(LOG_DEBUG, "wrote %s", svgTmpFile_.fileName().toStdString().c_str());
+
+        // move the renderer back to the regular render window
+        svgRenderWindow_->RemoveRenderer(view_->GetRenderer());
+        view_->GetRenderWindow()->AddRenderer(view_->GetRenderer());
 
         // now, send it to DisplayCluster
         sendSVGToDisplayCluster((svgTmpFile_.fileName() + ".svg").toStdString(), (QString("ExerciseChart-") + QString::number(index_) + ".svg").toStdString());

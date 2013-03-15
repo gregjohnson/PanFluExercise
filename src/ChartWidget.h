@@ -51,6 +51,7 @@ class ChartWidget : public QVTKWidget
 
         // SVG export
         vtkSmartPointer<vtkGL2PSExporter> svgExporter_;
+        vtkSmartPointer<vtkRenderWindow> svgRenderWindow_;
         QTemporaryFile svgTmpFile_;
 };
 
