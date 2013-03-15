@@ -21,6 +21,7 @@ class EpidemicChartWidget : public QMainWindow
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         void setTime(int time);
         void setNodeId(int nodeId);
+        void setGroupName(std::string groupName);
         void setVariable(std::string variable);
 
         void setStratifyByIndex(int index);
@@ -37,7 +38,11 @@ class EpidemicChartWidget : public QMainWindow
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
         int nodeId_;
+        std::string groupName_;
         std::string variable_;
+
+        // true if we're doing node groups; false otherwise
+        bool nodeGroupMode_;
 
         // stratification
         int stratifyByIndex_;

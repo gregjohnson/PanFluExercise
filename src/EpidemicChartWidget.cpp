@@ -1,11 +1,13 @@
 #include "EpidemicChartWidget.h"
 #include "EpidemicDataSet.h"
+#include "log.h"
 
 EpidemicChartWidget::EpidemicChartWidget(MainWindow * mainWindow)
 {
     // defaults
     time_ = 0;
     nodeId_ = NODES_ALL;
+    nodeGroupMode_ = false;
     stratifyByIndex_ = -1;
     stratificationValues_ = std::vector<int>(NUM_STRATIFICATION_DIMENSIONS, STRATIFICATIONS_ALL);
 
@@ -81,6 +83,7 @@ void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     // keep track of old selections
     int oldNodeId = nodeId_;
+    std::string oldGroupName = groupName_;
     std::string oldVariable = variable_;
 
     dataSet_ = dataSet;
@@ -94,6 +97,15 @@ void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
         // add node entries
         nodeComboBox_.addItem("All", NODES_ALL);
 
+        // groups
+        std::vector<std::string> groupNames = dataSet->getGroupNames();
+
+        for(unsigned int i=0; i<groupNames.size(); i++)
+        {
+            nodeComboBox_.addItem(groupNames[i].c_str(), groupNames[i].c_str());
+        }
+
+        // nodes
         std::vector<int> nodeIds = dataSet->getNodeIds();
 
         for(unsigned int i=0; i<nodeIds.size(); i++)
@@ -111,7 +123,17 @@ void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
     }
 
     // try to update new selections to match previous ones
-    int newNodeIndex = nodeComboBox_.findData(oldNodeId);
+    int newNodeIndex = -1;
+
+    if(nodeGroupMode_ == false)
+    {
+        newNodeIndex = nodeComboBox_.findData(oldNodeId);
+    }
+    else
+    {
+        newNodeIndex = nodeComboBox_.findData(oldGroupName.c_str());
+    }
+
     int newVariableIndex = variableComboBox_.findData(oldVariable.c_str());
 
     if(newNodeIndex != -1)
@@ -146,6 +168,17 @@ void EpidemicChartWidget::setTime(int time)
 void EpidemicChartWidget::setNodeId(int nodeId)
 {
     nodeId_ = nodeId;
+
+    nodeGroupMode_ = false;
+
+    update();
+}
+
+void EpidemicChartWidget::setGroupName(std::string groupName)
+{
+    groupName_ = groupName;
+
+    nodeGroupMode_ = true;
 
     update();
 }
@@ -187,13 +220,20 @@ void EpidemicChartWidget::update()
     if(dataSet_ != NULL)
     {
         // set title
-        if(nodeId_ == NODES_ALL)
+        if(nodeGroupMode_ == false)
         {
-            chartWidget_.setTitle("All Counties");
+            if(nodeId_ == NODES_ALL)
+            {
+                chartWidget_.setTitle("All Counties");
+            }
+            else
+            {
+                chartWidget_.setTitle(dataSet_->getNodeName(nodeId_) + std::string(" County"));
+            }
         }
         else
         {
-            chartWidget_.setTitle(dataSet_->getNodeName(nodeId_) + std::string(" County"));
+            chartWidget_.setTitle(groupName_);
         }
 
         // add a (0,0) point to fix bounds calculations for straight horizontal plots
@@ -214,7 +254,14 @@ void EpidemicChartWidget::update()
 
             for(int t=0; t<dataSet_->getNumTimes(); t++)
             {
-                line->addPoint(t, dataSet_->getValue(variable_, t, nodeId_, stratificationValues_));
+                if(nodeGroupMode_ == false)
+                {
+                    line->addPoint(t, dataSet_->getValue(variable_, t, nodeId_, stratificationValues_));
+                }
+                else
+                {
+                    line->addPoint(t, dataSet_->getValue(variable_, t, groupName_, stratificationValues_));
+                }
             }
         }
         else if(stratifyByIndex_ != -1)
@@ -247,7 +294,14 @@ void EpidemicChartWidget::update()
 
                     stratificationValues[stratifyByIndex_] = i;
 
-                    variableValues.push_back(dataSet_->getValue(variable_, t, nodeId_, stratificationValues));
+                    if(nodeGroupMode_ == false)
+                    {
+                        variableValues.push_back(dataSet_->getValue(variable_, t, nodeId_, stratificationValues));
+                    }
+                    else
+                    {
+                        variableValues.push_back(dataSet_->getValue(variable_, t, groupName_, stratificationValues));
+                    }
                 }
 
                 line->addPoints(t, variableValues);
@@ -266,9 +320,25 @@ void EpidemicChartWidget::update()
 
 void EpidemicChartWidget::setNodeChoice(int choiceIndex)
 {
-    int index = nodeComboBox_.itemData(choiceIndex).toInt();
+    QVariant::Type type = nodeComboBox_.itemData(choiceIndex).type();
 
-    setNodeId(index);
+    if(type == QMetaType::Int)
+    {
+        int index = nodeComboBox_.itemData(choiceIndex).toInt();
+
+        setNodeId(index);
+    }
+    else if(type == QMetaType::QString)
+    {
+        std::string groupName = nodeComboBox_.itemData(choiceIndex).toString().toStdString();
+
+        setGroupName(groupName);
+    }
+    else
+    {
+        put_flog(LOG_ERROR, "unknown variant type for choice");
+        return;
+    }
 }
 
 void EpidemicChartWidget::setVariableChoice(int choiceIndex)
