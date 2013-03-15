@@ -76,6 +76,8 @@ EpidemicChartWidget::EpidemicChartWidget(MainWindow * mainWindow)
     // make connections
     connect((QObject *)mainWindow, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), this, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
+    connect((QObject *)mainWindow, SIGNAL(numberOfTimestepsChanged()), this, SLOT(update()));
+
     connect((QObject *)mainWindow, SIGNAL(timeChanged(int)), this, SLOT(setTime(int)));
 }
 

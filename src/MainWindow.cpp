@@ -136,6 +136,7 @@ MainWindow::MainWindow()
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), stockpileMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
+    connect(this, SIGNAL(numberOfTimestepsChanged()), this, SLOT(resetTimeSlider()));
 
     connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget_, SLOT(setTime(int)));
     connect(this, SIGNAL(timeChanged(int)), stockpileMapWidget_, SLOT(setTime(int)));
@@ -247,7 +248,7 @@ bool MainWindow::nextTimestep()
                 simulation->simulate();
 
                 // since we've changed the number of timesteps
-                emit(dataSetChanged(dataSet_));
+                emit(numberOfTimestepsChanged());
             }
         }
         else

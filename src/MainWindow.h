@@ -25,6 +25,7 @@ class MainWindow : public QMainWindow {
     signals:
 
         void dataSetChanged(boost::shared_ptr<EpidemicDataSet> dataSet=boost::shared_ptr<EpidemicDataSet>());
+        void numberOfTimestepsChanged();
         void timeChanged(int time);
 
     public slots:
