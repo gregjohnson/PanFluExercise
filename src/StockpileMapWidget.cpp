@@ -26,28 +26,28 @@ void StockpileMapWidget::setTime(int time)
     // do coloring here, since render() won't be called if the map is offscreen (for SVG export)
     if(stockpileNetwork_ != NULL)
     {
-        std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork_->getStockpiles();
+        // get nodeIds
+        std::vector<int> nodeIds = stockpileNetwork_->getDataSet()->getNodeIds();
 
-        // recolor counties according to stockpile values
-        for(unsigned int i=0; i<stockpiles.size(); i++)
+        // recolor counties according to node stockpile values
+        for(unsigned int i=0; i<nodeIds.size(); i++)
         {
-            int num = stockpiles[i]->getNum(time_);
-            std::vector<int> nodeIds = stockpiles[i]->getNodeIds();
+            boost::shared_ptr<Stockpile> stockpile = stockpileNetwork_->getNodeStockpile(nodeIds[i]);
 
-            float population = dataSet_->getPopulation(nodeIds);
-
-            for(unsigned int j=0; j<nodeIds.size(); j++)
+            if(stockpile != NULL)
             {
-                int nodeId = nodeIds[j];
+                int num = stockpile->getNum(time_);
 
-                if(counties_.count(nodeId) != 0)
+                float population = dataSet_->getPopulation(nodeIds[i]);
+
+                if(counties_.count(nodeIds[i]) != 0)
                 {
                     // map to color
                     // scaled to 10% population
                     float r, g, b;
                     countiesColorMap_.getColor3(1. - (float)num / (0.10*population), r, g, b);
 
-                    counties_[nodeId]->setColor(r, g, b);
+                    counties_[nodeIds[i]]->setColor(r, g, b);
                 }
             }
         }
