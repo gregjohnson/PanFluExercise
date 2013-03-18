@@ -46,11 +46,17 @@ MainWindow::MainWindow()
     connectToDisplayClusterAction->setStatusTip("Connect to DisplayCluster");
     connect(connectToDisplayClusterAction, SIGNAL(triggered()), this, SLOT(connectToDisplayCluster()));
 
+    // disconnect from DisplayCluster action
+    QAction * disconnectFromDisplayClusterAction = new QAction("Disconnect from DisplayCluster", this);
+    disconnectFromDisplayClusterAction->setStatusTip("Disconnect from DisplayCluster");
+    connect(disconnectFromDisplayClusterAction, SIGNAL(triggered()), this, SLOT(disconnectFromDisplayCluster()));
+
     // add actions to menus
     fileMenu->addAction(newSimulationAction);
     fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
     fileMenu->addAction(connectToDisplayClusterAction);
+    fileMenu->addAction(disconnectFromDisplayClusterAction);
 
     // add actions to toolbar
     toolbar->addAction(newSimulationAction);
@@ -356,5 +362,14 @@ void MainWindow::connectToDisplayCluster()
             messageBox.setText("Could not connect to DisplayCluster.");
             messageBox.exec();
         }
+    }
+}
+
+void MainWindow::disconnectFromDisplayCluster()
+{
+    if(g_dcSocket != NULL)
+    {
+        dcStreamDisconnect(g_dcSocket);
+        g_dcSocket = NULL;
     }
 }
