@@ -3,6 +3,7 @@
 #include "log.h"
 #include <QtGui>
 #include <QtNetwork/QTcpSocket>
+#include <vtkObject.h>
 
 MainWindow * g_mainWindow = NULL;
 std::string g_dataDirectory;
@@ -27,6 +28,9 @@ int main(int argc, char * argv[])
     g_dataDirectory = dataDirectory.absolutePath().toStdString();
 
     put_flog(LOG_DEBUG, "data directory: %s", g_dataDirectory.c_str());
+
+    // disable VTK console messages
+    vtkObject::GlobalWarningDisplayOff();
 
     g_mainWindow = new MainWindow();
 
