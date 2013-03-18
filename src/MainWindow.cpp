@@ -166,11 +166,19 @@ QSize MainWindow::sizeHint() const
 
 void MainWindow::setTime(int time)
 {
+    // we only want to perform these actions once per time change...
+    if(time_ == time)
+    {
+        return;
+    }
+
     time_ = time;
 
     // make sure the time slider has the correct value
-    // Qt makes sure this won't result in infinite recursion
-    timeSlider_->setValue(time_);
+    if(timeSlider_->value() != time_)
+    {
+        timeSlider_->setValue(time_);
+    }
 
     emit(timeChanged(time_));
 }
