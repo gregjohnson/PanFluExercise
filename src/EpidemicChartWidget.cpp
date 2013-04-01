@@ -247,22 +247,57 @@ void EpidemicChartWidget::update()
         {
             // no stratifications
 
-            // plot the variable
-            boost::shared_ptr<ChartWidgetLine> line = chartWidget_.getLine();
-
-            line->setColor(1.,0.,0.);
-            line->setWidth(2.);
-            line->setLabel(variable_.c_str());
-
-            for(int t=0; t<dataSet_->getNumTimes(); t++)
+            // if we're showing all nodes, go ahead and stratify by group
+            if(nodeId_ == NODES_ALL && nodeGroupMode_ == false)
             {
-                if(nodeGroupMode_ == false)
+                // add by group
+                std::vector<std::string> groupNames = dataSet_->getGroupNames();
+
+                // plot the variable
+                boost::shared_ptr<ChartWidgetLine> line = chartWidget_.getLine(NEW_LINE, STACKED);
+
+                line->setWidth(2.);
+
+                std::vector<std::string> labels;
+
+                for(unsigned int i=0; i<groupNames.size(); i++)
                 {
-                    line->addPoint(t, dataSet_->getValue(variable_, t, nodeId_, stratificationValues_));
+                    labels.push_back(variable_ + " (" + groupNames[i] + ")");
                 }
-                else
+
+                line->setLabels(labels);
+
+                for(int t=0; t<dataSet_->getNumTimes(); t++)
                 {
-                    line->addPoint(t, dataSet_->getValue(variable_, t, groupName_, stratificationValues_));
+                    std::vector<double> variableValues;
+
+                    for(unsigned int i=0; i<groupNames.size(); i++)
+                    {
+                        variableValues.push_back(dataSet_->getValue(variable_, t, groupNames[i]));
+                    }
+
+                    line->addPoints(t, variableValues);
+                }
+            }
+            else
+            {
+                // plot the variable
+                boost::shared_ptr<ChartWidgetLine> line = chartWidget_.getLine();
+
+                line->setColor(1.,0.,0.);
+                line->setWidth(2.);
+                line->setLabel(variable_.c_str());
+
+                for(int t=0; t<dataSet_->getNumTimes(); t++)
+                {
+                    if(nodeGroupMode_ == false)
+                    {
+                        line->addPoint(t, dataSet_->getValue(variable_, t, nodeId_, stratificationValues_));
+                    }
+                    else
+                    {
+                        line->addPoint(t, dataSet_->getValue(variable_, t, groupName_, stratificationValues_));
+                    }
                 }
             }
         }
