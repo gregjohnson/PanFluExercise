@@ -27,7 +27,7 @@ StochasticSEATIRD::StochasticSEATIRD()
 
     // initiate random number generator
     gsl_rng_env_setup();
-    randGenerator_ = gsl_rng_alloc (gsl_rng_default);
+    randGenerator_ = gsl_rng_alloc(gsl_rng_default);
 }
 
 StochasticSEATIRD::~StochasticSEATIRD()
