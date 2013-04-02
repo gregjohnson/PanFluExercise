@@ -23,6 +23,7 @@ class ChartWidgetLine
         void setLabel(const char * label);
         void setLabels(std::vector<std::string> labels);
         void setBarLabels(std::vector<std::string> labels);
+        void clearBarLabels();
         void addPoint(double x, double y);
         void addPoints(double x, std::vector<double> ys);
         void addPoint(double y);

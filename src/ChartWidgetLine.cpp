@@ -126,8 +126,15 @@ void ChartWidgetLine::setBarLabels(std::vector<std::string> labels)
     parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetOrientation(90);
     parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetVerticalJustification(VTK_TEXT_TOP);
     parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetJustification(VTK_TEXT_RIGHT);
+}
 
-    plot_->SetIndexedLabels(vtkLabels);
+void ChartWidgetLine::clearBarLabels()
+{
+    // back to defaults
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->SetCustomTickPositions(NULL, NULL);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetOrientation(0);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetVerticalJustification(VTK_TEXT_TOP);
+    parent_->getChart()->GetAxis(vtkAxis::BOTTOM)->GetLabelProperties()->SetJustification(VTK_TEXT_CENTERED);
 }
 
 void ChartWidgetLine::addPoint(double x, double y)

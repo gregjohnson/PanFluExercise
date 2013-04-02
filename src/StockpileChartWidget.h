@@ -1,6 +1,9 @@
 #ifndef STOCKPILE_CHART_WIDGET_H
 #define STOCKPILE_CHART_WIDGET_H
 
+#define STOCKPILE_CHART_MODE_CURRENT 0
+#define STOCKPILE_CHART_MODE_TIME_HISTORY 1
+
 #include "ChartWidget.h"
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
@@ -26,6 +29,9 @@ class StockpileChartWidget : public QMainWindow
 
     private:
 
+        void updateBarChart();
+        void updateTimeSeries();
+
         // the chart widget
         ChartWidget chartWidget_;
 
@@ -33,6 +39,16 @@ class StockpileChartWidget : public QMainWindow
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
         boost::shared_ptr<StockpileNetwork> stockpileNetwork_;
+
+        // chart mode
+        int mode_;
+
+        // time indicator line
+        boost::shared_ptr<ChartWidgetLine> timeIndicator_;
+
+    private slots:
+
+        void setModeChoice(int choiceIndex);
 };
 
 #endif
