@@ -13,6 +13,7 @@ Parameters::Parameters()
     chi_ = 1.;
     gamma_ = 0.243902439024;
     nu_ = 0.0001;
+    antiviralEffectiveness_ = 0.8;
 }
 
 void Parameters::setR0(double value)
@@ -97,4 +98,16 @@ void Parameters::setNu(double value)
 double Parameters::getNu()
 {
     return nu_;
+}
+
+void Parameters::setAntiviralEffectiveness(double value)
+{
+    antiviralEffectiveness_ = value;
+
+    put_flog(LOG_DEBUG, "%f", value);
+}
+
+double Parameters::getAntiviralEffectiveness()
+{
+    return antiviralEffectiveness_;
 }

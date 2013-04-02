@@ -28,6 +28,9 @@ class Parameters
         void setNu(double value);
         double getNu();
 
+        void setAntiviralEffectiveness(double value);
+        double getAntiviralEffectiveness();
+
     private:
 
         // basic reproduction number
@@ -51,6 +54,9 @@ class Parameters
         // asymptomatic, treatable, or infectious -> deceased transition rate
         // todo: this should be age stratified
         double nu_;
+
+        // antiviral effectiveness
+        double antiviralEffectiveness_;
 };
 
 // global parameters object

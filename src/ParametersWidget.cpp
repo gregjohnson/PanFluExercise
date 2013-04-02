@@ -55,6 +55,12 @@ ParametersWidget::ParametersWidget()
     layout->addRow(new QLabel("nu"), &nu_spinBox_);
     connect(&nu_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setNu(double)));
 
+    antiviralEffectiveness_spinBox_.setToolTip("antiviral effectiveness");
+    antiviralEffectiveness_spinBox_.setRange(0., 1.);
+    antiviralEffectiveness_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
+    layout->addRow(new QLabel("Antiviral effectiveness"), &antiviralEffectiveness_spinBox_);
+    connect(&antiviralEffectiveness_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setAntiviralEffectiveness(double)));
+
     // update widget values
     readValues();
 }
@@ -68,6 +74,7 @@ void ParametersWidget::readValues()
     chi_spinBox_.setValue(g_parameters.getChi());
     gamma_spinBox_.setValue(g_parameters.getGamma());
     nu_spinBox_.setValue(g_parameters.getNu());
+    antiviralEffectiveness_spinBox_.setValue(g_parameters.getAntiviralEffectiveness());
 }
 
 void ParametersWidget::setR0(double value)
@@ -103,4 +110,9 @@ void ParametersWidget::setGamma(double value)
 void ParametersWidget::setNu(double value)
 {
     g_parameters.setNu(value);
+}
+
+void ParametersWidget::setAntiviralEffectiveness(double value)
+{
+    g_parameters.setAntiviralEffectiveness(value);
 }

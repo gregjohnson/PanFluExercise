@@ -26,6 +26,7 @@ class ParametersWidget : public QScrollArea
         void setChi(double value);
         void setGamma(double value);
         void setNu(double value);
+        void setAntiviralEffectiveness(double value);
 
     private:
 
@@ -36,6 +37,7 @@ class ParametersWidget : public QScrollArea
         QDoubleSpinBox chi_spinBox_;
         QDoubleSpinBox gamma_spinBox_;
         QDoubleSpinBox nu_spinBox_;
+        QDoubleSpinBox antiviralEffectiveness_spinBox_;
 };
 
 #endif
