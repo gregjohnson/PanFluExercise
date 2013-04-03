@@ -86,6 +86,8 @@ int EpidemicSimulation::transition(int num, std::string sourceVarName, std::stri
 
     if(numTransition > numSourceVar)
     {
+        put_flog(LOG_WARN, "bounding transition amount of %i to source quantity %i (%s -> %s)", num, numSourceVar, sourceVarName.c_str(), destVarName.c_str());
+
         numTransition = numSourceVar;
     }
 
