@@ -43,9 +43,9 @@ void StockpileMapWidget::setTime(int time)
                 if(counties_.count(nodeIds[i]) != 0)
                 {
                     // map to color
-                    // scaled to 10% population
+                    // scaled to 1% population
                     float r, g, b;
-                    countiesColorMap_.getColor3(1. - (float)num / (0.10*population), r, g, b);
+                    countiesColorMap_.getColor3(1. - (float)num / (0.01*population), r, g, b);
 
                     counties_[nodeIds[i]]->setColor(r, g, b);
                 }
