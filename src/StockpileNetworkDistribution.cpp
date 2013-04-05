@@ -27,37 +27,49 @@ void StockpileNetworkDistribution::apply(int nowTime)
     {
         int clampedQuantity = quantity_;
 
-        if(clampedQuantity > sourceStockpile_->getNum(nowTime))
+        if(sourceStockpile_ != NULL)
         {
-            put_flog(LOG_INFO, "clamping transfer quantity to %i", sourceStockpile_->getNum(nowTime));
+            if(clampedQuantity > sourceStockpile_->getNum(nowTime))
+            {
+                put_flog(LOG_INFO, "clamping transfer quantity to %i", sourceStockpile_->getNum(nowTime));
 
-            clampedQuantity = sourceStockpile_->getNum(nowTime);
+                clampedQuantity = sourceStockpile_->getNum(nowTime);
+            }
+
+            // decrement source
+            sourceStockpile_->setNum(nowTime, sourceStockpile_->getNum(nowTime) - clampedQuantity);
         }
-
-        put_flog(LOG_INFO, "applying distribution (outbound): %s --> %s, %i", sourceStockpile_->getName().c_str(), destinationStockpile_->getName().c_str(), clampedQuantity);
-
-        // decrement source
-        sourceStockpile_->setNum(nowTime, sourceStockpile_->getNum(nowTime) - clampedQuantity);
 
         // save clamped quantity
         clampedQuantity_ = clampedQuantity;
 
         // emit signal
         emit(applied(clampedQuantity_));
-    }
 
-    if(nowTime == time_ + transferTime_)
-    {
-        put_flog(LOG_INFO, "applying distribution (inbound): %s --> %s, %i", sourceStockpile_->getName().c_str(), destinationStockpile_->getName().c_str(), clampedQuantity_);
+        // name of source
+        std::string sourceName;
 
-        // increment destination
-        destinationStockpile_->setNum(nowTime, destinationStockpile_->getNum(nowTime) + clampedQuantity_);
-
-        // if the destination corresponds to a group of nodes, distribute to nodes
-        std::vector<int> destinationNodeIds = destinationStockpile_->getNodeIds();
-
-        if(destinationNodeIds.size() > 0)
+        if(sourceStockpile_ != NULL)
         {
+            sourceName = sourceStockpile_->getName();
+        }
+        else
+        {
+            sourceName = "New Inventory";
+        }
+
+        if(destinationStockpile_ != NULL)
+        {
+            put_flog(LOG_INFO, "applying distribution (outbound): %s --> %s, %i", sourceName.c_str(), destinationStockpile_->getName().c_str(), clampedQuantity);
+
+            // go ahead and save to the map too, to simplify the inbound distribution
+            clampedQuantities_[destinationStockpile_] = clampedQuantity_;
+        }
+        else
+        {
+            // distribution to all stockpiles associated with a set of nodeIds
+            // set clamped quantities for each destination stockpile
+
             // make sure we're associated with a network
             boost::shared_ptr<StockpileNetwork> network = network_.lock();
 
@@ -68,34 +80,94 @@ void StockpileNetworkDistribution::apply(int nowTime)
             }
 
             // total population
-            float totalPopulation = network->getDataSet()->getPopulation(destinationNodeIds);
+            float totalPopulation = network->getDataSet()->getPopulation(network->getDataSet()->getNodeIds());
 
-            for(unsigned int i=0; i<destinationNodeIds.size(); i++)
+            std::vector<boost::shared_ptr<Stockpile> > stockpiles = network->getStockpiles();
+
+            for(unsigned int i=0; i<stockpiles.size(); i++)
             {
-                // population and stockpile for this nodeId
-                float population = network->getDataSet()->getPopulation(destinationNodeIds[i]);
-
-                boost::shared_ptr<Stockpile> nodeStockpile = network->getNodeStockpile(destinationNodeIds[i]);
-
-                if(nodeStockpile == NULL)
+                if(stockpiles[i]->getNodeIds().size() > 0)
                 {
-                    put_flog(LOG_ERROR, "NULL node stockpile for nodeId %i", destinationNodeIds[i]);
-                    continue;
+                    // population for nodeIds of this stockpile
+                    float stockpilePopulation = network->getDataSet()->getPopulation(stockpiles[i]->getNodeIds());
+
+                    // prorata to this stockpile by population
+                    clampedQuantities_[stockpiles[i]] = (int)(stockpilePopulation / totalPopulation * (float)clampedQuantity_);
+
+                    put_flog(LOG_INFO, "applying split distribution (outbound): %s --> %s, %i", sourceName.c_str(), stockpiles[i]->getName().c_str(), clampedQuantities_[stockpiles[i]]);
+                }
+            }
+        }
+    }
+
+    if(nowTime == time_ + transferTime_)
+    {
+        // name of source
+        std::string sourceName;
+
+        if(sourceStockpile_ != NULL)
+        {
+            sourceName = sourceStockpile_->getName();
+        }
+        else
+        {
+            sourceName = "New Inventory";
+        }
+
+        for(std::map<boost::shared_ptr<Stockpile>, int>::iterator it=clampedQuantities_.begin(); it!=clampedQuantities_.end(); it++)
+        {
+            boost::shared_ptr<Stockpile> destinationStockpile = it->first;
+            int clampedQuantity = it->second;
+
+            put_flog(LOG_INFO, "applying distribution (inbound): %s --> %s, %i", sourceName.c_str(), destinationStockpile->getName().c_str(), clampedQuantity);
+
+            // increment destination
+            destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime) + clampedQuantity);
+
+            // if the destination corresponds to a group of nodes, distribute to nodes
+            std::vector<int> destinationNodeIds = destinationStockpile->getNodeIds();
+
+            if(destinationNodeIds.size() > 0)
+            {
+                // make sure we're associated with a network
+                boost::shared_ptr<StockpileNetwork> network = network_.lock();
+
+                if(network == NULL)
+                {
+                    put_flog(LOG_ERROR, "not associated with a network");
+                    return;
                 }
 
-                // now, make the pro-rata distribution
-                float fraction = population / totalPopulation;
+                // total population
+                float totalPopulation = network->getDataSet()->getPopulation(destinationNodeIds);
 
-                // todo: this truncates the decimal quantity...
-                int clampedQuantityFraction = (int)(fraction * clampedQuantity_);
+                for(unsigned int i=0; i<destinationNodeIds.size(); i++)
+                {
+                    // population and stockpile for this nodeId
+                    float population = network->getDataSet()->getPopulation(destinationNodeIds[i]);
 
-                put_flog(LOG_INFO, "applying distribution (pro rata to nodes): %s --> %s, %i", destinationStockpile_->getName().c_str(), nodeStockpile->getName().c_str(), clampedQuantityFraction);
+                    boost::shared_ptr<Stockpile> nodeStockpile = network->getNodeStockpile(destinationNodeIds[i]);
 
-                // decrement original destination
-                destinationStockpile_->setNum(nowTime, destinationStockpile_->getNum(nowTime) - clampedQuantityFraction);
+                    if(nodeStockpile == NULL)
+                    {
+                        put_flog(LOG_ERROR, "NULL node stockpile for nodeId %i", destinationNodeIds[i]);
+                        continue;
+                    }
 
-                // increment node stockpile
-                nodeStockpile->setNum(nowTime, nodeStockpile->getNum(nowTime) + clampedQuantityFraction);
+                    // now, make the pro-rata distribution
+                    float fraction = population / totalPopulation;
+
+                    // todo: this truncates the decimal quantity...
+                    int clampedQuantityFraction = (int)(fraction * clampedQuantity);
+
+                    put_flog(LOG_INFO, "applying distribution (pro rata to nodes): %s --> %s, %i", destinationStockpile->getName().c_str(), nodeStockpile->getName().c_str(), clampedQuantityFraction);
+
+                    // decrement original destination
+                    destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime) - clampedQuantityFraction);
+
+                    // increment node stockpile
+                    nodeStockpile->setNum(nowTime, nodeStockpile->getNum(nowTime) + clampedQuantityFraction);
+                }
             }
         }
     }
@@ -109,11 +181,6 @@ int StockpileNetworkDistribution::getTime()
 boost::shared_ptr<Stockpile> StockpileNetworkDistribution::getSourceStockpile()
 {
     return sourceStockpile_;
-}
-
-boost::shared_ptr<Stockpile> StockpileNetworkDistribution::getDestinationStockpile()
-{
-    return destinationStockpile_;
 }
 
 int StockpileNetworkDistribution::getQuantity()
@@ -135,5 +202,29 @@ int StockpileNetworkDistribution::getClampedQuantity()
     else
     {
         return clampedQuantity_;
+    }
+}
+
+bool StockpileNetworkDistribution::hasDestinationStockpile(boost::shared_ptr<Stockpile> stockpile)
+{
+    if(clampedQuantities_.count(stockpile) > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+int StockpileNetworkDistribution::getClampedQuantity(boost::shared_ptr<Stockpile> destinationStockpile)
+{
+    if(clampedQuantities_.count(destinationStockpile) > 0)
+    {
+        return clampedQuantities_[destinationStockpile];
+    }
+    else
+    {
+        return 0;
     }
 }

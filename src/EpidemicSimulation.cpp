@@ -21,7 +21,7 @@ EpidemicSimulation::EpidemicSimulation()
 
     // add central stockpile
     boost::shared_ptr<Stockpile> centralStockpile(new Stockpile("Central"));
-    centralStockpile->setNum(0, 1000000);
+    centralStockpile->setNum(0, 0);
     stockpileNetwork->addStockpile(centralStockpile);
 
     // add stockpiles for each group

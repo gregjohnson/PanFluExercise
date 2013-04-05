@@ -21,6 +21,12 @@ StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::sh
     // add widgets...
 
     // source stockpile
+
+    // "new inventory" entry
+    // use a NULL stockpile value
+    QVariant newInventoryStockpilesVariant = QVariant::fromValue(boost::shared_ptr<Stockpile>());
+    sourceComboBox_.addItem("New Inventory", newInventoryStockpilesVariant);
+
     std::vector<boost::shared_ptr<Stockpile> > stockpiles = dataSet->getStockpileNetwork()->getStockpiles();
 
     for(unsigned int i=0; i<stockpiles.size(); i++)
@@ -32,6 +38,12 @@ StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::sh
     layout->addRow("Source", &sourceComboBox_);
 
     // destination stockpile
+
+    // "all" entry
+    // use a NULL stockpile value
+    QVariant allStockpilesVariant = QVariant::fromValue(boost::shared_ptr<Stockpile>());
+    destinationComboBox_.addItem("All", allStockpilesVariant);
+
     for(unsigned int i=0; i<stockpiles.size(); i++)
     {
         QVariant stockpileVariant = QVariant::fromValue(stockpiles[i]);

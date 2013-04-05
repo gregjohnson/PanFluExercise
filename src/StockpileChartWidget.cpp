@@ -125,7 +125,7 @@ void StockpileChartWidget::updateBarChart()
 
         // series labels
         std::vector<std::string> seriesLabels;
-        seriesLabels.push_back("Current");
+        seriesLabels.push_back("Inventory");
         seriesLabels.push_back("Outbound");
         seriesLabels.push_back("Inbound");
         seriesLabels.push_back("Usable");
@@ -148,9 +148,9 @@ void StockpileChartWidget::updateBarChart()
                     pendingOutQuantity += pendingDistributions[j]->getClampedQuantity();
                 }
 
-                if(pendingDistributions[j]->getDestinationStockpile() == stockpiles[i])
+                if(pendingDistributions[j]->hasDestinationStockpile(stockpiles[i]) == true)
                 {
-                    pendingInQuantity += pendingDistributions[j]->getClampedQuantity();
+                    pendingInQuantity += pendingDistributions[j]->getClampedQuantity(stockpiles[i]);
                 }
             }
 
