@@ -53,6 +53,21 @@ MapWidget::~MapWidget()
     }
 }
 
+void MapWidget::setTitle(std::string title)
+{
+    title_ = title;
+}
+
+void MapWidget::setColorMapMinLabel(std::string label)
+{
+    colorMapMinLabel_ = label;
+}
+
+void MapWidget::setColorMapMaxLabel(std::string label)
+{
+    colorMapMaxLabel_ = label;
+}
+
 void MapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     dataSet_ = dataSet;
@@ -76,7 +91,7 @@ void MapWidget::exportSVGToDisplayCluster()
         painter.begin(&generator);
 
         // set logical coordinates of the render window
-        painter.setWindow(QRect(QPoint(-107,37), QPoint(-93,25)));
+        painter.setWindow(baseMapRect_.toRect());
 
         // draw a black background
         painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
@@ -89,6 +104,61 @@ void MapWidget::exportSVGToDisplayCluster()
         {
             iter->second->renderSVG(&painter);
         }
+
+        // draw title
+        painter.resetTransform();
+
+        QFont titleFont = painter.font();
+
+        int titleFontPixelSize = 32;
+        titleFont.setPixelSize(titleFontPixelSize);
+
+        painter.setFont(titleFont);
+        painter.setPen(QColor::fromRgbF(1,1,1,1));
+        painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+
+        QPoint titlePosition = painter.window().topRight() + QPoint(-600, 100);
+        QRect titleRect = QRect(titlePosition, titlePosition + QPoint(600, 3 * titleFontPixelSize));
+
+        painter.drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
+
+        // draw legend
+        QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-250, -250);
+        float legendHeight = 200.;
+        float legendWidth = 50.;
+
+        int legendSubdivisions = 50;
+
+        float colorMin, colorMax;
+        countiesColorMap_.getColorMap(colorMin, colorMax);
+
+        for(int i=0; i<legendSubdivisions; i++)
+        {
+            QPointF tl = QPointF(legendTopLeft) + QPointF(0., (float)i * legendHeight / (float)legendSubdivisions);
+            QPointF br = tl + QPointF(legendWidth, legendHeight / (float)legendSubdivisions);
+
+            float value = colorMax + (float)i/((float)legendSubdivisions - 1.) * (colorMin - colorMax);
+
+            float r,g,b;
+            countiesColorMap_.getColor3(value, r,g,b);
+
+            painter.setPen(QColor::fromRgbF(r,g,b,1));
+            painter.setBrush(QBrush(QColor::fromRgbF(r,g,b,1)));
+
+            painter.drawRect(QRectF(tl, br));
+        }
+
+        // draw legend labels
+        float textPadding = 25;
+
+        QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
+        QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
+
+        painter.setPen(QColor::fromRgbF(1,1,1,1));
+        painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+
+        painter.drawText(legendMax, colorMapMaxLabel_.c_str());
+        painter.drawText(legendMin, colorMapMinLabel_.c_str());
 
         painter.end();
 

@@ -19,6 +19,11 @@ class MapWidget : public QGLWidget
         MapWidget();
         ~MapWidget();
 
+        void setTitle(std::string title);
+
+        void setColorMapMinLabel(std::string label);
+        void setColorMapMaxLabel(std::string label);
+
     public slots:
 
         virtual void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
@@ -31,6 +36,12 @@ class MapWidget : public QGLWidget
         // indexing used to identify this map
         static int numMapWidgets_;
         int index_;
+
+        // title and color map labels
+        std::string title_;
+
+        std::string colorMapMinLabel_;
+        std::string colorMapMaxLabel_;
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
