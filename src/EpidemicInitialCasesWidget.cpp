@@ -91,6 +91,28 @@ void EpidemicInitialCasesWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> d
         }
 
         casesWidgets_.clear();
+
+        // create defaults
+        // todo: this should be handled somewhere else
+        int defaultNumCases = 10000;
+        std::vector<int> defaultNodeIds;
+
+        defaultNodeIds.push_back(453);
+        defaultNodeIds.push_back(113);
+        defaultNodeIds.push_back(201);
+        defaultNodeIds.push_back(141);
+        defaultNodeIds.push_back(375);
+
+        for(unsigned int i=0; i<defaultNodeIds.size(); i++)
+        {
+            EpidemicCasesWidget * casesWidget = new EpidemicCasesWidget(simulation);
+
+            casesWidgets_.push_back(casesWidget);
+            layout_.addWidget(casesWidget);
+
+            casesWidget->setNumCases(defaultNumCases);
+            casesWidget->setNodeId(defaultNodeIds[i]);
+        }
     }
 }
 
