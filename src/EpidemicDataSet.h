@@ -56,6 +56,8 @@ class EpidemicDataSet
         bool copyVariable(std::string sourceVarName, std::string destVarName);
         bool copyVariableToNewTimeStep(std::string varName);
 
+        // both of these return arrays that reference the original data!
+        blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> getVariableAtTime(std::string varName, int time);
         blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> getVariableAtFinalTime(std::string varName);
 
         boost::shared_ptr<StockpileNetwork> getStockpileNetwork();

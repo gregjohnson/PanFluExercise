@@ -383,6 +383,26 @@ bool EpidemicDataSet::copyVariableToNewTimeStep(std::string varName)
     return true;
 }
 
+blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> EpidemicDataSet::getVariableAtTime(std::string varName, int time)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS>();
+    }
+
+    if(time >= variables_[varName].extent(0))
+    {
+        put_flog(LOG_ERROR, "time %i >= time extent %i", time, variables_[varName].extent(0));
+        return blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS>();
+    }
+
+    // this should produce a slice that references the data in the original variable array
+    blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> subVar = variables_[varName](time, blitz::Range::all(), BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, TEXT, blitz::Range::all()));
+
+    return subVar;
+}
+
 blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> EpidemicDataSet::getVariableAtFinalTime(std::string varName)
 {
     if(variables_.count(varName) == 0)
