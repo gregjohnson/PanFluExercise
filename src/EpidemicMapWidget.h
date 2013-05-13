@@ -7,6 +7,8 @@ class EpidemicMapWidget : public MapWidget
 {
     public:
 
+        EpidemicMapWidget();
+
         // re-implemented virtual methods
         void setTime(int time);
 

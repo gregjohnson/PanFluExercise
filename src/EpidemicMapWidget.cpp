@@ -2,6 +2,13 @@
 #include "EpidemicDataSet.h"
 #include "MapShape.h"
 
+EpidemicMapWidget::EpidemicMapWidget()
+{
+    setTitle("Infectious Population by County");
+    setColorMapMinLabel("0%");
+    setColorMapMaxLabel("1%");
+}
+
 void EpidemicMapWidget::setTime(int time)
 {
     MapWidget::setTime(time);

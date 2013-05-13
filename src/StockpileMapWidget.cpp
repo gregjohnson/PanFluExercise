@@ -13,6 +13,10 @@ StockpileMapWidget::StockpileMapWidget()
     colorVector.push_back(Color(0., .267, .106));
 
     countiesColorMap_.setColorVector(colorVector);
+
+    setTitle("Available Antivirals by County as a Fraction of Population");
+    setColorMapMinLabel("0%");
+    setColorMapMaxLabel("1%");
 }
 
 void StockpileMapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
