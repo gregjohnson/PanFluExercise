@@ -19,6 +19,9 @@ class EpidemicCasesWidget : public QGroupBox
 
         EpidemicCasesWidget(boost::shared_ptr<EpidemicDataSet> dataSet);
 
+        void setNumCases(int num);
+        void setNodeId(int nodeId);
+
         EpidemicCases getCases();
 
     private:

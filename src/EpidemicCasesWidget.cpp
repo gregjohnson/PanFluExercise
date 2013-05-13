@@ -41,6 +41,16 @@ EpidemicCasesWidget::EpidemicCasesWidget(boost::shared_ptr<EpidemicDataSet> data
     }
 }
 
+void EpidemicCasesWidget::setNumCases(int num)
+{
+    numCasesSpinBox_.setValue(num);
+}
+
+void EpidemicCasesWidget::setNodeId(int nodeId)
+{
+    nodeComboBox_.setCurrentIndex(nodeComboBox_.findData(nodeId));
+}
+
 EpidemicCases EpidemicCasesWidget::getCases()
 {
     EpidemicCases cases;
