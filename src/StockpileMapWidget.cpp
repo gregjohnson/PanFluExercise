@@ -4,6 +4,17 @@
 #include "MapShape.h"
 #include "EpidemicDataSet.h"
 
+StockpileMapWidget::StockpileMapWidget()
+{
+    std::vector<Color> colorVector;
+
+    colorVector.push_back(Color(.60, .847, .788));
+    colorVector.push_back(Color(.137, .545, .271));
+    colorVector.push_back(Color(0., .267, .106));
+
+    countiesColorMap_.setColorVector(colorVector);
+}
+
 void StockpileMapWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     MapWidget::setDataSet(dataSet);
@@ -45,7 +56,7 @@ void StockpileMapWidget::setTime(int time)
                     // map to color
                     // scaled to 1% population
                     float r, g, b;
-                    countiesColorMap_.getColor3(1. - (float)num / (0.01*population), r, g, b);
+                    countiesColorMap_.getColor3((float)num / (0.01*population), r, g, b);
 
                     counties_[nodeIds[i]]->setColor(r, g, b);
                 }

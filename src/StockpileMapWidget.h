@@ -10,6 +10,8 @@ class StockpileMapWidget : public MapWidget
 {
     public:
 
+        StockpileMapWidget();
+
         // re-implemented virtual methods
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         void setTime(int time);
