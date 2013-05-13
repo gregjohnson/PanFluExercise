@@ -60,7 +60,7 @@ void StockpileNetworkDistribution::apply(int nowTime)
 
         if(destinationStockpile_ != NULL)
         {
-            put_flog(LOG_INFO, "applying distribution (outbound): %s --> %s, %i", sourceName.c_str(), destinationStockpile_->getName().c_str(), clampedQuantity);
+            put_flog(LOG_INFO, "applying distribution (outbound): %s --> %s, %i", sourceName.c_str(), destinationStockpile_->getName().c_str(), clampedQuantity_);
 
             // go ahead and save to the map too, to simplify the inbound distribution
             clampedQuantities_[destinationStockpile_] = clampedQuantity_;
@@ -138,6 +138,9 @@ void StockpileNetworkDistribution::apply(int nowTime)
                     return;
                 }
 
+                // at the end of the distribution the destination stockpile should be this
+                int destinationStockpileFinal = destinationStockpile->getNum(nowTime) - clampedQuantity;
+
                 // total population
                 float totalPopulation = network->getDataSet()->getPopulation(destinationNodeIds);
 
@@ -158,7 +161,7 @@ void StockpileNetworkDistribution::apply(int nowTime)
                     float fraction = population / totalPopulation;
 
                     // todo: this truncates the decimal quantity...
-                    int clampedQuantityFraction = (int)(fraction * clampedQuantity);
+                    int clampedQuantityFraction = (int)(fraction * (float)clampedQuantity);
 
                     put_flog(LOG_INFO, "applying distribution (pro rata to nodes): %s --> %s, %i", destinationStockpile->getName().c_str(), nodeStockpile->getName().c_str(), clampedQuantityFraction);
 
@@ -167,6 +170,15 @@ void StockpileNetworkDistribution::apply(int nowTime)
 
                     // increment node stockpile
                     nodeStockpile->setNum(nowTime, nodeStockpile->getNum(nowTime) + clampedQuantityFraction);
+                }
+
+                // make sure the destination stockpile has the expected quantity
+                // if not, correct it... this occurs due to integer division issues
+                if(destinationStockpile->getNum(nowTime) != destinationStockpileFinal)
+                {
+                    put_flog(LOG_DEBUG, "adjust desination stockpile to %i from %i", destinationStockpileFinal, destinationStockpile->getNum(nowTime));
+
+                    destinationStockpile->setNum(nowTime, destinationStockpileFinal);
                 }
             }
         }
