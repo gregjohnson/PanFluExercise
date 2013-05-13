@@ -1,13 +1,29 @@
 #ifndef COLOR_MAP_H
 #define COLOR_MAP_H
 
-#define COLOR_ARRAY_SIZE 3
+#include <vector>
+
+struct Color {
+
+    Color(float red, float green, float blue)
+    {
+        r = red;
+        g = green;
+        b = blue;
+    }
+
+    float r;
+    float g;
+    float b;
+};
 
 class ColorMap {
 
     public:
 
         ColorMap();
+
+        void setColorVector(std::vector<Color> colorVector);
 
         // get and set color / alpha map entries
         void getColorMap(float &colorMin, float &colorMax);
@@ -29,7 +45,8 @@ class ColorMap {
 
     private:
 
-        float colorArray[COLOR_ARRAY_SIZE][3];
+
+        std::vector<Color> colorVector_;
 
         float colorMin_;
         float colorMax_;

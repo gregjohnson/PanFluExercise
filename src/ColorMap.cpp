@@ -1,4 +1,5 @@
 #include "ColorMap.h"
+#include "log.h"
 #include <cmath>
 
 #ifdef __APPLE__
@@ -10,21 +11,18 @@
 ColorMap::ColorMap()
 {
     // color map definition (CFD-type)
-    colorArray[0][0] = 0.;
-    colorArray[0][1] = 1.;
-    colorArray[0][2] = 0.;
-
-    colorArray[1][0] = 1.;
-    colorArray[1][1] = 1.;
-    colorArray[1][2] = 0.;
-
-    colorArray[2][0] = 1.;
-    colorArray[2][1] = 0.;
-    colorArray[2][2] = 0.;
+    colorVector_.push_back(Color(0.,1.,0.));
+    colorVector_.push_back(Color(1.,1.,0.));
+    colorVector_.push_back(Color(1.,0.,0.));
 
     // defaults
     colorMin_ = colorMax_ = 0.;
     alphaMin_ = alphaMax_ = 0.;
+}
+
+void ColorMap::setColorVector(std::vector<Color> colorVector)
+{
+    colorVector_ = colorVector;
 }
 
 void ColorMap::getColorMap(float &colorMin, float &colorMax)
@@ -103,28 +101,36 @@ void ColorMap::getColor4(float value, float &r, float &g, float &b, float &a)
 
 void ColorMap::mapIndex(float index, float &r, float &g, float &b)
 {
+    if(colorVector_.size() <= 0)
+    {
+        put_flog(LOG_ERROR, "undefined color vector");
+        r = g = b = 1.;
+
+        return;
+    }
+
     if(index <= 0.)
     {
-        r = colorArray[0][0];
-        g = colorArray[0][1];
-        b = colorArray[0][2];
+        r = colorVector_[0].r;
+        g = colorVector_[0].g;
+        b = colorVector_[0].b;
 
         return;
     }
     else if(index >= 1.)
     {
-        r = colorArray[COLOR_ARRAY_SIZE-1][0];
-        g = colorArray[COLOR_ARRAY_SIZE-1][1];
-        b = colorArray[COLOR_ARRAY_SIZE-1][2];
+        r = colorVector_[colorVector_.size()-1].r;
+        g = colorVector_[colorVector_.size()-1].g;
+        b = colorVector_[colorVector_.size()-1].b;
 
         return;
     }
 
     // index is in range, let's interpolate a color
-    index = index * ((float)COLOR_ARRAY_SIZE - 1.);
+    index = index * ((float)colorVector_.size() - 1.);
 
     // interpolate between the two bounding colors
-    r = colorArray[(int)index][0] + (index - floor(index)) * (colorArray[(int)index+1][0] - colorArray[(int)index][0]);
-    g = colorArray[(int)index][1] + (index - floor(index)) * (colorArray[(int)index+1][1] - colorArray[(int)index][1]);
-    b = colorArray[(int)index][2] + (index - floor(index)) * (colorArray[(int)index+1][2] - colorArray[(int)index][2]);
+    r = colorVector_[(int)index].r + (index - floor(index)) * (colorVector_[(int)index+1].r - colorVector_[(int)index].r);
+    g = colorVector_[(int)index].g + (index - floor(index)) * (colorVector_[(int)index+1].g - colorVector_[(int)index].g);
+    b = colorVector_[(int)index].b + (index - floor(index)) * (colorVector_[(int)index+1].b - colorVector_[(int)index].b);
 }
