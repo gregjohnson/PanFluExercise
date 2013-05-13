@@ -10,6 +10,9 @@ endif(COMMAND cmake_policy)
 # show all warnings
 set(CMAKE_CXX_FLAGS "-Wall")
 
+# keep the library path in installed executables
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # path for additional modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
