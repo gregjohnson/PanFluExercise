@@ -190,6 +190,8 @@ void EpidemicChartWidget::setVariable(std::string variable)
     variable_ = variable;
 
     update();
+
+    emit(variableChanged(variable));
 }
 
 void EpidemicChartWidget::setStratifyByIndex(int index)
@@ -197,6 +199,8 @@ void EpidemicChartWidget::setStratifyByIndex(int index)
     stratifyByIndex_ = index;
 
     update();
+
+    emit(stratifyByIndexChanged(index));
 }
 
 void EpidemicChartWidget::setStratificationValues(std::vector<int> stratificationValues)
@@ -204,6 +208,8 @@ void EpidemicChartWidget::setStratificationValues(std::vector<int> stratificatio
     stratificationValues_ = stratificationValues;
 
     update();
+
+    emit(stratificationValuesChanged(stratificationValues));
 }
 
 void EpidemicChartWidget::update()
