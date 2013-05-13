@@ -13,7 +13,7 @@ Parameters::Parameters()
     chi_ = 1.;
     gamma_ = 0.243902439024;
     nu_ = 0.0001;
-    antiviralEffectiveness_ = 0.8;
+    antiviralEffectiveness_ = 0.15;
 }
 
 void Parameters::setR0(double value)
