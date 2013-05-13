@@ -8,6 +8,7 @@
 #include <vtkContextScene.h>
 #include <vtkContextMouseEvent.h>
 #include <vtkAxis.h>
+#include <vtkChartLegend.h>
 
 int ChartWidget::numChartWidgets_ = 0;
 
@@ -27,8 +28,10 @@ ChartWidget::ChartWidget()
     chart_ = vtkSmartPointer<vtkChartXY>::New();
     view_->GetScene()->AddItem(chart_);
 
-    // show legend
+    // show legend, by default in the lower left
     chart_->SetShowLegend(true);
+    chart_->GetLegend()->SetVerticalAlignment(vtkChartLegend::BOTTOM);
+    chart_->GetLegend()->SetHorizontalAlignment(vtkChartLegend::LEFT);
 
     // don't allow zooming out beyond range of data
     chart_->SetForceAxesToBounds(true);
