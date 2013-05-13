@@ -25,6 +25,7 @@ StochasticSEATIRD::StochasticSEATIRD()
     derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getHospitalized, this, _1, _2, _3);
 
     // initial start time to 0
+    nowInt_ = 0;
     now_ = 0.;
 
     // initiate random number generator
@@ -67,20 +68,20 @@ void StochasticSEATIRD::simulate()
 {
     EpidemicSimulation::simulate();
 
-    // pre-compute some frequently used values
-    precompute(numTimes_ - 1);
-
     // apply treatments
     applyTreatments();
 
-    double tMax = now_ + 1.0;
+    // pre-compute some frequently used values
+    precompute(numTimes_ - 1);
+
+    double tMax = (double)nowInt_ + 1.0;
 
     // process events for each node
     for(unsigned int i=0; i<nodeIds_.size(); i++)
     {
         int nodeId = nodeIds_[i];
 
-        while(!eventQueue_[nodeId][(int)now_].empty())
+        while(!eventQueue_[nodeId][nowInt_].empty())
         {
             nextEvent(nodeId);
         }
@@ -89,7 +90,8 @@ void StochasticSEATIRD::simulate()
     // travel between nodes
     travel();
 
-    now_ = tMax;
+    nowInt_++;
+    now_ = (double)nowInt_;
 }
 
 float StochasticSEATIRD::getInfected(int time, int nodeId, std::vector<int> stratificationValues)
@@ -564,7 +566,7 @@ void StochasticSEATIRD::applyTreatments()
         }
 
         // available stockpile
-        int stockpileAmount = stockpile->getNum((int)now_);
+        int stockpileAmount = stockpile->getNum((int)now_+1);
 
         // do nothing if we have no available stockpile
         if(stockpileAmount == 0)

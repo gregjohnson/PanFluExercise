@@ -30,6 +30,7 @@ class StochasticSEATIRD : public EpidemicSimulation
         gsl_rng * randGenerator_;
 
         // current time
+        int nowInt_;
         double now_;
 
         // event queue for each nodeId and for each (int)time
