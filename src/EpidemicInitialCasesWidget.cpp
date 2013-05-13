@@ -11,6 +11,10 @@ EpidemicInitialCasesWidget::EpidemicInitialCasesWidget(MainWindow * mainWindow)
     setWidgetResizable(true);
     setWidget(widget);
 
+    // clear cases button
+    QPushButton * clearCasesButton = new QPushButton("&Clear Cases");
+    layout_.addWidget(clearCasesButton);
+
     // add cases button
     QPushButton * addCasesButton = new QPushButton("&Add Cases");
     layout_.addWidget(addCasesButton);
@@ -18,6 +22,7 @@ EpidemicInitialCasesWidget::EpidemicInitialCasesWidget(MainWindow * mainWindow)
     // make connections
     connect((QObject *)mainWindow, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), this, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
+    connect(clearCasesButton, SIGNAL(clicked()), this, SLOT(clearCases()));
     connect(addCasesButton, SIGNAL(clicked()), this, SLOT(addCases()));
 }
 
@@ -86,6 +91,37 @@ void EpidemicInitialCasesWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> d
         }
 
         casesWidgets_.clear();
+    }
+}
+
+void EpidemicInitialCasesWidget::clearCases()
+{
+    boost::shared_ptr<EpidemicSimulation> simulation = boost::dynamic_pointer_cast<EpidemicSimulation>(dataSet_);
+
+    if(simulation != NULL)
+    {
+        if(simulation->getNumTimes() == 1)
+        {
+            // delete all existing case widgets
+            for(unsigned int i=0; i<casesWidgets_.size(); i++)
+            {
+                delete casesWidgets_[i];
+            }
+
+            casesWidgets_.clear();
+        }
+        else
+        {
+            put_flog(LOG_ERROR, "cannot clear initial cases after initial time");
+
+            QMessageBox::warning(this, "Error", "Cannot clear initial cases after initial time.", QMessageBox::Ok, QMessageBox::Ok);
+        }
+    }
+    else
+    {
+        put_flog(LOG_ERROR, "not a valid simulation");
+
+        QMessageBox::warning(this, "Error", "Not a valid simulation.", QMessageBox::Ok, QMessageBox::Ok);
     }
 }
 

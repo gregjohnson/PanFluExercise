@@ -34,6 +34,7 @@ class EpidemicInitialCasesWidget : public QScrollArea
 
     private slots:
 
+        void clearCases();
         void addCases();
 };
 
