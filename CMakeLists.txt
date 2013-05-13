@@ -20,6 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 # see http://cmake.org/cmake/help/cmake2.6docs.html#module:FindQt4 for details
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTSVG TRUE)
+set(QT_USE_QTNETWORK TRUE)
 
 if(WIN32)
     set(QT_USE_QTMAIN TRUE)
