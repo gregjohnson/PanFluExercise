@@ -97,6 +97,9 @@ void MapWidget::exportSVGToDisplayCluster()
         painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
         painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
 
+        // don't render the basemap in SVG since it's too expensive
+        // baseMapSvg_->render(&painter, QRect(QPoint(-107,37), QPoint(-93,25)));
+
         // render shapes
         std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
 
