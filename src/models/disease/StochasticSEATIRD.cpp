@@ -6,6 +6,10 @@
 #include "../../log.h"
 #include <boost/bind.hpp>
 
+const int StochasticSEATIRD::numAgeGroups_ = 5;
+const int StochasticSEATIRD::numRiskGroups_ = 2;
+const int StochasticSEATIRD::numVaccinatedGroups_ = 2;
+
 StochasticSEATIRD::StochasticSEATIRD()
 {
     put_flog(LOG_DEBUG, "");
@@ -24,8 +28,8 @@ StochasticSEATIRD::StochasticSEATIRD()
     derivedVariables_[":infected"] = boost::bind(&StochasticSEATIRD::getInfected, this, _1, _2, _3);
     derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getHospitalized, this, _1, _2, _3);
 
-    // initial start time to 0
-    nowInt_ = 0;
+    // initialize start time to 0
+    time_ = 0;
     now_ = 0.;
 
     // initiate random number generator
@@ -43,11 +47,11 @@ StochasticSEATIRD::~StochasticSEATIRD()
 int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificationValues)
 {
     // expose() can be called outside of a simulation before we've simulated any time steps
-    if(cachedTime_ != numTimes_ - 1)
+    if(cachedTime_ != time_)
     {
         put_flog(LOG_DEBUG, "precomputing (should only happen at the beginning of simulation)");
 
-        precompute(numTimes_ - 1);
+        precompute(time_);
     }
 
     int numExposed = EpidemicSimulation::expose(num, nodeId, stratificationValues);
@@ -57,8 +61,10 @@ int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificati
     {
         StochasticSEATIRDSchedule schedule(now_, rand_, stratificationValues);
 
-        initializeExposedTransitions(nodeId, stratificationValues, schedule);
-        initializeContactEvents(nodeId, stratificationValues, schedule);
+        initializeContactEvents(schedule, nodeId, stratificationValues);
+
+        // now add event schedules to big queue
+        scheduleEventQueues_[nodeId].push(schedule);
     }
 
     return numExposed;
@@ -66,32 +72,67 @@ int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificati
 
 void StochasticSEATIRD::simulate()
 {
+    // we are simulating from time_ to time_+1
+    now_ = (double)time_;
+
+    // pre-compute some frequently used values
+    precompute(time_);
+
+    // base class simulate(): copies variables to new time step (time_+1) and evolves stockpile network
     EpidemicSimulation::simulate();
+
+    // enable this for schedule verification (this is expensive!)
+#if 0
+    if(verifyScheduleCounts() != true)
+    {
+        put_flog(LOG_ERROR, "failed verification of schedule counts");
+    }
+#endif
 
     // apply treatments
     applyTreatments();
-
-    // pre-compute some frequently used values
-    precompute(numTimes_ - 1);
-
-    double tMax = (double)nowInt_ + 1.0;
 
     // process events for each node
     for(unsigned int i=0; i<nodeIds_.size(); i++)
     {
         int nodeId = nodeIds_[i];
 
-        while(!eventQueue_[nodeId][nowInt_].empty())
+        while(scheduleEventQueues_[nodeId].empty() != true && scheduleEventQueues_[nodeId].top().getTopEvent().time < (double)time_+1.)
         {
-            nextEvent(nodeId);
+            // pop the schedule off the schedule queue
+            StochasticSEATIRDSchedule schedule = scheduleEventQueues_[nodeId].top();
+            scheduleEventQueues_[nodeId].pop();
+
+            // make sure schedule isn't empty or canceled (it could be canceled from applying treatments, for example)
+            if(schedule.empty() != true && schedule.canceled() != true)
+            {
+                // pop the event off the schedule's event queue
+                StochasticSEATIRDEvent event = schedule.getTopEvent();
+                schedule.popTopEvent();
+
+                // process the event
+                now_ = event.time;
+
+                processEvent(nodeId, event);
+
+                // re-insert the schedule back into the schedule queue
+                // it will be sorted corresponding to its next event
+                if(schedule.empty() != true)
+                {
+                    scheduleEventQueues_[nodeId].push(schedule);
+                }
+            }
         }
     }
+
+    // current event time is now the end of the current day
+    now_ = (double)time_ + 1.;
 
     // travel between nodes
     travel();
 
-    nowInt_++;
-    now_ = (double)nowInt_;
+    // increment current time
+    time_++;
 }
 
 float StochasticSEATIRD::getInfected(int time, int nodeId, std::vector<int> stratificationValues)
@@ -116,259 +157,7 @@ float StochasticSEATIRD::getHospitalized(int time, int nodeId, std::vector<int> 
     return hospitalized;
 }
 
-void StochasticSEATIRD::addEvent(const int &nodeId, const StochasticSEATIRDEvent &event)
-{
-    eventQueue_[nodeId][(int)event.time].push(event);
-
-    if(event.type == CONTACT)
-    {
-        // increment contact counter
-        incrementCounter(nodeId, event.fromStratificationValues, "queuedContact", 1);
-    }
-}
-
-int StochasticSEATIRD::getCount(const int &nodeId, const std::vector<int> &stratificationValues, const std::string &counterType)
-{
-    // if we don't have a counter for this type, return 0
-    if(counters_.count(counterType) == 0)
-    {
-        return 0;
-    }
-
-    return counters_[counterType](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues));
-}
-
-void StochasticSEATIRD::incrementCounter(const int &nodeId, const std::vector<int> &stratificationValues, const std::string &counterType, const int &count)
-{
-    // if we don't have a counter for this type, create it
-    if(counters_.count(counterType) == 0)
-    {
-        // shape
-        blitz::TinyVector<int, 1+NUM_STRATIFICATION_DIMENSIONS> shape;
-
-        shape(0) = numNodes_;
-
-        for(int i=0; i<NUM_STRATIFICATION_DIMENSIONS; i++)
-        {
-            shape(1+i) = stratifications_[i].size();
-        }
-
-        // create the variable
-        blitz::Array<int, 1+NUM_STRATIFICATION_DIMENSIONS> var(shape);
-
-        // initialize values to zero
-        var = 0;
-
-        // add the variable to the vector
-        counters_[counterType].reference(var);
-    }
-
-    // increment counter
-    counters_[counterType](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) += count;
-}
-
-bool StochasticSEATIRD::keepEvent(const int &nodeId, const StochasticSEATIRDEvent &event)
-{
-    bool keepEvent;
-
-    std::string eventType;
-
-    // right now only "treatable" and "infectious" events are unqueued here
-    switch(event.type)
-    {
-        case TtoI:
-        case TtoR:
-        case TtoD:
-            eventType = "treatable";
-            break;
-
-        case ItoR:
-        case ItoD:
-            eventType = "infectious";
-            break;
-
-        default:
-            break;
-    }
-
-    if(eventType.empty() == true)
-    {
-        put_flog(LOG_ERROR, "unknown event type");
-        return true;
-    }
-
-    if(counters_.count(eventType) == 0)
-    {
-        return true;
-    }
-
-    int unqueuedCount = counters_[eventType](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues));
-
-    if(eventType == "treatable" && (int)event.initializationTime == (int)now_)
-    {
-        keepEvent = true;
-    }
-    else
-    {
-        // todo: use of the cached initial variables is questionable...
-        if(cachedInitialVariables_.count(eventType) == 0)
-        {
-            put_flog(LOG_ERROR, "no cached initial variable for %s", eventType.c_str());
-            return true;
-        }
-
-        blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> initialVariable = cachedInitialVariables_[eventType];
-
-        if(unqueuedCount == 0 || rand_.rand() > (float)unqueuedCount / ((float)unqueuedCount + initialVariable(nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues))))
-        {
-            keepEvent = true;
-            initialVariable(nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues)) -= 1;
-        }
-        else
-        {
-            keepEvent = false;
-            counters_[eventType](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues)) -= 1;
-        }
-    }
-
-    return keepEvent;
-}
-
-bool StochasticSEATIRD::keepContact(const int &nodeId, const StochasticSEATIRDEvent &event)
-{
-    bool keepEvent;
-
-    if(counters_.count("unqueuedContact") == 0)
-    {
-        return true;
-    }
-
-    int unqueuedContactCount = counters_["unqueuedContact"](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues));
-
-    int queuedContactCount = counters_["queuedContact"](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues));
-
-    if(rand_.rand() > (double)unqueuedContactCount / (double)queuedContactCount)
-    {
-        keepEvent = true;
-    }
-    else
-    {
-        keepEvent = false;
-        counters_["unqueuedContact"](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues)) -= 1;
-    }
-
-    counters_["queuedContact"](nodeIdToIndex_[nodeId], BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, event.fromStratificationValues)) -= 1;
-
-    return keepEvent;
-}
-
-void StochasticSEATIRD::initializeExposedTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
-{
-    StochasticSEATIRDEvent event;
-
-    event.initializationTime = now_;
-    event.time = schedule.Ta;
-    event.type = EtoA;
-    event.fromStratificationValues = stratificationValues;
-    event.toStratificationValues = stratificationValues;
-
-    addEvent(nodeId, event);
-
-    initializeAsymptomaticTransitions(nodeId, stratificationValues, schedule);
-}
-
-void StochasticSEATIRD::initializeAsymptomaticTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
-{
-    StochasticSEATIRDEvent event;
-
-    event.initializationTime = schedule.Ta;
-    event.fromStratificationValues = stratificationValues;
-    event.toStratificationValues = stratificationValues;
-
-    // event time and type will vary...
-    if(schedule.Tt < schedule.Tr_a && schedule.Tt < schedule.Td_a)
-    {
-        // asymptomatic -> treatable
-        event.time = schedule.Tt;
-        event.type = AtoT;
-
-        initializeTreatableTransitions(nodeId, stratificationValues, schedule);
-    }
-    else if(schedule.Tr_a < schedule.Td_a)
-    {
-        // asymptomatic -> recovered
-        event.time = schedule.Tr_a;
-        event.type = AtoR;
-    }
-    else
-    {
-        // asymptomatic -> deceased
-        event.time = schedule.Td_a;
-        event.type = AtoD;
-    }
-
-    addEvent(nodeId, event);
-}
-
-void StochasticSEATIRD::initializeTreatableTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
-{
-    StochasticSEATIRDEvent event;
-
-    event.initializationTime = schedule.Tt;
-    event.fromStratificationValues = stratificationValues;
-    event.toStratificationValues = stratificationValues;
-
-    // event time and type will vary...
-    if(schedule.Ti < schedule.Tr_ti && schedule.Ti < schedule.Td_ti)
-    {
-        // treatable -> infectious
-        event.time = schedule.Ti;
-        event.type = TtoI;
-
-        initializeInfectiousTransitions(nodeId, stratificationValues, schedule);
-    }
-    else if(schedule.Tr_ti < schedule.Td_ti)
-    {
-        // treatable -> recovered
-        event.time = schedule.Tr_ti;
-        event.type = TtoR;
-    }
-    else
-    {
-        // treatable -> deceased
-        event.time = schedule.Td_ti;
-        event.type = TtoD;
-    }
-
-    addEvent(nodeId, event);
-}
-
-void StochasticSEATIRD::initializeInfectiousTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
-{
-    StochasticSEATIRDEvent event;
-
-    event.initializationTime = schedule.Ti;
-    event.fromStratificationValues = stratificationValues;
-    event.toStratificationValues = stratificationValues;
-
-    // event time and type will vary...
-    if(schedule.Tr_ti < schedule.Td_ti)
-    {
-        // infectious -> recovered
-        event.time = schedule.Tr_ti;
-        event.type = ItoR;
-    }
-    else
-    {
-        // infectious -> deceased
-        event.time = schedule.Td_ti;
-        event.type = ItoD;
-    }
-
-    addEvent(nodeId, event);
-}
-
-void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule)
+void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues)
 {
     // todo: beta should be age-specific considering PHA's
     double beta = g_parameters.getR0() / g_parameters.getBetaScale();
@@ -387,12 +176,7 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
                                 { 4.02227175596,4.22656343551,6.92483172729,9.45371062356,14.0529294262 }   };
 
     // make sure we have expected stratifications
-    // todo: make these defined elsewhere?
-    static int numAgeGroups = 5;
-    static int numRiskGroups = 2;
-    static int numVaccinatedGroups = 2;
-
-    if((int)stratifications_[0].size() != numAgeGroups || (int)stratifications_[1].size() != numRiskGroups || (int)stratifications_[2].size() != numVaccinatedGroups)
+    if((int)stratifications_[0].size() != StochasticSEATIRD::numAgeGroups_ || (int)stratifications_[1].size() != StochasticSEATIRD::numRiskGroups_ || (int)stratifications_[2].size() != StochasticSEATIRD::numVaccinatedGroups_)
     {
         put_flog(LOG_ERROR, "wrong number of stratifications");
         return;
@@ -400,35 +184,34 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
 
     std::vector<int> toStratificationValues(3);
 
-    for(int a=0; a<numAgeGroups; a++)
+    for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
     {
-        for(int r=0; r<numRiskGroups; r++)
+        for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
         {
-            for(int v=0; v<numVaccinatedGroups; v++)
+            for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
             {
+                //// this seems wrong -- the number of vaccinated people will change over time, and this targets them only at the time of exposure!
+
                 toStratificationValues[0] = a;
                 toStratificationValues[1] = r;
                 toStratificationValues[2] = v;
 
-                // fraction of the to group in population; this was cached before
+                // fraction of the to group in population; use cached values
                 double toGroupFraction = populations_(nodeIdToIndex_[nodeId], a, r, v) / populationNodes_(nodeIdToIndex_[nodeId]);
 
                 double contactRate = contact[stratificationValues[0]][a];
                 double transmissionRate = (1. - vaccineEffectiveness) * beta * contactRate * sigma[a] * toGroupFraction;
-                double TcInit = schedule.Ta;
-                double Tc = random_exponential(transmissionRate, &rand_) + TcInit;
 
-                while(Tc < schedule.Trd_ati)
+                // contacts can occur within this time range
+                double TcInit = schedule.getInfectedTMin(); // asymptomatic
+                double TcFinal = schedule.getInfectedTMax(); // recovered / deceased
+
+                // the first contact time...
+                double Tc = TcInit + random_exponential(transmissionRate, &rand_);
+
+                while(Tc < TcFinal)
                 {
-                    StochasticSEATIRDEvent event;
-
-                    event.initializationTime = TcInit;
-                    event.time = Tc;
-                    event.type = CONTACT;
-                    event.fromStratificationValues = stratificationValues;
-                    event.toStratificationValues = toStratificationValues;
-
-                    addEvent(nodeId, event);
+                    schedule.insertEvent(StochasticSEATIRDEvent(TcInit, Tc, CONTACT, stratificationValues, toStratificationValues));
 
                     TcInit = Tc;
                     Tc = TcInit + random_exponential(transmissionRate, &rand_);
@@ -438,19 +221,8 @@ void StochasticSEATIRD::initializeContactEvents(const int &nodeId, const std::ve
     }
 }
 
-bool StochasticSEATIRD::nextEvent(int nodeId)
+bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDEvent &event)
 {
-    if(eventQueue_[nodeId][(int)now_].empty() == true)
-    {
-        return false;
-    }
-
-    // get and pop first event
-    StochasticSEATIRDEvent event = eventQueue_[nodeId][(int)now_].top();
-    eventQueue_[nodeId][(int)now_].pop();
-
-    now_ = event.time;
-
     switch(event.type)
     {
         case EtoA:
@@ -471,78 +243,44 @@ bool StochasticSEATIRD::nextEvent(int nodeId)
             transition(1, "asymptomatic", "deceased", nodeId, event.fromStratificationValues);
             break;
 
-        // todo: for TtoI, TtoR, TtoD look at keep_event, unqueue_event...
         case TtoI:
             // treatable -> infectious
-            if(keepEvent(nodeId, event) == true)
-            {
-                transition(1, "treatable", "infectious", nodeId, event.fromStratificationValues);
-            }
-            else
-            {
-                // unqueue a subsequent infectious event
-                incrementCounter(nodeId, event.fromStratificationValues, "infectious", 1);
-            }
-
+            transition(1, "treatable", "infectious", nodeId, event.fromStratificationValues);
             break;
         case TtoR:
             // treatable -> recovered
-            if(keepEvent(nodeId, event) == true)
-            {
-                transition(1, "treatable", "recovered", nodeId, event.fromStratificationValues);
-            }
-
+            transition(1, "treatable", "recovered", nodeId, event.fromStratificationValues);
             break;
         case TtoD:
             // treatable -> deceased
-            if(keepEvent(nodeId, event) == true)
-            {
-                transition(1, "treatable", "deceased", nodeId, event.fromStratificationValues);
-            }
-
+            transition(1, "treatable", "deceased", nodeId, event.fromStratificationValues);
             break;
 
-        // todo: for ItoR, ItoD look at keep_event
         case ItoR:
             // infectious -> recovered
-            if(keepEvent(nodeId, event) == true)
-            {
-                transition(1, "infectious", "recovered", nodeId, event.fromStratificationValues);
-            }
-
+            transition(1, "infectious", "recovered", nodeId, event.fromStratificationValues);
             break;
         case ItoD:
             // infectious -> deceased
-            if(keepEvent(nodeId, event) == true)
-            {
-                transition(1, "infectious", "deceased", nodeId, event.fromStratificationValues);
-            }
-
+            transition(1, "infectious", "deceased", nodeId, event.fromStratificationValues);
             break;
 
         case CONTACT:
-            // todo: see if we keep this contact event
-            if(keepContact(nodeId, event) == true)
+            int targetPopulationSize = (int)populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]);
+
+            if(event.fromStratificationValues == event.toStratificationValues)
             {
-                // current time
-                int time = numTimes_ - 1;
+                targetPopulationSize -= 1; // - 1 because randint includes both endpoints
+            }
 
-                int targetPopulationSize = (int)populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]);
+            if(targetPopulationSize > 0)
+            {
+                // random integer between 1 and targetPopulationSize
+                int contact = rand_.randInt(targetPopulationSize - 1) + 1;
 
-                if(event.fromStratificationValues == event.toStratificationValues)
+                if((int)getValue("susceptible", time_+1, nodeId, event.toStratificationValues) >= contact)
                 {
-                    targetPopulationSize -= 1; // - 1 because randint includes both endpoints
-                }
-
-                if(targetPopulationSize > 0)
-                {
-                    // random integer between 1 and targetPopulationSize
-                    int contact = rand_.randInt(targetPopulationSize - 1) + 1;
-
-                    if((int)getValue("susceptible", time, nodeId, event.toStratificationValues) >= contact)
-                    {
-                        expose(1, nodeId, event.toStratificationValues);
-                    }
+                    expose(1, nodeId, event.toStratificationValues);
                 }
             }
     }
@@ -566,7 +304,7 @@ void StochasticSEATIRD::applyTreatments()
         }
 
         // available stockpile
-        int stockpileAmount = stockpile->getNum((int)now_+1);
+        int stockpileAmount = stockpile->getNum(time_+1);
 
         // do nothing if we have no available stockpile
         if(stockpileAmount == 0)
@@ -574,17 +312,17 @@ void StochasticSEATIRD::applyTreatments()
             continue;
         }
 
-        float totalNumberTreatable = getValue("treatable", (int)now_, nodeIds[i]);
+        int totalNumberTreatable = (int)getValue("treatable", time_+1, nodeIds[i]);
 
         int stockpileAmountUsed = stockpileAmount;
 
-        if(stockpileAmountUsed > (int)totalNumberTreatable)
+        if(stockpileAmountUsed > totalNumberTreatable)
         {
-            stockpileAmountUsed = (int)totalNumberTreatable;
+            stockpileAmountUsed = totalNumberTreatable;
         }
 
         // decrement stockpile
-        stockpile->setNum((int)now_+1, stockpileAmount - stockpileAmountUsed);
+        stockpile->setNum(time_+1, stockpileAmount - stockpileAmountUsed);
 
         // number successfully treated (includes effectiveness)
         int totalNumberTreated = (int)((float)stockpileAmountUsed * g_parameters.getAntiviralEffectiveness());
@@ -597,61 +335,63 @@ void StochasticSEATIRD::applyTreatments()
 
         // apply treatments pro-rata across all stratifications
         // todo: when we're doing these fractional divisions of int, we need to make sure we're not truncating off treatments
-        static int numAgeGroups = 5;
-        static int numRiskGroups = 2;
-        static int numVaccinatedGroups = 2;
 
-        for(int a=0; a<numAgeGroups; a++)
+        blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS> numberTreatable(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
+        blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS> numberTreated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
+
+        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
         {
-            for(int r=0; r<numRiskGroups; r++)
+            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
             {
-                for(int v=0; v<numVaccinatedGroups; v++)
+                for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
                 {
                     std::vector<int> stratificationValues;
                     stratificationValues.push_back(a);
                     stratificationValues.push_back(r);
                     stratificationValues.push_back(v);
 
-                    float numberTreatable = getValue("treatable", (int)now_, nodeIds[i], stratificationValues);
+                    numberTreatable(a, r, v) = (int)getValue("treatable", time_+1, nodeIds[i], stratificationValues);
 
                     // pro-rata based on treatable population
-                    int numberTreated = (int)(((float)numberTreatable / (float)totalNumberTreatable) * (float)totalNumberTreated);
+                    numberTreated(a, r, v) = (int)((float)numberTreatable(a, r, v) / (float)totalNumberTreatable * (float)totalNumberTreated);
 
-                    if(numberTreated <= 0)
+                    if(numberTreated(a, r, v) <= 0)
                     {
                         continue;
                     }
 
-                    put_flog(LOG_DEBUG, "numberTreatable = %f, numTreated = %i", numberTreatable, numberTreated);
+                    put_flog(LOG_DEBUG, "numberTreatable = %i, numberTreated = %i", numberTreatable(a, r, v), numberTreated(a, r, v));
 
                     // transition those treated from "treatable" to "recovered"
-                    transition(numberTreated, "treatable", "recovered", nodeIds[i], stratificationValues);
+                    transition(numberTreated(a, r, v), "treatable", "recovered", nodeIds[i], stratificationValues);
+                }
+            }
+        }
 
-                    // unqueue treatable events via counter
-                    incrementCounter(nodeIds[i], stratificationValues, "treatable", numberTreated);
+        // now, adjust schedules for individuals that were treated
+        // this will stop their transitions to other states and also their contact events
+        boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator begin = scheduleEventQueues_[nodeIds[i]].begin();
+        boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator end = scheduleEventQueues_[nodeIds[i]].end();
 
-                    // now, unqueue appropriate number of contact events
-                    float probability = (float)numberTreated / getInfected((int)now_, nodeIds[i], stratificationValues);
+        boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator it;
 
-                    int numTrials = getCount(nodeIds[i], stratificationValues, "queuedContact") - getCount(nodeIds[i], stratificationValues, "unqueuedContact");
+        for(it=begin; it!=end && blitz::sum(numberTreated) > 0; it++)
+        {
+            if((*it).getState() == T)
+            {
+                std::vector<int> stratificationValues = (*it).getStratificationValues();
 
-                    int unqueuedContacts = 0;
-
-                    if(probability >= 1.)
+                if(numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) > 0)
+                {
+                    if(rand_.rand() <= numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) / numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)))
                     {
-                        unqueuedContacts = numTrials;
-                    }
-                    else if(probability <= 0.)
-                    {
-                        unqueuedContacts = 0;
-                    }
-                    else
-                    {
-                        unqueuedContacts = gsl_ran_binomial(randGenerator_, probability, numTrials);
+                        // cancel the remaining schedule
+                        (*boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::s_handle_from_iterator(it)).cancel();
+
+                        numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))--;
                     }
 
-                    // unqueue contact events via counter
-                    incrementCounter(nodeIds[i], stratificationValues, "unqueuedContact", unqueuedContacts);
+                    numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))--;
                 }
             }
         }
@@ -660,13 +400,6 @@ void StochasticSEATIRD::applyTreatments()
 
 void StochasticSEATIRD::travel()
 {
-    // current time
-    int time = numTimes_ - 1;
-
-    int numAgeGroups = 5;
-    int numRiskGroups = 2;
-    int numVaccinatedGroups = 2;
-
     // todo: these should be parameters defined elsewhere
     double RHO = 0.39;
 
@@ -686,7 +419,7 @@ void StochasticSEATIRD::travel()
 
         double populationSink = populationNodes_(nodeIdToIndex_[sinkNodeId]);
 
-        std::vector<double> unvaccinatedProbabilities(numAgeGroups, 0.0);
+        std::vector<double> unvaccinatedProbabilities(StochasticSEATIRD::numAgeGroups_, 0.0);
 
         std::vector<double> ageBasedFlowReductions (5, 1.0);
         ageBasedFlowReductions[0] = 10; // 0-4  year olds
@@ -700,13 +433,13 @@ void StochasticSEATIRD::travel()
             double populationSource = populationNodes_(nodeIdToIndex_[sourceNodeId]);
 
             // pre-compute some frequently needed quantities
-            std::vector<double> asymptomatics(numAgeGroups);
-            std::vector<double> transmittings(numAgeGroups);
+            std::vector<double> asymptomatics(StochasticSEATIRD::numAgeGroups_);
+            std::vector<double> transmittings(StochasticSEATIRD::numAgeGroups_);
 
-            for(int age=0; age<numAgeGroups; age++)
+            for(int age=0; age<StochasticSEATIRD::numAgeGroups_; age++)
             {
-                asymptomatics[age] = getValue("asymptomatic", time, sourceNodeId, std::vector<int>(1,age));
-                transmittings[age] = asymptomatics[age] + getValue("treatable", time, sourceNodeId, std::vector<int>(1,age)) + getValue("infectious", time, sourceNodeId, std::vector<int>(1,age));
+                asymptomatics[age] = getValue("asymptomatic", time_+1, sourceNodeId, std::vector<int>(1,age));
+                transmittings[age] = asymptomatics[age] + getValue("treatable", time_+1, sourceNodeId, std::vector<int>(1,age)) + getValue("infectious", time_+1, sourceNodeId, std::vector<int>(1,age));
             }
 
             if(sinkNodeId != sourceNodeId)
@@ -717,7 +450,7 @@ void StochasticSEATIRD::travel()
 
                 if(travelFractionIJ > 0. || travelFractionJI > 0.)
                 {
-                    for(int a=0; a<numAgeGroups; a++)
+                    for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
                     {
                         double numberOfInfectiousContactsIJ = 0.;
                         double numberOfInfectiousContactsJI = 0.;
@@ -725,7 +458,7 @@ void StochasticSEATIRD::travel()
                         // todo: beta should be age-specific considering PHA's
                         double beta = g_parameters.getR0() / g_parameters.getBetaScale();
 
-                        for(int b=0; b<numAgeGroups; b++)
+                        for(int b=0; b<StochasticSEATIRD::numAgeGroups_; b++)
                         {
                             double asymptomatic = asymptomatics[b];
 
@@ -744,11 +477,11 @@ void StochasticSEATIRD::travel()
             }
         }
 
-        for(int a=0; a<numAgeGroups; a++)
+        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
         {
-            for(int r=0; r<numRiskGroups; r++)
+            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
             {
-                for(int v=0; v<numVaccinatedGroups; v++)
+                for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
                 {
                     double probability = 0.;
 
@@ -767,7 +500,7 @@ void StochasticSEATIRD::travel()
                     stratificationValues.push_back(r);
                     stratificationValues.push_back(v);
 
-                    int sinkNumSusceptible = (int)(variables_["susceptible"](time, nodeIdToIndex_[sinkNodeId], a, r, v) + 0.5); // continuity correction
+                    int sinkNumSusceptible = (int)(variables_["susceptible"](time_+1, nodeIdToIndex_[sinkNodeId], a, r, v) + 0.5); // continuity correction
 
                     double numberOfExposures = gsl_ran_binomial(randGenerator_, probability, sinkNumSusceptible);
 
@@ -782,17 +515,13 @@ void StochasticSEATIRD::precompute(int time)
 {
     cachedTime_ = time;
 
-    int numAgeGroups = 5;
-    int numRiskGroups = 2;
-    int numVaccinatedGroups = 2;
-
     blitz::Array<double, 1> populationNodes(numNodes_); // [nodeIndex]
 
     blitz::TinyVector<int, 1+NUM_STRATIFICATION_DIMENSIONS> shape;
     shape(0) = numNodes_;
-    shape(1) = numAgeGroups;
-    shape(2) = numRiskGroups;
-    shape(3) = numVaccinatedGroups;
+    shape(1) = StochasticSEATIRD::numAgeGroups_;
+    shape(2) = StochasticSEATIRD::numRiskGroups_;
+    shape(3) = StochasticSEATIRD::numVaccinatedGroups_;
 
     blitz::Array<double, 1+NUM_STRATIFICATION_DIMENSIONS> populations(shape); // [nodeIndex, a, r, v]
 
@@ -802,11 +531,11 @@ void StochasticSEATIRD::precompute(int time)
 
         populationNodes((int)i) = getValue("population", time, nodeId);
 
-        for(int a=0; a<numAgeGroups; a++)
+        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
         {
-            for(int r=0; r<numRiskGroups; r++)
+            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
             {
-                for(int v=0; v<numVaccinatedGroups; v++)
+                for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
                 {
                     std::vector<int> stratificationValues;
                     stratificationValues.push_back(a);
@@ -821,23 +550,88 @@ void StochasticSEATIRD::precompute(int time)
 
     populationNodes_.reference(populationNodes);
     populations_.reference(populations);
+}
 
-    cachedInitialVariables_.clear();
+int StochasticSEATIRD::getScheduleCount(const int &nodeId, const StochasticSEATIRDScheduleState &state, const std::vector<int> &stratificationValues)
+{
+    int count = 0;
 
-    // only need to cache treatable and infectious variables
-    std::vector<std::string> variables;
+    boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator begin = scheduleEventQueues_[nodeId].begin();
+    boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator end = scheduleEventQueues_[nodeId].end();
 
-    variables.push_back("treatable");
-    variables.push_back("infectious");
+    boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator it;
 
-    for(unsigned int i=0; i<variables.size(); i++)
+    for(it=begin; it!=end; it++)
     {
-        // this is a reference to the original data -- we don't want to modify it
-        blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> var = getVariableAtFinalTime(variables[i]);
-
-        // make a copy
-        blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> varCopy = var.copy();
-
-        cachedInitialVariables_[variables[i]].reference(varCopy);
+        if((*it).canceled() != true && (*it).getState() == state && (*it).getStratificationValues() == stratificationValues)
+        {
+            count++;
+        }
     }
+
+    return count;
+}
+
+bool StochasticSEATIRD::verifyScheduleCounts()
+{
+    bool verified = true;
+
+    std::vector<int> nodeIds = getNodeIds();
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
+        {
+            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
+            {
+                for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
+                {
+                    std::vector<int> stratificationValues;
+                    stratificationValues.push_back(a);
+                    stratificationValues.push_back(r);
+                    stratificationValues.push_back(v);
+
+                    // only verify exposed, asymptomatic, treatable, infectious, as these are the only states having events
+
+                    int exposed = (int)getValue("exposed", time_+1, nodeIds[i], stratificationValues);
+                    int exposedScheduled = getScheduleCount(nodeIds[i], E, stratificationValues);
+
+                    int asymptomatic = (int)getValue("asymptomatic", time_+1, nodeIds[i], stratificationValues);
+                    int asymptomaticScheduled = getScheduleCount(nodeIds[i], A, stratificationValues);
+
+                    int treatable = (int)getValue("treatable", time_+1, nodeIds[i], stratificationValues);
+                    int treatableScheduled = getScheduleCount(nodeIds[i], T, stratificationValues);
+
+                    int infectious = (int)getValue("infectious", time_+1, nodeIds[i], stratificationValues);
+                    int infectiousScheduled = getScheduleCount(nodeIds[i], I, stratificationValues);
+
+                    if(exposed != exposedScheduled)
+                    {
+                        put_flog(LOG_ERROR, "exposed != exposedScheduled (%i != %i)", exposed, exposedScheduled);
+                        verified = false;
+                    }
+
+                    if(asymptomatic != asymptomaticScheduled)
+                    {
+                        put_flog(LOG_ERROR, "asymptomatic != asymptomaticScheduled (%i != %i)", asymptomatic, asymptomaticScheduled);
+                        verified = false;
+                    }
+
+                    if(treatable != treatableScheduled)
+                    {
+                        put_flog(LOG_ERROR, "treatable != treatableScheduled (%i != %i)", treatable, treatableScheduled);
+                        verified = false;
+                    }
+
+                    if(infectious != infectiousScheduled)
+                    {
+                        put_flog(LOG_ERROR, "infectious != infectiousScheduled (%i != %i)", infectious, infectiousScheduled);
+                        verified = false;
+                    }
+                }
+            }
+        }
+    }
+
+    return verified;
 }

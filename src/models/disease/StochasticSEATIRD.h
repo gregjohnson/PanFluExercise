@@ -25,47 +25,34 @@ class StochasticSEATIRD : public EpidemicSimulation
 
     private:
 
+        // dimensions of stratifications
+        static const int numAgeGroups_;
+        static const int numRiskGroups_;
+        static const int numVaccinatedGroups_;
+
         // random number generators
         MTRand rand_;
         gsl_rng * randGenerator_;
 
-        // current time
-        int nowInt_;
+        // current time step
+        int time_;
+
+        // current time for processing new events / new exposures
         double now_;
 
-        // event queue for each nodeId and for each (int)time
-        std::map<int, std::map<int, boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> > > > eventQueue_;
-
-        // counters used to unqueue events
-        std::map<std::string, blitz::Array<int, 1+NUM_STRATIFICATION_DIMENSIONS> > counters_;
+        // schedule event queue for each nodeId
+        std::map<int, boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> > > scheduleEventQueues_;
 
         // cached values
         int cachedTime_;
         blitz::Array<double, 1> populationNodes_;
         blitz::Array<double, 1+NUM_STRATIFICATION_DIMENSIONS> populations_;
-        std::map<std::string, blitz::Array<float, 1+NUM_STRATIFICATION_DIMENSIONS> > cachedInitialVariables_;
 
-        // add an event to the queue
-        void addEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
-
-        // counter access / manipulation
-        int getCount(const int &nodeId, const std::vector<int> &stratificationValues, const std::string &counterType);
-        void incrementCounter(const int &nodeId, const std::vector<int> &stratificationValues, const std::string &counterType, const int &count);
-
-        // determine whether or not to keep events (they may be unqueued)
-        bool keepEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
-        bool keepContact(const int &nodeId, const StochasticSEATIRDEvent &event);
-
-        // initiate transitions for an event according to a schedule
-        void initializeExposedTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule);
-        void initializeAsymptomaticTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule);
-        void initializeTreatableTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule);
-        void initializeInfectiousTransitions(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule);
-
-        void initializeContactEvents(const int &nodeId, const std::vector<int> &stratificationValues, const StochasticSEATIRDSchedule &schedule);
+        // create contact events and insert them into the schedule
+        void initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues);
 
         // process the next event
-        bool nextEvent(int nodeId);
+        bool processEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
 
         // treatments
         void applyTreatments();
@@ -75,6 +62,12 @@ class StochasticSEATIRD : public EpidemicSimulation
 
         // precompute / cache values for each time step
         void precompute(int time);
+
+        // count number of active (not canceled) events in schedules corresponding to state and stratifications for nodeId
+        int getScheduleCount(const int &nodeId, const StochasticSEATIRDScheduleState &state, const std::vector<int> &stratificationValues);
+
+        // verify that the queued schedules match what is expected
+        bool verifyScheduleCounts();
 };
 
 #endif

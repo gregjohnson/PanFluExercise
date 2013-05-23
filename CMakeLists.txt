@@ -95,7 +95,6 @@ set(SRCS ${SRCS}
     src/StockpileChartWidget.cpp
     src/models/random.cpp
     src/models/disease/StochasticSEATIRD.cpp
-    src/models/disease/StochasticSEATIRDEvent.cpp
     src/models/disease/StochasticSEATIRDSchedule.cpp
 )
 

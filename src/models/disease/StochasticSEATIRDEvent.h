@@ -20,7 +20,14 @@ enum StochasticSEATIRDEventType
 
 struct StochasticSEATIRDEvent
 {
-    StochasticSEATIRDEvent();
+    StochasticSEATIRDEvent(const double &_initializationTime, const double &_time, const StochasticSEATIRDEventType &_type, const std::vector<int> &_fromStratificationValues, const std::vector<int> &_toStratificationValues)
+    {
+        initializationTime = _initializationTime;
+        time = _time;
+        type = _type;
+        fromStratificationValues = _fromStratificationValues;
+        toStratificationValues = _toStratificationValues;
+    }
 
     double initializationTime;
     double time;

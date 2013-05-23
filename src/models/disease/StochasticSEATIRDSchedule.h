@@ -1,23 +1,88 @@
 #ifndef STOCHASTIC_SEATIRD_SCHEDULE_H
 #define STOCHASTIC_SEATIRD_SCHEDULE_H
 
+#include "StochasticSEATIRDEvent.h"
 #include "../MersenneTwister.h"
-#include <vector>
+#include <boost/heap/pairing_heap.hpp>
 
-struct StochasticSEATIRDSchedule
+// an individual corresponding to a schedule can be in any of these states
+// susceptible is not included, since events start after exposure
+enum StochasticSEATIRDScheduleState
 {
-    StochasticSEATIRDSchedule();
+    E,
+    A,
+    T,
+    I,
+    R,
+    D
+};
 
-    StochasticSEATIRDSchedule(const double now, MTRand &rand, std::vector<int> stratificationValues);
+class StochasticSEATIRDSchedule
+{
+    public:
 
-    double Ta;      // time to progress from exposed to asymptomatic
-    double Tt;      // time to progress from asymptomatic to treatable
-    double Ti;      // time to progress from treatable to infectious
-    double Tr_a;    // time to recover from asymptomatic
-    double Tr_ti;   // time to recover from treatable/infectious
-    double Td_a;    // time to death from asymptomatic
-    double Td_ti;   // time to death from treatable/infectious
-    double Trd_ati; // time to recovery or death from asymptomatic, treatable, or infectious
+        StochasticSEATIRDSchedule(const double &now, MTRand &rand, const std::vector<int> &stratificationValues);
+
+        void insertEvent(const StochasticSEATIRDEvent &event);
+
+        // see if schedule is empty
+        bool empty() const;
+
+        // get the top event, but don't pop it off the queue
+        StochasticSEATIRDEvent getTopEvent() const;
+
+        // get and pop the top event
+        // when an event is popped, it is assumed the person corresponding to this schedule transitions to the next state of the event (if applicable for event type)
+        void popTopEvent();
+
+        // get stratification of individual corresponding to this schedule
+        std::vector<int> getStratificationValues() const;
+
+        // get state of individual corresponding to this schedule
+        StochasticSEATIRDScheduleState getState() const;
+
+        // get infected time bounds
+        double getInfectedTMin() const;
+        double getInfectedTMax() const;
+
+        // see if schedule is canceled
+        bool canceled() const;
+
+        // cancel schedule (e.g. by treatment)
+        void cancel();
+
+        // todo: we could save the latest event time in this class to make the comparisons faster...
+        class compareByNextEventTime
+        {
+            public:
+                bool operator()(const StochasticSEATIRDSchedule * lhs, const StochasticSEATIRDSchedule * rhs) const
+                {
+                    return (lhs->eventQueue_.top().time > rhs->eventQueue_.top().time);
+                }
+
+                bool operator()(const StochasticSEATIRDSchedule &lhs, const StochasticSEATIRDSchedule &rhs) const
+                {
+                    return (lhs.eventQueue_.top().time > rhs.eventQueue_.top().time);
+                }
+        };
+
+    private:
+
+        boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> > eventQueue_;
+
+        // stratification of individual corresponding to schedule
+        std::vector<int> stratificationValues_;
+
+        // current state of individual corresponding to schedule
+        StochasticSEATIRDScheduleState state_;
+
+        // infected times: from asymptomatic to recovery / death
+        // new events (such as contacts) only allowed within this range!
+        double infectedTMin_;
+        double infectedTMax_;
+
+        // if the schedule is canceled no further events should be processed
+        bool canceled_;
 };
 
 #endif
