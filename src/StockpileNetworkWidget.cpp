@@ -38,39 +38,23 @@ void StockpileNetworkWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataS
 {
     dataSet_ = dataSet;
 
-    bool keepWidgets = false;
+    clearWidgets();
 
-    // keep widgets if this is an evolution of an existing simulation
-    boost::shared_ptr<EpidemicSimulation> simulation = boost::dynamic_pointer_cast<EpidemicSimulation>(dataSet_);
-
-    if(simulation != NULL)
+    // create new widgets if needed
+    if(dataSet_ != NULL)
     {
-        if(simulation->getNumTimes() > 1)
+        boost::shared_ptr<StockpileNetwork> stockpileNetwork = dataSet_->getStockpileNetwork();
+
+        if(stockpileNetwork != NULL)
         {
-            keepWidgets = true;
-        }
-    }
+            std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork->getStockpiles();
 
-    if(keepWidgets == false)
-    {
-        clearWidgets();
-
-        // create new widgets if needed
-        if(simulation != NULL)
-        {
-            boost::shared_ptr<StockpileNetwork> stockpileNetwork = simulation->getStockpileNetwork();
-
-            if(stockpileNetwork != NULL)
+            for(unsigned int i=0; i<stockpiles.size(); i++)
             {
-                std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork->getStockpiles();
+                StockpileWidget * stockpileWidget = new StockpileWidget(stockpiles[i]);
 
-                for(unsigned int i=0; i<stockpiles.size(); i++)
-                {
-                    StockpileWidget * stockpileWidget = new StockpileWidget(stockpiles[i]);
-
-                    stockpileWidgets_.push_back(stockpileWidget);
-                    layout_.addWidget(stockpileWidget);
-                }
+                stockpileWidgets_.push_back(stockpileWidget);
+                layout_.addWidget(stockpileWidget);
             }
         }
     }

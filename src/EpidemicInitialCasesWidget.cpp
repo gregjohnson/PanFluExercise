@@ -69,30 +69,20 @@ void EpidemicInitialCasesWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> d
 {
     dataSet_ = dataSet;
 
-    bool keepCaseWidgets = false;
-
-    // keep case widgets if this is an evolution of an existing simulation
+    // see if this is a simulation
     boost::shared_ptr<EpidemicSimulation> simulation = boost::dynamic_pointer_cast<EpidemicSimulation>(dataSet_);
 
-    if(simulation != NULL)
+    // delete all existing case widgets
+    for(unsigned int i=0; i<casesWidgets_.size(); i++)
     {
-        if(simulation->getNumTimes() > 1)
-        {
-            keepCaseWidgets = true;
-        }
+        delete casesWidgets_[i];
     }
 
-    if(keepCaseWidgets == false)
+    casesWidgets_.clear();
+
+    // create defaults if this is a simulation
+    if(simulation != NULL && simulation->getNumTimes() == 1)
     {
-        // delete all existing case widgets
-        for(unsigned int i=0; i<casesWidgets_.size(); i++)
-        {
-            delete casesWidgets_[i];
-        }
-
-        casesWidgets_.clear();
-
-        // create defaults
         // todo: this should be handled somewhere else
         int defaultNumCases = 10000;
         std::vector<int> defaultNodeIds;
