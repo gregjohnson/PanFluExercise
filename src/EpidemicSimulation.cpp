@@ -41,6 +41,23 @@ EpidemicSimulation::EpidemicSimulation()
     }
 
     stockpileNetwork_ = stockpileNetwork;
+
+    // default priority groups
+    std::vector<std::vector<int> > stratificationVectorValues;
+
+    // all stratifications
+    stratificationVectorValues.clear();
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    addPriorityGroup(PriorityGroup("All", stratificationVectorValues));
+
+    // high risk only
+    stratificationVectorValues.clear();
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, 1));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    addPriorityGroup(PriorityGroup("High risk", stratificationVectorValues));
 }
 
 int EpidemicSimulation::expose(int num, int nodeId, std::vector<int> stratificationValues)

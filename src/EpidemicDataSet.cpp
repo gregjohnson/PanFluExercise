@@ -424,6 +424,16 @@ boost::shared_ptr<StockpileNetwork> EpidemicDataSet::getStockpileNetwork()
     return stockpileNetwork_;
 }
 
+std::vector<PriorityGroup> EpidemicDataSet::getPriorityGroups()
+{
+    return priorityGroups_;
+}
+
+void EpidemicDataSet::addPriorityGroup(PriorityGroup priorityGroup)
+{
+    priorityGroups_.push_back(priorityGroup);
+}
+
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
     // change netcdf library error behavior

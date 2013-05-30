@@ -85,6 +85,9 @@ set(SRCS ${SRCS}
     src/MapWidget.cpp
     src/Parameters.cpp
     src/ParametersWidget.cpp
+    src/PriorityGroup.cpp
+    src/PriorityGroupWidget.cpp
+    src/PriorityGroupDefinitionWidget.cpp
     src/Stockpile.cpp
     src/StockpileMapWidget.cpp
     src/StockpileNetwork.cpp
@@ -105,6 +108,8 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/MainWindow.h
     src/MapWidget.h
     src/ParametersWidget.h
+    src/PriorityGroupWidget.h
+    src/PriorityGroupDefinitionWidget.h
     src/Stockpile.h
     src/StockpileNetworkWidget.h
     src/StockpileNetworkDistribution.h

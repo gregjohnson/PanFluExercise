@@ -6,6 +6,7 @@
 #include "ParametersWidget.h"
 #include "EpidemicInitialCasesWidget.h"
 #include "StockpileNetworkWidget.h"
+#include "PriorityGroupDefinitionWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
 #include "StockpileChartWidget.h"
@@ -115,6 +116,11 @@ MainWindow::MainWindow()
     stockpileNetworkDockWidget->setWidget(new StockpileNetworkWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, stockpileNetworkDockWidget);
 
+    // priority group definition dock
+    QDockWidget * priorityGroupDefinitionDockWidget = new QDockWidget("Priority Groups", this);
+    priorityGroupDefinitionDockWidget->setWidget(new PriorityGroupDefinitionWidget(this));
+    addDockWidget(Qt::LeftDockWidgetArea, priorityGroupDefinitionDockWidget);
+
     // info dock
     QDockWidget * infoDockWidget = new QDockWidget("Info", this);
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
@@ -123,6 +129,7 @@ MainWindow::MainWindow()
     // tabify parameters, initial cases, stockpile network, and info docks
     tabifyDockWidget(parametersDockWidget, initialCasesDockWidget);
     tabifyDockWidget(parametersDockWidget, stockpileNetworkDockWidget);
+    tabifyDockWidget(parametersDockWidget, priorityGroupDefinitionDockWidget);
     tabifyDockWidget(parametersDockWidget, infoDockWidget);
 
     // chart docks

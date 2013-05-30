@@ -1,6 +1,7 @@
 #ifndef EPIDEMIC_DATA_SET_H
 #define EPIDEMIC_DATA_SET_H
 
+#include "PriorityGroup.h"
 #include <map>
 #include <vector>
 #include <blitz/array.h>
@@ -62,6 +63,9 @@ class EpidemicDataSet
 
         boost::shared_ptr<StockpileNetwork> getStockpileNetwork();
 
+        std::vector<PriorityGroup> getPriorityGroups();
+        void addPriorityGroup(PriorityGroup priorityGroup);
+
     protected:
 
         bool isValid_;
@@ -100,6 +104,9 @@ class EpidemicDataSet
 
         // stockpile network
         boost::shared_ptr<StockpileNetwork> stockpileNetwork_;
+
+        // priority groups
+        std::vector<PriorityGroup> priorityGroups_;
 
         bool loadNetCdfFile(const char * filename);
         static bool loadStratificationsFile();
