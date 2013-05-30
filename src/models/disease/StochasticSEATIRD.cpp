@@ -303,8 +303,8 @@ void StochasticSEATIRD::applyTreatments()
             continue;
         }
 
-        // available stockpile
-        int stockpileAmount = stockpile->getNum(time_+1);
+        // available antiviral stockpile
+        int stockpileAmount = stockpile->getNum(time_+1, STOCKPILE_ANTIVIRALS);
 
         // do nothing if we have no available stockpile
         if(stockpileAmount == 0)
@@ -321,8 +321,8 @@ void StochasticSEATIRD::applyTreatments()
             stockpileAmountUsed = totalNumberTreatable;
         }
 
-        // decrement stockpile
-        stockpile->setNum(time_+1, stockpileAmount - stockpileAmountUsed);
+        // decrement antivirals stockpile
+        stockpile->setNum(time_+1, stockpileAmount - stockpileAmountUsed, STOCKPILE_ANTIVIRALS);
 
         // number successfully treated (includes effectiveness)
         int totalNumberTreated = (int)((float)stockpileAmountUsed * g_parameters.getAntiviralEffectiveness());

@@ -52,6 +52,14 @@ StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::sh
 
     layout->addRow("Destination", &destinationComboBox_);
 
+    // type
+    for(unsigned int i=0; i<NUM_STOCKPILE_TYPES; i++)
+    {
+        typeComboBox_.addItem(Stockpile::getTypeName((STOCKPILE_TYPE)i).c_str());
+    }
+
+    layout->addRow("Type", &typeComboBox_);
+
     // quantity
     quantitySpinBox_.setMaximum(STOCKPILE_WIDGET_NUM_MAX);
 
@@ -99,7 +107,7 @@ void StockpileNetworkDistributionWidget::execute()
     boost::shared_ptr<Stockpile> destinationStockpile = destinationComboBox_.itemData(destinationComboBox_.currentIndex()).value<boost::shared_ptr<Stockpile> >();
 
     // create the distribution object
-    boost::shared_ptr<StockpileNetworkDistribution> distribution(new StockpileNetworkDistribution(time, sourceStockpile, destinationStockpile, quantitySpinBox_.value(), transferTimeSpinBox_.value()));
+    boost::shared_ptr<StockpileNetworkDistribution> distribution(new StockpileNetworkDistribution(time, sourceStockpile, destinationStockpile, (STOCKPILE_TYPE)typeComboBox_.currentIndex(), quantitySpinBox_.value(), transferTimeSpinBox_.value()));
 
     // add the distribution to the network for later application
     dataSet_->getStockpileNetwork()->addDistribution(distribution);

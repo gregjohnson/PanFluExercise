@@ -1,10 +1,9 @@
 #include "StockpileNetworkDistribution.h"
-#include "Stockpile.h"
 #include "StockpileNetwork.h"
 #include "EpidemicDataSet.h"
 #include "log.h"
 
-StockpileNetworkDistribution::StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, int quantity, int transferTime)
+StockpileNetworkDistribution::StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, STOCKPILE_TYPE type, int quantity, int transferTime)
 {
     // defaults
     clampedQuantity_ = -1;
@@ -12,6 +11,7 @@ StockpileNetworkDistribution::StockpileNetworkDistribution(int time, boost::shar
     time_ = time;
     sourceStockpile_ = sourceStockpile;
     destinationStockpile_ = destinationStockpile;
+    type_ = type;
     quantity_ = quantity;
     transferTime_ = transferTime;
 }
@@ -29,15 +29,15 @@ void StockpileNetworkDistribution::apply(int nowTime)
 
         if(sourceStockpile_ != NULL)
         {
-            if(clampedQuantity > sourceStockpile_->getNum(nowTime))
+            if(clampedQuantity > sourceStockpile_->getNum(nowTime, type_))
             {
-                put_flog(LOG_INFO, "clamping transfer quantity to %i", sourceStockpile_->getNum(nowTime));
+                put_flog(LOG_INFO, "clamping transfer quantity to %i", sourceStockpile_->getNum(nowTime, type_));
 
-                clampedQuantity = sourceStockpile_->getNum(nowTime);
+                clampedQuantity = sourceStockpile_->getNum(nowTime, type_);
             }
 
             // decrement source
-            sourceStockpile_->setNum(nowTime, sourceStockpile_->getNum(nowTime) - clampedQuantity);
+            sourceStockpile_->setNum(nowTime, sourceStockpile_->getNum(nowTime, type_) - clampedQuantity, type_);
         }
 
         // save clamped quantity
@@ -122,7 +122,7 @@ void StockpileNetworkDistribution::apply(int nowTime)
             put_flog(LOG_INFO, "applying distribution (inbound): %s --> %s, %i", sourceName.c_str(), destinationStockpile->getName().c_str(), clampedQuantity);
 
             // increment destination
-            destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime) + clampedQuantity);
+            destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime, type_) + clampedQuantity, type_);
 
             // if the destination corresponds to a group of nodes, distribute to nodes
             std::vector<int> destinationNodeIds = destinationStockpile->getNodeIds();
@@ -139,7 +139,7 @@ void StockpileNetworkDistribution::apply(int nowTime)
                 }
 
                 // at the end of the distribution the destination stockpile should be this
-                int destinationStockpileFinal = destinationStockpile->getNum(nowTime) - clampedQuantity;
+                int destinationStockpileFinal = destinationStockpile->getNum(nowTime, type_) - clampedQuantity;
 
                 // total population
                 float totalPopulation = network->getDataSet()->getPopulation(destinationNodeIds);
@@ -166,19 +166,19 @@ void StockpileNetworkDistribution::apply(int nowTime)
                     put_flog(LOG_INFO, "applying distribution (pro rata to nodes): %s --> %s, %i", destinationStockpile->getName().c_str(), nodeStockpile->getName().c_str(), clampedQuantityFraction);
 
                     // decrement original destination
-                    destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime) - clampedQuantityFraction);
+                    destinationStockpile->setNum(nowTime, destinationStockpile->getNum(nowTime, type_) - clampedQuantityFraction, type_);
 
                     // increment node stockpile
-                    nodeStockpile->setNum(nowTime, nodeStockpile->getNum(nowTime) + clampedQuantityFraction);
+                    nodeStockpile->setNum(nowTime, nodeStockpile->getNum(nowTime, type_) + clampedQuantityFraction, type_);
                 }
 
                 // make sure the destination stockpile has the expected quantity
                 // if not, correct it... this occurs due to integer division issues
-                if(destinationStockpile->getNum(nowTime) != destinationStockpileFinal)
+                if(destinationStockpile->getNum(nowTime, type_) != destinationStockpileFinal)
                 {
-                    put_flog(LOG_DEBUG, "adjust desination stockpile to %i from %i", destinationStockpileFinal, destinationStockpile->getNum(nowTime));
+                    put_flog(LOG_DEBUG, "adjust desination stockpile to %i from %i", destinationStockpileFinal, destinationStockpile->getNum(nowTime, type_));
 
-                    destinationStockpile->setNum(nowTime, destinationStockpileFinal);
+                    destinationStockpile->setNum(nowTime, destinationStockpileFinal, type_);
                 }
             }
         }
@@ -193,6 +193,11 @@ int StockpileNetworkDistribution::getTime()
 boost::shared_ptr<Stockpile> StockpileNetworkDistribution::getSourceStockpile()
 {
     return sourceStockpile_;
+}
+
+STOCKPILE_TYPE StockpileNetworkDistribution::getType()
+{
+    return type_;
 }
 
 int StockpileNetworkDistribution::getQuantity()

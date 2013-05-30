@@ -10,15 +10,12 @@ StockpileWidget::StockpileWidget(boost::shared_ptr<Stockpile> stockpile)
     QVBoxLayout * layout = new QVBoxLayout();
     setLayout(layout);
 
-    // add num cases label
-    layout->addWidget(&numLabel_);
+    // add UI elements
 
-    // current value
-    numLabel_.setNum(stockpile->getNum(0));
 }
 
 void StockpileWidget::setTime(int time)
 {
-    // update UI element
-    numLabel_.setNum(stockpile_->getNum(time));
+    // update UI elements
+
 }

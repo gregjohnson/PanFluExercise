@@ -5,6 +5,7 @@
 #define STOCKPILE_CHART_MODE_TIME_HISTORY 1
 
 #include "ChartWidget.h"
+#include "Stockpile.h"
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
 
@@ -43,12 +44,16 @@ class StockpileChartWidget : public QMainWindow
         // chart mode
         int mode_;
 
+        // selected stockpile type
+        STOCKPILE_TYPE type_;
+
         // time indicator line
         boost::shared_ptr<ChartWidgetLine> timeIndicator_;
 
     private slots:
 
         void setModeChoice(int choiceIndex);
+        void setTypeChoice(int choiceIndex);
 };
 
 #endif

@@ -67,11 +67,16 @@ MainWindow::MainWindow()
     // make map widgets the main view
     QTabWidget * tabWidget = new QTabWidget();
 
-    epidemicMapWidget_ = new EpidemicMapWidget();
-    tabWidget->addTab(epidemicMapWidget_, "Infectious");
+    EpidemicMapWidget * epidemicMapWidget = new EpidemicMapWidget();
+    tabWidget->addTab(epidemicMapWidget, "Infectious");
 
-    stockpileMapWidget_ = new StockpileMapWidget();
-    tabWidget->addTab(stockpileMapWidget_, "Stockpile");
+    StockpileMapWidget * antiviralsStockpileMapWidget = new StockpileMapWidget();
+    antiviralsStockpileMapWidget->setType(STOCKPILE_ANTIVIRALS);
+    tabWidget->addTab(antiviralsStockpileMapWidget, "Antivirals Stockpile");
+
+    StockpileMapWidget * vaccinesStockpileMapWidget = new StockpileMapWidget();
+    vaccinesStockpileMapWidget->setType(STOCKPILE_VACCINES);
+    tabWidget->addTab(vaccinesStockpileMapWidget, "Vaccines Stockpile");
 
     setCentralWidget(tabWidget);
 
@@ -145,14 +150,16 @@ MainWindow::MainWindow()
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
-    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), epidemicMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
-    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), stockpileMapWidget_, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), epidemicMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), antiviralsStockpileMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), vaccinesStockpileMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
 
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
     connect(this, SIGNAL(numberOfTimestepsChanged()), this, SLOT(resetTimeSlider()));
 
-    connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget_, SLOT(setTime(int)));
-    connect(this, SIGNAL(timeChanged(int)), stockpileMapWidget_, SLOT(setTime(int)));
+    connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget, SLOT(setTime(int)));
+    connect(this, SIGNAL(timeChanged(int)), antiviralsStockpileMapWidget, SLOT(setTime(int)));
+    connect(this, SIGNAL(timeChanged(int)), vaccinesStockpileMapWidget, SLOT(setTime(int)));
 
     connect(&playTimestepsTimer_, SIGNAL(timeout()), this, SLOT(playTimesteps()));
 
@@ -162,8 +169,7 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-    delete epidemicMapWidget_;
-    delete stockpileMapWidget_;
+
 }
 
 QSize MainWindow::sizeHint() const

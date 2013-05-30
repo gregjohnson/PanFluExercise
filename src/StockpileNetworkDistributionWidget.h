@@ -28,6 +28,7 @@ class StockpileNetworkDistributionWidget : public QGroupBox
         // UI elements
         QComboBox sourceComboBox_;
         QComboBox destinationComboBox_;
+        QComboBox typeComboBox_;
         QSpinBox quantitySpinBox_;
         QSpinBox transferTimeSpinBox_;
         QLabel resultLabel_;

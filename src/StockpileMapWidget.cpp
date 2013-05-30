@@ -1,11 +1,13 @@
 #include "StockpileMapWidget.h"
 #include "StockpileNetwork.h"
-#include "Stockpile.h"
 #include "MapShape.h"
 #include "EpidemicDataSet.h"
 
 StockpileMapWidget::StockpileMapWidget()
 {
+    // defaults
+    type_ = (STOCKPILE_TYPE)0;
+
     std::vector<Color> colorVector;
 
     colorVector.push_back(Color(.60, .847, .788));
@@ -14,7 +16,7 @@ StockpileMapWidget::StockpileMapWidget()
 
     countiesColorMap_.setColorVector(colorVector);
 
-    setTitle("Available Antivirals by County as a Fraction of Population");
+    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County as a Fraction of Population"));
     setColorMapMinLabel("0%");
     setColorMapMaxLabel("1%");
 }
@@ -51,7 +53,7 @@ void StockpileMapWidget::setTime(int time)
 
             if(stockpile != NULL)
             {
-                int num = stockpile->getNum(time_);
+                int num = stockpile->getNum(time_, type_);
 
                 float population = dataSet_->getPopulation(nodeIds[i]);
 
@@ -72,6 +74,13 @@ void StockpileMapWidget::setTime(int time)
     update();
 
     exportSVGToDisplayCluster();
+}
+
+void StockpileMapWidget::setType(STOCKPILE_TYPE type)
+{
+    type_ = type;
+
+    update();
 }
 
 void StockpileMapWidget::render()

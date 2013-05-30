@@ -4,7 +4,27 @@
 Stockpile::Stockpile(std::string name)
 {
     name_ = name;
-    num_.push_back(0);
+
+    boost::array<int, NUM_STOCKPILE_TYPES> zeros;
+    zeros.fill(0);
+
+    num_.push_back(zeros);
+}
+
+std::string Stockpile::getTypeName(STOCKPILE_TYPE type)
+{
+    if(type == STOCKPILE_ANTIVIRALS)
+    {
+        return std::string("Antivirals");
+    }
+    else if(type == STOCKPILE_VACCINES)
+    {
+        return std::string("Vaccines");
+    }
+    else
+    {
+        return std::string("Unknown");
+    }
 }
 
 std::string Stockpile::getName()
@@ -12,7 +32,7 @@ std::string Stockpile::getName()
     return name_;
 }
 
-int Stockpile::getNum(int time)
+int Stockpile::getNum(int time, STOCKPILE_TYPE type)
 {
     if(time >= (int)num_.size())
     {
@@ -20,7 +40,7 @@ int Stockpile::getNum(int time)
         return 0;
     }
 
-    return num_[time];
+    return num_[time][type];
 }
 
 void Stockpile::setNodeIds(std::vector<int> nodeIds)
@@ -38,7 +58,7 @@ void Stockpile::copyToNewTimeStep()
     num_.push_back(num_.back());
 }
 
-void Stockpile::setNum(int time, int num)
+void Stockpile::setNum(int time, int num, STOCKPILE_TYPE type)
 {
     if(time >= (int)num_.size())
     {
@@ -46,5 +66,5 @@ void Stockpile::setNum(int time, int num)
         return;
     }
 
-    num_[time] = num;
+    num_[time][type] = num;
 }

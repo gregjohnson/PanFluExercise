@@ -1,11 +1,11 @@
 #ifndef STOCKPILE_NETWORK_DISTRIBUTION_H
 #define STOCKPILE_NETWORK_DISTRIBUTION_H
 
+#include "Stockpile.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <QtGui>
 
-class Stockpile;
 class StockpileNetwork;
 
 class StockpileNetworkDistribution : public QObject
@@ -14,7 +14,7 @@ class StockpileNetworkDistribution : public QObject
 
     public:
 
-        StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, int quantity, int transferTime);
+        StockpileNetworkDistribution(int time, boost::shared_ptr<Stockpile> sourceStockpile, boost::shared_ptr<Stockpile> destinationStockpile, STOCKPILE_TYPE type, int quantity, int transferTime);
 
         void setNetwork(boost::shared_ptr<StockpileNetwork> network);
 
@@ -23,6 +23,7 @@ class StockpileNetworkDistribution : public QObject
 
         int getTime();
         boost::shared_ptr<Stockpile> getSourceStockpile();
+        STOCKPILE_TYPE getType();
         int getQuantity();
         int getTransferTime();
 
@@ -48,6 +49,7 @@ class StockpileNetworkDistribution : public QObject
 
         boost::shared_ptr<Stockpile> sourceStockpile_; // NULL == new inventory
         boost::shared_ptr<Stockpile> destinationStockpile_; // NULL == to all stockpiles associated with a set of nodeIds
+        STOCKPILE_TYPE type_;
         int quantity_;
         int transferTime_;
 

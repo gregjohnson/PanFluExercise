@@ -2,7 +2,6 @@
 #include "EpidemicDataSet.h"
 #include "StockpileNetwork.h"
 #include "StockpileNetworkDistribution.h"
-#include "Stockpile.h"
 #include "log.h"
 #include <string>
 #include <vector>
@@ -12,6 +11,7 @@ StockpileChartWidget::StockpileChartWidget(MainWindow * mainWindow)
     // defaults
     time_ = 0;
     mode_ = STOCKPILE_CHART_MODE_CURRENT;
+    type_ = (STOCKPILE_TYPE)0;
 
     // add toolbar
     QToolBar * toolbar = addToolBar("toolbar");
@@ -27,6 +27,20 @@ StockpileChartWidget::StockpileChartWidget(MainWindow * mainWindow)
 
     // add mode combobox to toolbar
     toolbar->addWidget(modeComboBox);
+
+    // type combobox
+    QComboBox * typeComboBox = new QComboBox(this);
+
+    // corresponds to STOCKPILE_TYPE enums
+    for(unsigned int i=0; i<NUM_STOCKPILE_TYPES; i++)
+    {
+        typeComboBox->addItem(Stockpile::getTypeName((STOCKPILE_TYPE)i).c_str());
+    }
+
+    connect(typeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(setTypeChoice(int)));
+
+    // add type combobox to toolbar
+    toolbar->addWidget(typeComboBox);
 
     setCentralWidget(&chartWidget_);
 
@@ -114,7 +128,7 @@ void StockpileChartWidget::updateBarChart()
 
     if(stockpileNetwork_ != NULL)
     {
-        chartWidget_.setTitle("All Stockpiles");
+        chartWidget_.setTitle(Stockpile::getTypeName(type_) + std::string(" Stockpiles"));
 
         std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork_->getStockpiles();
 
@@ -137,18 +151,18 @@ void StockpileChartWidget::updateBarChart()
 
         for(unsigned int i=0; i<stockpiles.size(); i++)
         {
-            int currentQuantity = stockpiles[i]->getNum(time_);
+            int currentQuantity = stockpiles[i]->getNum(time_, type_);
             int pendingOutQuantity = 0;
             int pendingInQuantity = 0;
 
             for(unsigned int j=0; j<pendingDistributions.size(); j++)
             {
-                if(pendingDistributions[j]->getSourceStockpile() == stockpiles[i])
+                if(pendingDistributions[j]->getSourceStockpile() == stockpiles[i] && pendingDistributions[j]->getType() == type_)
                 {
                     pendingOutQuantity += pendingDistributions[j]->getClampedQuantity();
                 }
 
-                if(pendingDistributions[j]->hasDestinationStockpile(stockpiles[i]) == true)
+                if(pendingDistributions[j]->hasDestinationStockpile(stockpiles[i]) == true && pendingDistributions[j]->getType() == type_)
                 {
                     pendingInQuantity += pendingDistributions[j]->getClampedQuantity(stockpiles[i]);
                 }
@@ -160,7 +174,7 @@ void StockpileChartWidget::updateBarChart()
 
             for(unsigned int j=0; j<nodeIds.size(); j++)
             {
-                usable += stockpileNetwork_->getNodeStockpile(nodeIds[j])->getNum(time_);
+                usable += stockpileNetwork_->getNodeStockpile(nodeIds[j])->getNum(time_, type_);
             }
 
             std::vector<double> points;
@@ -196,7 +210,7 @@ void StockpileChartWidget::updateTimeSeries()
 
     if(dataSet_ != NULL && stockpileNetwork_ != NULL)
     {
-        chartWidget_.setTitle("All Stockpiles");
+        chartWidget_.setTitle(Stockpile::getTypeName(type_) + " Stockpiles");
 
         // add a (0,0) point to fix bounds calculations for straight horizontal plots
         boost::shared_ptr<ChartWidgetLine> line0 = chartWidget_.getLine();
@@ -230,7 +244,7 @@ void StockpileChartWidget::updateTimeSeries()
             for(unsigned int i=0; i<stockpiles.size(); i++)
             {
                 // inventory for this stockpile
-                int stockpile = stockpiles[i]->getNum(t);
+                int stockpile = stockpiles[i]->getNum(t, type_);
 
                 // usable from node stockpiles
                 int usable = 0;
@@ -239,7 +253,7 @@ void StockpileChartWidget::updateTimeSeries()
 
                 for(unsigned int j=0; j<nodeIds.size(); j++)
                 {
-                    usable += stockpileNetwork_->getNodeStockpile(nodeIds[j])->getNum(t);
+                    usable += stockpileNetwork_->getNodeStockpile(nodeIds[j])->getNum(t, type_);
                 }
 
                 // include inventory for this stockpile and from the node stockpiles
@@ -262,6 +276,13 @@ void StockpileChartWidget::updateTimeSeries()
 void StockpileChartWidget::setModeChoice(int choiceIndex)
 {
     mode_ = choiceIndex;
+
+    update();
+}
+
+void StockpileChartWidget::setTypeChoice(int choiceIndex)
+{
+    type_ = (STOCKPILE_TYPE)choiceIndex;
 
     update();
 }

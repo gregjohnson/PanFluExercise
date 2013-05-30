@@ -21,7 +21,7 @@ class StockpileWidget : public QGroupBox
         boost::shared_ptr<Stockpile> stockpile_;
 
         // UI elements
-        QLabel numLabel_;
+
 };
 
 #endif

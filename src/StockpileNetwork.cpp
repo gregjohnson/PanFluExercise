@@ -14,9 +14,6 @@ StockpileNetwork::StockpileNetwork(EpidemicDataSet * dataSet)
     {
         boost::shared_ptr<Stockpile> stockpile(new Stockpile(boost::lexical_cast<std::string>(nodeIds[i])));
 
-        // zero value at initial time
-        stockpile->setNum(0, 0);
-
         nodeStockpiles_[nodeIds[i]] = stockpile;
     }
 }
