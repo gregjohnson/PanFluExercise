@@ -90,7 +90,7 @@ void StochasticSEATIRD::simulate()
 #endif
 
     // apply treatments
-    applyTreatments();
+    applyAntivirals();
 
     // process events for each node
     for(unsigned int i=0; i<nodeIds_.size(); i++)
@@ -288,7 +288,7 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
     return true;
 }
 
-void StochasticSEATIRD::applyTreatments()
+void StochasticSEATIRD::applyAntivirals()
 {
     // treatments for each node
     std::vector<int> nodeIds = getNodeIds();

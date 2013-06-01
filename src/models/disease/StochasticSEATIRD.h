@@ -55,7 +55,7 @@ class StochasticSEATIRD : public EpidemicSimulation
         bool processEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
 
         // treatments
-        void applyTreatments();
+        void applyAntivirals();
 
         // travel between nodes
         void travel();
