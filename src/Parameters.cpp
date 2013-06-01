@@ -14,6 +14,52 @@ Parameters::Parameters()
     gamma_ = 0.243902439024;
     nu_ = 0.0001;
     antiviralEffectiveness_ = 0.15;
+    vaccineAdherence_ = 0.8;
+}
+
+double Parameters::getR0()
+{
+    return R0_;
+}
+
+double Parameters::getBetaScale()
+{
+    return betaScale_;
+}
+
+double Parameters::getTau()
+{
+    return tau_;
+}
+
+double Parameters::getKappa()
+{
+    return kappa_;
+}
+
+double Parameters::getChi()
+{
+    return chi_;
+}
+
+double Parameters::getGamma()
+{
+    return gamma_;
+}
+
+double Parameters::getNu()
+{
+    return nu_;
+}
+
+double Parameters::getAntiviralEffectiveness()
+{
+    return antiviralEffectiveness_;
+}
+
+double Parameters::getVaccineAdherence()
+{
+    return vaccineAdherence_;
 }
 
 void Parameters::setR0(double value)
@@ -23,21 +69,11 @@ void Parameters::setR0(double value)
     put_flog(LOG_DEBUG, "%f", value);
 }
 
-double Parameters::getR0()
-{
-    return R0_;
-}
-
 void Parameters::setBetaScale(double value)
 {
     betaScale_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
-}
-
-double Parameters::getBetaScale()
-{
-    return betaScale_;
 }
 
 void Parameters::setTau(double value)
@@ -47,21 +83,11 @@ void Parameters::setTau(double value)
     put_flog(LOG_DEBUG, "%f", value);
 }
 
-double Parameters::getTau()
-{
-    return tau_;
-}
-
 void Parameters::setKappa(double value)
 {
     kappa_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
-}
-
-double Parameters::getKappa()
-{
-    return kappa_;
 }
 
 void Parameters::setChi(double value)
@@ -71,21 +97,11 @@ void Parameters::setChi(double value)
     put_flog(LOG_DEBUG, "%f", value);
 }
 
-double Parameters::getChi()
-{
-    return chi_;
-}
-
 void Parameters::setGamma(double value)
 {
     gamma_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
-}
-
-double Parameters::getGamma()
-{
-    return gamma_;
 }
 
 void Parameters::setNu(double value)
@@ -95,11 +111,6 @@ void Parameters::setNu(double value)
     put_flog(LOG_DEBUG, "%f", value);
 }
 
-double Parameters::getNu()
-{
-    return nu_;
-}
-
 void Parameters::setAntiviralEffectiveness(double value)
 {
     antiviralEffectiveness_ = value;
@@ -107,7 +118,9 @@ void Parameters::setAntiviralEffectiveness(double value)
     put_flog(LOG_DEBUG, "%f", value);
 }
 
-double Parameters::getAntiviralEffectiveness()
+void Parameters::setVaccineAdherence(double value)
 {
-    return antiviralEffectiveness_;
+    vaccineAdherence_ = value;
+
+    put_flog(LOG_DEBUG, "%f", value);
 }

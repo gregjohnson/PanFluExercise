@@ -107,6 +107,7 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicInitialCasesWidget.h
     src/MainWindow.h
     src/MapWidget.h
+    src/Parameters.h
     src/ParametersWidget.h
     src/PriorityGroupWidget.h
     src/PriorityGroupDefinitionWidget.h

@@ -6,113 +6,34 @@ ParametersWidget::ParametersWidget()
 {
     // initialize form layout
     QWidget * widget = new QWidget();
-    QFormLayout * layout = new QFormLayout();
-    widget->setLayout(layout);
+    formLayout_ = new QFormLayout();
+    widget->setLayout(formLayout_);
 
     setWidgetResizable(true);
     setWidget(widget);
 
-    // add rows to the form layouts
-    R0_spinBox_.setToolTip("Basic reproduction number");
-    R0_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    R0_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("R0"), &R0_spinBox_);
-    connect(&R0_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setR0(double)));
-
-    betaScale_spinBox_.setToolTip("Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale");
-    betaScale_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    betaScale_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("betaScale"), &betaScale_spinBox_);
-    connect(&betaScale_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setBetaScale(double)));
-
-    tau_spinBox_.setToolTip("exposed -> asymptomatic transition rate");
-    tau_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    tau_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("tau"), &tau_spinBox_);
-    connect(&tau_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setTau(double)));
-
-    kappa_spinBox_.setToolTip("asymptomatic -> treatable transition rate");
-    kappa_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    kappa_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("kappa"), &kappa_spinBox_);
-    connect(&kappa_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setKappa(double)));
-
-    chi_spinBox_.setToolTip("time spent before progressing from treatable to infectious");
-    chi_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    chi_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("chi"), &chi_spinBox_);
-    connect(&chi_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setChi(double)));
-
-    gamma_spinBox_.setToolTip("asymptomatic, treatable, or infectious -> recovered transition rate");
-    gamma_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    gamma_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("gamma"), &gamma_spinBox_);
-    connect(&gamma_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setGamma(double)));
-
-    nu_spinBox_.setToolTip("asymptomatic, treatable, or infectious -> deceased transition rate");
-    nu_spinBox_.setRange(0., WIDGET_MAX_VALUE);
-    nu_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("nu"), &nu_spinBox_);
-    connect(&nu_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setNu(double)));
-
-    antiviralEffectiveness_spinBox_.setToolTip("antiviral effectiveness");
-    antiviralEffectiveness_spinBox_.setRange(0., 1.);
-    antiviralEffectiveness_spinBox_.setDecimals(WIDGET_NUM_DECIMALS);
-    layout->addRow(new QLabel("Antiviral effectiveness"), &antiviralEffectiveness_spinBox_);
-    connect(&antiviralEffectiveness_spinBox_, SIGNAL(valueChanged(double)), this, SLOT(setAntiviralEffectiveness(double)));
-
-    // update widget values
-    readValues();
+    // add widgets for all parameters
+    constructParameterWidget("R0", "Basic reproduction number", g_parameters.getR0(), 0., WIDGET_MAX_VALUE, SLOT(setR0(double)));
+    constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
+    constructParameterWidget("tau", "exposed -> asymptomatic transition rate", g_parameters.getTau(), 0., WIDGET_MAX_VALUE, SLOT(setTau(double)));
+    constructParameterWidget("kappa", "asymptomatic -> treatable transition rate", g_parameters.getKappa(), 0., WIDGET_MAX_VALUE, SLOT(setKappa(double)));
+    constructParameterWidget("chi", "time spent before progressing from treatable to infectious", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
+    constructParameterWidget("gamma", "asymptomatic, treatable, or infectious -> recovered transition rate", g_parameters.getGamma(), 0., WIDGET_MAX_VALUE, SLOT(setGamma(double)));
+    constructParameterWidget("nu", "asymptomatic, treatable, or infectious -> deceased transition rate", g_parameters.getNu(), 0., WIDGET_MAX_VALUE, SLOT(setNu(double)));
+    constructParameterWidget("Antiviral effectiveness", "antiviral effectiveness", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)));
+    constructParameterWidget("Vaccine adherence", "vaccine adherence", g_parameters.getVaccineAdherence(), 0., 1., SLOT(setVaccineAdherence(double)));
 }
 
-void ParametersWidget::readValues()
+void ParametersWidget::constructParameterWidget(std::string label, std::string description, double value, double min, double max, const char * setSlot)
 {
-    R0_spinBox_.setValue(g_parameters.getR0());
-    betaScale_spinBox_.setValue(g_parameters.getBetaScale());
-    tau_spinBox_.setValue(g_parameters.getTau());
-    kappa_spinBox_.setValue(g_parameters.getKappa());
-    chi_spinBox_.setValue(g_parameters.getChi());
-    gamma_spinBox_.setValue(g_parameters.getGamma());
-    nu_spinBox_.setValue(g_parameters.getNu());
-    antiviralEffectiveness_spinBox_.setValue(g_parameters.getAntiviralEffectiveness());
-}
+    QDoubleSpinBox * spinBox = new QDoubleSpinBox();
 
-void ParametersWidget::setR0(double value)
-{
-    g_parameters.setR0(value);
-}
+    spinBox->setToolTip(description.c_str());
+    spinBox->setValue(value);
+    spinBox->setRange(min, max);
+    spinBox->setDecimals(WIDGET_NUM_DECIMALS);
 
-void ParametersWidget::setBetaScale(double value)
-{
-    g_parameters.setBetaScale(value);
-}
+    formLayout_->addRow(new QLabel(label.c_str()), spinBox);
 
-void ParametersWidget::setTau(double value)
-{
-    g_parameters.setTau(value);
-}
-
-void ParametersWidget::setKappa(double value)
-{
-    g_parameters.setKappa(value);
-}
-
-void ParametersWidget::setChi(double value)
-{
-    g_parameters.setChi(value);
-}
-
-void ParametersWidget::setGamma(double value)
-{
-    g_parameters.setGamma(value);
-}
-
-void ParametersWidget::setNu(double value)
-{
-    g_parameters.setNu(value);
-}
-
-void ParametersWidget::setAntiviralEffectiveness(double value)
-{
-    g_parameters.setAntiviralEffectiveness(value);
+    connect(spinBox, SIGNAL(valueChanged(double)), &g_parameters, setSlot);
 }

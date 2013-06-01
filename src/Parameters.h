@@ -1,35 +1,37 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-class Parameters
+#include <QtGui>
+
+class Parameters : public QObject
 {
+    Q_OBJECT
+
     public:
 
         Parameters();
 
-        void setR0(double value);
         double getR0();
-
-        void setBetaScale(double value);
         double getBetaScale();
-
-        void setTau(double value);
         double getTau();
-
-        void setKappa(double value);
         double getKappa();
-
-        void setChi(double value);
         double getChi();
-
-        void setGamma(double value);
         double getGamma();
-
-        void setNu(double value);
         double getNu();
-
-        void setAntiviralEffectiveness(double value);
         double getAntiviralEffectiveness();
+        double getVaccineAdherence();
+
+    public slots:
+
+        void setR0(double value);
+        void setBetaScale(double value);
+        void setTau(double value);
+        void setKappa(double value);
+        void setChi(double value);
+        void setGamma(double value);
+        void setNu(double value);
+        void setAntiviralEffectiveness(double value);
+        void setVaccineAdherence(double value);
 
     private:
 
@@ -57,6 +59,9 @@ class Parameters
 
         // antiviral effectiveness
         double antiviralEffectiveness_;
+
+        // vaccine adherence
+        double vaccineAdherence_;
 };
 
 // global parameters object
