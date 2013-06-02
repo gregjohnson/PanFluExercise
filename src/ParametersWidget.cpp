@@ -31,9 +31,11 @@ void ParametersWidget::constructParameterWidget(std::string label, std::string d
     QDoubleSpinBox * spinBox = new QDoubleSpinBox();
 
     spinBox->setToolTip(description.c_str());
-    spinBox->setValue(value);
     spinBox->setRange(min, max);
     spinBox->setDecimals(WIDGET_NUM_DECIMALS);
+
+    // setValue() should occur after the decimal precision has been set
+    spinBox->setValue(value);
 
     formLayout_->addRow(new QLabel(label.c_str()), spinBox);
 
