@@ -6,8 +6,8 @@ ParametersWidget::ParametersWidget()
 {
     // initialize form layout
     QWidget * widget = new QWidget();
-    formLayout_ = new QFormLayout();
-    widget->setLayout(formLayout_);
+    layout_ = new QVBoxLayout();
+    widget->setLayout(layout_);
 
     setWidgetResizable(true);
     setWidget(widget);
@@ -28,6 +28,24 @@ ParametersWidget::ParametersWidget()
 
 void ParametersWidget::constructParameterWidget(std::string label, std::string description, double value, double min, double max, const char * setSlot)
 {
+    QGroupBox * groupBox = new QGroupBox();
+    QHBoxLayout * layout = new QHBoxLayout();
+    groupBox->setLayout(layout);
+
+    // label and description
+    QWidget * labelWidget = new QWidget();
+    QVBoxLayout * labelLayout = new QVBoxLayout();
+    labelWidget->setLayout(labelLayout);
+
+    labelLayout->addWidget(new QLabel(label.c_str()));
+
+    QLabel * descriptionLabel = new QLabel(description.c_str());
+    descriptionLabel->setWordWrap(true);
+    labelLayout->addWidget(descriptionLabel);
+
+    layout->addWidget(labelWidget);
+
+    // the spin box
     QDoubleSpinBox * spinBox = new QDoubleSpinBox();
 
     spinBox->setToolTip(description.c_str());
@@ -37,7 +55,10 @@ void ParametersWidget::constructParameterWidget(std::string label, std::string d
     // setValue() should occur after the decimal precision has been set
     spinBox->setValue(value);
 
-    formLayout_->addRow(new QLabel(label.c_str()), spinBox);
+    layout->addWidget(spinBox);
+
+    // add the widgets and make connections
+    layout_->addWidget(groupBox);
 
     connect(spinBox, SIGNAL(valueChanged(double)), &g_parameters, setSlot);
 }
