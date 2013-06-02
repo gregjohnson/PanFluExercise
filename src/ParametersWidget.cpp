@@ -21,6 +21,7 @@ ParametersWidget::ParametersWidget()
     constructParameterWidget("gamma", "asymptomatic, treatable, or infectious -> recovered transition rate", g_parameters.getGamma(), 0., WIDGET_MAX_VALUE, SLOT(setGamma(double)));
     constructParameterWidget("nu", "asymptomatic, treatable, or infectious -> deceased transition rate", g_parameters.getNu(), 0., WIDGET_MAX_VALUE, SLOT(setNu(double)));
     constructParameterWidget("Antiviral effectiveness", "antiviral effectiveness", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)));
+    constructParameterWidget("Vaccine effectiveness", "vaccine effectiveness", g_parameters.getVaccineEffectiveness(), 0., 1., SLOT(setVaccineEffectiveness(double)));
     constructParameterWidget("Vaccine adherence", "vaccine adherence", g_parameters.getVaccineAdherence(), 0., 1., SLOT(setVaccineAdherence(double)));
 }
 

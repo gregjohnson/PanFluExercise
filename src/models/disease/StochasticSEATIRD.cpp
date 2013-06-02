@@ -162,8 +162,8 @@ void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &sched
     // todo: beta should be age-specific considering PHA's
     double beta = g_parameters.getR0() / g_parameters.getBetaScale();
 
-    // todo: need actual value here, should be age-specific
-    static double vaccineEffectiveness = 0.;
+    // todo: should be age-specific
+    double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
 
     // todo: should be in parameters
     static double sigma[] = {1.00, 0.98, 0.94, 0.91, 0.66};
@@ -411,7 +411,7 @@ void StochasticSEATIRD::travel()
                                 { 6.10114751268,7.847051289,13.7392636644,18.0482119252,9.45371062356 },
                                 { 4.02227175596,4.22656343551,6.92483172729,9.45371062356,14.0529294262 }   };
 
-    double vaccineEffectiveness = 0.8;
+    double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
 
     for(unsigned int sinkNodeIndex=0; sinkNodeIndex < nodeIds_.size(); sinkNodeIndex++)
     {

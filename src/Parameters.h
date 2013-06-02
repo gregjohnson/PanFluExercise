@@ -19,6 +19,7 @@ class Parameters : public QObject
         double getGamma();
         double getNu();
         double getAntiviralEffectiveness();
+        double getVaccineEffectiveness();
         double getVaccineAdherence();
 
     public slots:
@@ -31,6 +32,7 @@ class Parameters : public QObject
         void setGamma(double value);
         void setNu(double value);
         void setAntiviralEffectiveness(double value);
+        void setVaccineEffectiveness(double value);
         void setVaccineAdherence(double value);
 
     private:
@@ -59,6 +61,9 @@ class Parameters : public QObject
 
         // antiviral effectiveness
         double antiviralEffectiveness_;
+
+        // vaccine effectiveness
+        double vaccineEffectiveness_;
 
         // vaccine adherence
         double vaccineAdherence_;
