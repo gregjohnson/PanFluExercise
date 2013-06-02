@@ -442,9 +442,11 @@ void StochasticSEATIRD::applyVaccines()
         // determine total number of adherent susceptible unvaccinated
         float totalPopulation = getValue("population", time_+1, nodeIds[i]);
         float totalVaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesVaccinated);
+        float totalUnvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
         float totalSusceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
 
-        float totalAdherentSusceptibleUnvaccinated = (vaccineAdherence * totalPopulation - totalVaccinatedPopulation) * totalSusceptibleUnvaccinated / totalPopulation;
+        // == (adherent unvaccinated population) * (fraction of unvaccinated population that is susceptible)
+        float totalAdherentSusceptibleUnvaccinated = (vaccineAdherence * totalPopulation - totalVaccinatedPopulation) * totalSusceptibleUnvaccinated / totalUnvaccinatedPopulation;
 
         // we will use all of our available stockpile (subject to capacity constraint) to treat the adherent susceptible unvaccinated population
         int stockpileAmountUsed = stockpileAmount;
@@ -489,9 +491,11 @@ void StochasticSEATIRD::applyVaccines()
                 float vaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
 
                 stratificationValues[2] = 0; // unvaccinated
+                float unvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
                 float susceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValues);
 
-                adherentSusceptibleUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * susceptibleUnvaccinated / population;
+                // == (adherent unvaccinated population) * (fraction of unvaccinated population that is susceptible)
+                adherentSusceptibleUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * susceptibleUnvaccinated / unvaccinatedPopulation;
 
                 // pro-rata by adherent susceptible unvaccinated population
                 numberVaccinated(a, r) = (int)(adherentSusceptibleUnvaccinated(a, r) / totalAdherentSusceptibleUnvaccinated * (float)stockpileAmountUsed);
