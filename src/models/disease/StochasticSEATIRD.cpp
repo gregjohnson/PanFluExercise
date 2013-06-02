@@ -627,9 +627,12 @@ void StochasticSEATIRD::travel()
 
                     int sinkNumSusceptible = (int)(variables_["susceptible"](time_+1, nodeIdToIndex_[sinkNodeId], a, r, v) + 0.5); // continuity correction
 
-                    double numberOfExposures = gsl_ran_binomial(randGenerator_, probability, sinkNumSusceptible);
+                    if(sinkNumSusceptible > 0)
+                    {
+                        int numberOfExposures = (int)gsl_ran_binomial(randGenerator_, probability, sinkNumSusceptible);
 
-                    expose(numberOfExposures, sinkNodeId, stratificationValues);
+                        expose(numberOfExposures, sinkNodeId, stratificationValues);
+                    }
                 }
             }
         }
