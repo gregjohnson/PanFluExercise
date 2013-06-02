@@ -23,6 +23,7 @@ ParametersWidget::ParametersWidget()
     constructParameterWidget("Antiviral effectiveness", "antiviral effectiveness", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)));
     constructParameterWidget("Vaccine effectiveness", "vaccine effectiveness", g_parameters.getVaccineEffectiveness(), 0., 1., SLOT(setVaccineEffectiveness(double)));
     constructParameterWidget("Vaccine adherence", "vaccine adherence", g_parameters.getVaccineAdherence(), 0., 1., SLOT(setVaccineAdherence(double)));
+    constructParameterWidget("Vaccine capacity", "daily vaccine distribution capacity as a fraction of population", g_parameters.getVaccineCapacity(), 0., 1., SLOT(setVaccineCapacity(double)));
 }
 
 void ParametersWidget::constructParameterWidget(std::string label, std::string description, double value, double min, double max, const char * setSlot)

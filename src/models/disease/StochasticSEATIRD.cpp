@@ -91,6 +91,7 @@ void StochasticSEATIRD::simulate()
 
     // apply treatments
     applyAntivirals();
+    applyVaccines();
 
     // process events for each node
     for(unsigned int i=0; i<nodeIds_.size(); i++)
@@ -401,6 +402,124 @@ void StochasticSEATIRD::applyAntivirals()
                 }
             }
         }
+    }
+}
+
+void StochasticSEATIRD::applyVaccines()
+{
+    double vaccineAdherence = g_parameters.getVaccineAdherence();
+    double vaccineCapacity = g_parameters.getVaccineCapacity();
+
+    // treatments for each node
+    std::vector<int> nodeIds = getNodeIds();
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        boost::shared_ptr<Stockpile> stockpile = getStockpileNetwork()->getNodeStockpile(nodeIds[i]);
+
+        // do nothing if no stockpile is found
+        if(stockpile == NULL)
+        {
+            continue;
+        }
+
+        // available vaccines stockpile
+        int stockpileAmount = stockpile->getNum(time_+1, STOCKPILE_VACCINES);
+
+        // do nothing if we have no available stockpile
+        if(stockpileAmount == 0)
+        {
+            continue;
+        }
+
+        // stratifications that we'll use...
+        std::vector<int> stratificationValuesVaccinated(3, STRATIFICATIONS_ALL);
+        stratificationValuesVaccinated[2] = 1; // vaccinated
+
+        std::vector<int> stratificationValuesUnvaccinated(3, STRATIFICATIONS_ALL);
+        stratificationValuesUnvaccinated[2] = 0; // unvaccinated
+
+        // determine total number of adherent susceptible unvaccinated
+        float totalPopulation = getValue("population", time_+1, nodeIds[i]);
+        float totalVaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesVaccinated);
+        float totalSusceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
+
+        float totalAdherentSusceptibleUnvaccinated = (vaccineAdherence * totalPopulation - totalVaccinatedPopulation) * totalSusceptibleUnvaccinated / totalPopulation;
+
+        // we will use all of our available stockpile (subject to capacity constraint) to treat the adherent susceptible unvaccinated population
+        int stockpileAmountUsed = stockpileAmount;
+
+        if(stockpileAmountUsed > (int)totalAdherentSusceptibleUnvaccinated)
+        {
+            stockpileAmountUsed = (int)totalAdherentSusceptibleUnvaccinated;
+        }
+
+        if(stockpileAmountUsed > (int)(vaccineCapacity * totalPopulation))
+        {
+            stockpileAmountUsed = (int)(vaccineCapacity * totalPopulation);
+        }
+
+        // do nothing if no stockpile is used
+        if(stockpileAmountUsed <= 0)
+        {
+            continue;
+        }
+
+        // decrement vaccines stockpile
+        stockpile->setNum(time_+1, stockpileAmount - stockpileAmountUsed, STOCKPILE_VACCINES);
+
+        // apply vaccines pro-rata across all stratifications
+
+        blitz::Array<float, NUM_STRATIFICATION_DIMENSIONS-1> adherentSusceptibleUnvaccinated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_);
+        blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS-1> numberVaccinated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_);
+
+        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
+        {
+            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
+            {
+                std::vector<int> stratificationValues(3, STRATIFICATIONS_ALL);
+                stratificationValues[0] = a;
+                stratificationValues[1] = r;
+
+                // determine number of adherent susceptible unvaccinated
+                stratificationValues[2] = STRATIFICATIONS_ALL;
+                float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
+
+                stratificationValues[2] = 1; // vaccinated
+                float vaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
+
+                stratificationValues[2] = 0; // unvaccinated
+                float susceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValues);
+
+                adherentSusceptibleUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * susceptibleUnvaccinated / population;
+
+                // pro-rata by adherent susceptible unvaccinated population
+                numberVaccinated(a, r) = (int)(adherentSusceptibleUnvaccinated(a, r) / totalAdherentSusceptibleUnvaccinated * (float)stockpileAmountUsed);
+
+                if(numberVaccinated(a, r) <= 0)
+                {
+                    continue;
+                }
+
+                put_flog(LOG_DEBUG, "adherentSusceptibleUnvaccinated = %f, numberVaccinated = %i", adherentSusceptibleUnvaccinated(a, r), numberVaccinated(a, r));
+
+                // move individuals from susceptible unvaccinated to susceptible vaccinated
+                variables_["susceptible"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated(a, r);
+                variables_["susceptible"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated(a, r);
+
+                // need to also manipulate the total population variable: individuals are changing stratifications as well as state
+                variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated(a, r);
+                variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated(a, r);
+            }
+        }
+
+        // the sum over numberVaccinated should equal stockpileAmountUsed
+        if(blitz::sum(numberVaccinated) != stockpileAmountUsed)
+        {
+            put_flog(LOG_WARN, "numberVaccinated != stockpileAmountUsed (%i != %i)", blitz::sum(numberVaccinated), stockpileAmountUsed);
+        }
+
+        // no need to adjust schedules since susceptible individuals are not scheduled yet
     }
 }
 

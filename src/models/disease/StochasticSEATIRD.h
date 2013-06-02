@@ -56,6 +56,7 @@ class StochasticSEATIRD : public EpidemicSimulation
 
         // treatments
         void applyAntivirals();
+        void applyVaccines();
 
         // travel between nodes
         void travel();

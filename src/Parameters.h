@@ -21,6 +21,7 @@ class Parameters : public QObject
         double getAntiviralEffectiveness();
         double getVaccineEffectiveness();
         double getVaccineAdherence();
+        double getVaccineCapacity();
 
     public slots:
 
@@ -34,6 +35,7 @@ class Parameters : public QObject
         void setAntiviralEffectiveness(double value);
         void setVaccineEffectiveness(double value);
         void setVaccineAdherence(double value);
+        void setVaccineCapacity(double value);
 
     private:
 
@@ -67,6 +69,9 @@ class Parameters : public QObject
 
         // vaccine adherence
         double vaccineAdherence_;
+
+        // vaccine capacity (possible distributions per day as a fraction of total population)
+        double vaccineCapacity_;
 };
 
 // global parameters object
