@@ -200,7 +200,13 @@ void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &sched
                 double toGroupFraction = populations_(nodeIdToIndex_[nodeId], a, r, v) / populationNodes_(nodeIdToIndex_[nodeId]);
 
                 double contactRate = contact[stratificationValues[0]][a];
-                double transmissionRate = (1. - vaccineEffectiveness) * beta * contactRate * sigma[a] * toGroupFraction;
+                double transmissionRate = beta * contactRate * sigma[a] * toGroupFraction;
+
+                // // vaccined stratification == 1
+                if(v == 1)
+                {
+                    transmissionRate *= (1. - vaccineEffectiveness);
+                }
 
                 // contacts can occur within this time range
                 double TcInit = schedule.getInfectedTMin(); // asymptomatic
@@ -483,16 +489,12 @@ void StochasticSEATIRD::travel()
             {
                 for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
                 {
-                    double probability = 0.;
+                    double probability = unvaccinatedProbabilities[a];
 
                     // vaccined stratification == 1
                     if(v == 1)
                     {
-                        probability = (1. - vaccineEffectiveness) * unvaccinatedProbabilities[a];
-                    }
-                    else
-                    {
-                        probability = unvaccinatedProbabilities[a];
+                        probability *= (1. - vaccineEffectiveness);
                     }
 
                     std::vector<int> stratificationValues;
