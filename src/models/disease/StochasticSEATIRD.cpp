@@ -331,6 +331,12 @@ void StochasticSEATIRD::applyAntivirals()
         float totalTreated = getValue("treated", time_+1, nodeIds[i]);
         float totalTreatable = getValue("treatable", time_+1, nodeIds[i]);
 
+        // do nothing if this population is zero
+        if(totalPopulation <= 0.)
+        {
+            continue;
+        }
+
         // == (adherent untreated population) * (fraction of population that is treatable)
         float totalAdherentTreatable = (antiviralAdherence * totalPopulation - totalTreated) * totalTreatable / totalPopulation;
 
@@ -380,6 +386,17 @@ void StochasticSEATIRD::applyAntivirals()
                     float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
                     float treated = getValue("treated", time_+1, nodeIds[i], stratificationValues);
                     float treatable = getValue("treatable", time_+1, nodeIds[i], stratificationValues);
+
+                    // do nothing if this population is zero
+                    if(population <= 0.)
+                    {
+                        adherentTreatable(a, r, v) = 0.;
+                        numberTreated(a, r, v) = 0;
+                        numberEffectivelyTreated(a, r, v) = 0;
+                        numberTreatable(a, r, v) = 0.;
+
+                        continue;
+                    }
 
                     // == (adherent untreated population) * (fraction of population that is treatable)
                     adherentTreatable(a, r, v) = (antiviralAdherence * population - treated) * treatable / population;
@@ -492,6 +509,12 @@ void StochasticSEATIRD::applyVaccines()
         float totalUnvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
         float totalSusceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
 
+        // do nothing if this population is zero
+        if(totalUnvaccinatedPopulation <= 0.)
+        {
+            continue;
+        }
+
         // == (adherent unvaccinated population) * (fraction of unvaccinated population that is susceptible)
         float totalAdherentSusceptibleUnvaccinated = (vaccineAdherence * totalPopulation - totalVaccinatedPopulation) * totalSusceptibleUnvaccinated / totalUnvaccinatedPopulation;
 
@@ -540,6 +563,15 @@ void StochasticSEATIRD::applyVaccines()
                 stratificationValues[2] = 0; // unvaccinated
                 float unvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
                 float susceptibleUnvaccinated = getValue("susceptible", time_+1, nodeIds[i], stratificationValues);
+
+                // do nothing if this population is zero
+                if(unvaccinatedPopulation <= 0.)
+                {
+                    adherentSusceptibleUnvaccinated(a, r) = 0.;
+                    numberVaccinated(a, r) = 0;
+
+                    continue;
+                }
 
                 // == (adherent unvaccinated population) * (fraction of unvaccinated population that is susceptible)
                 adherentSusceptibleUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * susceptibleUnvaccinated / unvaccinatedPopulation;
