@@ -24,6 +24,9 @@ StochasticSEATIRD::StochasticSEATIRD()
     newVariable("recovered");
     newVariable("deceased");
 
+    // the "treated" variable keeps tracks of those treated with antivirals
+    newVariable("treated");
+
     // derived variables
     derivedVariables_[":infected"] = boost::bind(&StochasticSEATIRD::getInfected, this, _1, _2, _3);
     derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getHospitalized, this, _1, _2, _3);
@@ -203,7 +206,7 @@ void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &sched
                 double contactRate = contact[stratificationValues[0]][a];
                 double transmissionRate = beta * contactRate * sigma[a] * toGroupFraction;
 
-                // // vaccined stratification == 1
+                // vaccinated stratification == 1
                 if(v == 1)
                 {
                     transmissionRate *= (1. - vaccineEffectiveness);
@@ -273,7 +276,7 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
             break;
 
         case CONTACT:
-            int targetPopulationSize = (int)populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]);
+            int targetPopulationSize = int(populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]));
 
             if(event.fromStratificationValues == event.toStratificationValues)
             {
@@ -297,6 +300,10 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
 
 void StochasticSEATIRD::applyAntivirals()
 {
+    double antiviralEffectiveness = g_parameters.getAntiviralEffectiveness();
+    double antiviralAdherence = g_parameters.getAntiviralAdherence();
+    double antiviralCapacity = g_parameters.getAntiviralCapacity();
+
     // treatments for each node
     std::vector<int> nodeIds = getNodeIds();
 
@@ -310,7 +317,7 @@ void StochasticSEATIRD::applyAntivirals()
             continue;
         }
 
-        // available antiviral stockpile
+        // available antivirals stockpile
         int stockpileAmount = stockpile->getNum(time_+1, STOCKPILE_ANTIVIRALS);
 
         // do nothing if we have no available stockpile
@@ -319,32 +326,44 @@ void StochasticSEATIRD::applyAntivirals()
             continue;
         }
 
-        int totalNumberTreatable = (int)getValue("treatable", time_+1, nodeIds[i]);
+        // determine total number of adherent treatable
+        float totalPopulation = getValue("population", time_+1, nodeIds[i]);
+        float totalTreated = getValue("treated", time_+1, nodeIds[i]);
+        float totalTreatable = getValue("treatable", time_+1, nodeIds[i]);
 
+        // == (adherent untreated population) * (fraction of population that is treatable)
+        float totalAdherentTreatable = (antiviralAdherence * totalPopulation - totalTreated) * totalTreatable / totalPopulation;
+
+        // we will use all of our available stockpile (subject to capacity constraint) to treat the adherent treatable population
         int stockpileAmountUsed = stockpileAmount;
 
-        if(stockpileAmountUsed > totalNumberTreatable)
+        if(stockpileAmountUsed > (int)totalAdherentTreatable)
         {
-            stockpileAmountUsed = totalNumberTreatable;
+            stockpileAmountUsed = (int)totalAdherentTreatable;
+        }
+
+        if(stockpileAmountUsed > (int)(antiviralCapacity * totalPopulation))
+        {
+            stockpileAmountUsed = (int)(antiviralCapacity * totalPopulation);
+        }
+
+        // do nothing if no stockpile is used
+        if(stockpileAmountUsed <= 0)
+        {
+            continue;
         }
 
         // decrement antivirals stockpile
         stockpile->setNum(time_+1, stockpileAmount - stockpileAmountUsed, STOCKPILE_ANTIVIRALS);
 
-        // number successfully treated (includes effectiveness)
-        int totalNumberTreated = (int)((float)stockpileAmountUsed * g_parameters.getAntiviralEffectiveness());
+        // apply antivirals pro-rata across all stratifications
 
-        // do nothing if nobody is treated
-        if(totalNumberTreated <= 0)
-        {
-            continue;
-        }
-
-        // apply treatments pro-rata across all stratifications
-        // todo: when we're doing these fractional divisions of int, we need to make sure we're not truncating off treatments
-
-        blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS> numberTreatable(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
+        blitz::Array<float, NUM_STRATIFICATION_DIMENSIONS> adherentTreatable(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
         blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS> numberTreated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
+        blitz::Array<int, NUM_STRATIFICATION_DIMENSIONS> numberEffectivelyTreated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
+
+        // we also need the number treatable for probabilistically choosing who got the treatment
+        blitz::Array<float, NUM_STRATIFICATION_DIMENSIONS> numberTreatable(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
 
         for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
         {
@@ -357,50 +376,78 @@ void StochasticSEATIRD::applyAntivirals()
                     stratificationValues.push_back(r);
                     stratificationValues.push_back(v);
 
-                    numberTreatable(a, r, v) = (int)getValue("treatable", time_+1, nodeIds[i], stratificationValues);
+                    // determine number of adherent treatable
+                    float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
+                    float treated = getValue("treated", time_+1, nodeIds[i], stratificationValues);
+                    float treatable = getValue("treatable", time_+1, nodeIds[i], stratificationValues);
 
-                    // pro-rata based on treatable population
-                    numberTreated(a, r, v) = (int)((float)numberTreatable(a, r, v) / (float)totalNumberTreatable * (float)totalNumberTreated);
+                    // == (adherent untreated population) * (fraction of population that is treatable)
+                    adherentTreatable(a, r, v) = (antiviralAdherence * population - treated) * treatable / population;
+
+                    // pro-rata by adherent treatable population
+                    numberTreated(a, r, v) = int(adherentTreatable(a, r, v) / totalAdherentTreatable * (float)stockpileAmountUsed);
+
+                    // considering effectiveness
+                    numberEffectivelyTreated(a, r, v) = int(antiviralEffectiveness * float(numberTreated(a, r, v)));
+
+                    // for probabilistically choosing who got the treatment
+                    numberTreatable(a, r, v) = treatable;
 
                     if(numberTreated(a, r, v) <= 0)
                     {
                         continue;
                     }
 
-                    put_flog(LOG_DEBUG, "numberTreatable = %i, numberTreated = %i", numberTreatable(a, r, v), numberTreated(a, r, v));
+                    put_flog(LOG_DEBUG, "adherentTreatable = %f, numberTreated = %i, numberEffectivelyTreated = %i", adherentTreatable(a, r, v), numberTreated(a, r, v), numberEffectivelyTreated(a, r, v));
 
-                    // transition those treated from "treatable" to "recovered"
-                    transition(numberTreated(a, r, v), "treatable", "recovered", nodeIds[i], stratificationValues);
+                    // transition those effectively treated from "treatable" to "recovered"
+                    transition(numberEffectivelyTreated(a, r, v), "treatable", "recovered", nodeIds[i], stratificationValues);
+
+                    // need to keep track of those treated (regardless of effectiveness)
+                    variables_["treated"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, v) += numberTreated(a, r, v);
                 }
             }
         }
 
-        // now, adjust schedules for individuals that were treated
+        // the sum over numberTreated should equal stockpileAmountUsed
+        // this can differ due to integer division issues with pro rata distributions
+        if(int(blitz::sum(numberTreated)) != stockpileAmountUsed)
+        {
+            put_flog(LOG_WARN, "numberTreated != stockpileAmountUsed (%i != %i)", int(blitz::sum(numberTreated)), stockpileAmountUsed);
+        }
+
+        // now, adjust schedules for individuals that were effectively treated
         // this will stop their transitions to other states and also their contact events
         boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator begin = scheduleEventQueues_[nodeIds[i]].begin();
         boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator end = scheduleEventQueues_[nodeIds[i]].end();
 
         boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator it;
 
-        for(it=begin; it!=end && blitz::sum(numberTreated) > 0; it++)
+        for(it=begin; it!=end && int(blitz::sum(numberEffectivelyTreated)) > 0; it++)
         {
             if((*it).getState() == T)
             {
                 std::vector<int> stratificationValues = (*it).getStratificationValues();
 
-                if(numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) > 0)
+                if(numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) > 0)
                 {
-                    if(rand_.rand() <= numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) / numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)))
+                    if(rand_.rand() <= float(numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))) / numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)))
                     {
                         // cancel the remaining schedule
                         (*boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::s_handle_from_iterator(it)).cancel();
 
-                        numberTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))--;
+                        numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))--;
                     }
 
                     numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))--;
                 }
             }
+        }
+
+        // the sum over numberEffectivelyTreated should now be zero if all events were unqueued
+        if(int(blitz::sum(numberEffectivelyTreated)) != 0)
+        {
+            put_flog(LOG_WARN, "numberEffectivelyTreated != 0 (%i)", int(blitz::sum(numberEffectivelyTreated)));
         }
     }
 }
@@ -498,7 +545,7 @@ void StochasticSEATIRD::applyVaccines()
                 adherentSusceptibleUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * susceptibleUnvaccinated / unvaccinatedPopulation;
 
                 // pro-rata by adherent susceptible unvaccinated population
-                numberVaccinated(a, r) = (int)(adherentSusceptibleUnvaccinated(a, r) / totalAdherentSusceptibleUnvaccinated * (float)stockpileAmountUsed);
+                numberVaccinated(a, r) = int(adherentSusceptibleUnvaccinated(a, r) / totalAdherentSusceptibleUnvaccinated * (float)stockpileAmountUsed);
 
                 if(numberVaccinated(a, r) <= 0)
                 {
@@ -518,9 +565,10 @@ void StochasticSEATIRD::applyVaccines()
         }
 
         // the sum over numberVaccinated should equal stockpileAmountUsed
-        if(blitz::sum(numberVaccinated) != stockpileAmountUsed)
+        // this can differ due to integer division issues with pro rata distributions
+        if(int(blitz::sum(numberVaccinated)) != stockpileAmountUsed)
         {
-            put_flog(LOG_WARN, "numberVaccinated != stockpileAmountUsed (%i != %i)", blitz::sum(numberVaccinated), stockpileAmountUsed);
+            put_flog(LOG_WARN, "numberVaccinated != stockpileAmountUsed (%i != %i)", int(blitz::sum(numberVaccinated)), stockpileAmountUsed);
         }
 
         // no need to adjust schedules since susceptible individuals are not scheduled yet
@@ -614,7 +662,7 @@ void StochasticSEATIRD::travel()
                 {
                     double probability = unvaccinatedProbabilities[a];
 
-                    // vaccined stratification == 1
+                    // vaccinated stratification == 1
                     if(v == 1)
                     {
                         probability *= (1. - vaccineEffectiveness);

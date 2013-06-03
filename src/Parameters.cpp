@@ -14,6 +14,8 @@ Parameters::Parameters()
     gamma_ = 0.243902439024;
     nu_ = 0.0001;
     antiviralEffectiveness_ = 0.15;
+    antiviralAdherence_ = 0.8;
+    antiviralCapacity_ = 0.1;
     vaccineEffectiveness_ = 0.8;
     vaccineAdherence_ = 0.8;
     vaccineCapacity_ = 0.1;
@@ -57,6 +59,16 @@ double Parameters::getNu()
 double Parameters::getAntiviralEffectiveness()
 {
     return antiviralEffectiveness_;
+}
+
+double Parameters::getAntiviralAdherence()
+{
+    return antiviralAdherence_;
+}
+
+double Parameters::getAntiviralCapacity()
+{
+    return antiviralCapacity_;
 }
 
 double Parameters::getVaccineEffectiveness()
@@ -126,6 +138,20 @@ void Parameters::setNu(double value)
 void Parameters::setAntiviralEffectiveness(double value)
 {
     antiviralEffectiveness_ = value;
+
+    put_flog(LOG_DEBUG, "%f", value);
+}
+
+void Parameters::setAntiviralAdherence(double value)
+{
+    antiviralAdherence_ = value;
+
+    put_flog(LOG_DEBUG, "%f", value);
+}
+
+void Parameters::setAntiviralCapacity(double value)
+{
+    antiviralCapacity_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
 }

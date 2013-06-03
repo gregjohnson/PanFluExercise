@@ -19,6 +19,8 @@ class Parameters : public QObject
         double getGamma();
         double getNu();
         double getAntiviralEffectiveness();
+        double getAntiviralAdherence();
+        double getAntiviralCapacity();
         double getVaccineEffectiveness();
         double getVaccineAdherence();
         double getVaccineCapacity();
@@ -33,6 +35,8 @@ class Parameters : public QObject
         void setGamma(double value);
         void setNu(double value);
         void setAntiviralEffectiveness(double value);
+        void setAntiviralAdherence(double value);
+        void setAntiviralCapacity(double value);
         void setVaccineEffectiveness(double value);
         void setVaccineAdherence(double value);
         void setVaccineCapacity(double value);
@@ -63,6 +67,12 @@ class Parameters : public QObject
 
         // antiviral effectiveness
         double antiviralEffectiveness_;
+
+        // antiviral adherence
+        double antiviralAdherence_;
+
+        // antiviral capacity (possible distributions per day as a fraction of total population)
+        double antiviralCapacity_;
 
         // vaccine effectiveness
         double vaccineEffectiveness_;
