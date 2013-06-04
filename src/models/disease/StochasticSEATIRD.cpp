@@ -428,9 +428,9 @@ void StochasticSEATIRD::applyAntivirals()
 
         // the sum over numberTreated should equal stockpileAmountUsed
         // this can differ due to integer division issues with pro rata distributions
-        if(int(blitz::sum(numberTreated)) != stockpileAmountUsed)
+        if(blitz::sum(numberTreated) != stockpileAmountUsed)
         {
-            put_flog(LOG_WARN, "numberTreated != stockpileAmountUsed (%i != %i)", int(blitz::sum(numberTreated)), stockpileAmountUsed);
+            put_flog(LOG_WARN, "numberTreated != stockpileAmountUsed (%i != %i)", blitz::sum(numberTreated), stockpileAmountUsed);
         }
 
         // now, adjust schedules for individuals that were effectively treated
@@ -440,7 +440,7 @@ void StochasticSEATIRD::applyAntivirals()
 
         boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::iterator it;
 
-        for(it=begin; it!=end && int(blitz::sum(numberEffectivelyTreated)) > 0; it++)
+        for(it=begin; it!=end && blitz::sum(numberEffectivelyTreated) > 0; it++)
         {
             if((*it).getState() == T)
             {
@@ -462,9 +462,9 @@ void StochasticSEATIRD::applyAntivirals()
         }
 
         // the sum over numberEffectivelyTreated should now be zero if all events were unqueued
-        if(int(blitz::sum(numberEffectivelyTreated)) != 0)
+        if(blitz::sum(numberEffectivelyTreated) != 0)
         {
-            put_flog(LOG_WARN, "numberEffectivelyTreated != 0 (%i)", int(blitz::sum(numberEffectivelyTreated)));
+            put_flog(LOG_WARN, "numberEffectivelyTreated != 0 (%i)", blitz::sum(numberEffectivelyTreated));
         }
     }
 }
@@ -598,9 +598,9 @@ void StochasticSEATIRD::applyVaccines()
 
         // the sum over numberVaccinated should equal stockpileAmountUsed
         // this can differ due to integer division issues with pro rata distributions
-        if(int(blitz::sum(numberVaccinated)) != stockpileAmountUsed)
+        if(blitz::sum(numberVaccinated) != stockpileAmountUsed)
         {
-            put_flog(LOG_WARN, "numberVaccinated != stockpileAmountUsed (%i != %i)", int(blitz::sum(numberVaccinated)), stockpileAmountUsed);
+            put_flog(LOG_WARN, "numberVaccinated != stockpileAmountUsed (%i != %i)", blitz::sum(numberVaccinated), stockpileAmountUsed);
         }
 
         // no need to adjust schedules since susceptible individuals are not scheduled yet
