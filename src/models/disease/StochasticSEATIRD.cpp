@@ -50,11 +50,19 @@ StochasticSEATIRD::~StochasticSEATIRD()
 int StochasticSEATIRD::expose(int num, int nodeId, std::vector<int> stratificationValues)
 {
     // expose() can be called outside of a simulation before we've simulated any time steps
-    if(cachedTime_ != time_)
+    if(time_ == 0 && cachedTime_ == -1)
     {
-        put_flog(LOG_DEBUG, "precomputing (should only happen at the beginning of simulation)");
+        put_flog(LOG_DEBUG, "precomputing at beginning of simulation");
 
-        precompute(time_);
+        // in this case we don't precompute on time_+1 since it doesn't exist yet
+        // this will still produce correct results since there's no movement in stratifications
+        precompute(0);
+    }
+    else if(time_ != 0 && cachedTime_ != time_+1)
+    {
+        put_flog(LOG_WARN, "precomputing during simulation! should not be necessary.");
+
+        precompute(time_+1);
     }
 
     int numExposed = EpidemicSimulation::expose(num, nodeId, stratificationValues);
@@ -78,9 +86,6 @@ void StochasticSEATIRD::simulate()
     // we are simulating from time_ to time_+1
     now_ = (double)time_;
 
-    // pre-compute some frequently used values
-    precompute(time_);
-
     // base class simulate(): copies variables to new time step (time_+1) and evolves stockpile network
     EpidemicSimulation::simulate();
 
@@ -95,6 +100,11 @@ void StochasticSEATIRD::simulate()
     // apply treatments
     applyAntivirals();
     applyVaccines();
+
+    // pre-compute some frequently used values
+    // this should be done after applyVaccines() since individuals may be changing stratifications
+    // we operate on the new time step (time_+1) to capture such stratification changes
+    precompute(time_+1);
 
     // process events for each node
     for(unsigned int i=0; i<nodeIds_.size(); i++)
@@ -166,9 +176,6 @@ void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &sched
     // todo: beta should be age-specific considering PHA's
     double beta = g_parameters.getR0() / g_parameters.getBetaScale();
 
-    // todo: should be age-specific
-    double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
-
     // todo: should be in parameters
     static double sigma[] = {1.00, 0.98, 0.94, 0.91, 0.66};
 
@@ -186,46 +193,38 @@ void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &sched
         return;
     }
 
-    std::vector<int> toStratificationValues(3);
+    // contact events will only be targeted at (age group, risk group)
+    // vaccinated status changes over time, and these events are all initiated at the point of exposure
+    // when the contact event occurs, it will then be determined if the target individual is vaccinated or not
+    std::vector<int> toStratificationValues(2);
 
     for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
     {
         for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
         {
-            for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
+            toStratificationValues[0] = a;
+            toStratificationValues[1] = r;
+
+            // fraction of the to group in population; use cached values
+            // sum both unvaccinated and vaccinated stratifications
+            double toGroupFraction = (populations_(nodeIdToIndex_[nodeId], a, r, 0) + populations_(nodeIdToIndex_[nodeId], a, r, 1))  / populationNodes_(nodeIdToIndex_[nodeId]);
+
+            double contactRate = contact[stratificationValues[0]][a];
+            double transmissionRate = beta * contactRate * sigma[a] * toGroupFraction;
+
+            // contacts can occur within this time range
+            double TcInit = schedule.getInfectedTMin(); // asymptomatic
+            double TcFinal = schedule.getInfectedTMax(); // recovered / deceased
+
+            // the first contact time...
+            double Tc = TcInit + random_exponential(transmissionRate, &rand_);
+
+            while(Tc < TcFinal)
             {
-                //// this seems wrong -- the number of vaccinated people will change over time, and this targets them only at the time of exposure!
+                schedule.insertEvent(StochasticSEATIRDEvent(TcInit, Tc, CONTACT, stratificationValues, toStratificationValues));
 
-                toStratificationValues[0] = a;
-                toStratificationValues[1] = r;
-                toStratificationValues[2] = v;
-
-                // fraction of the to group in population; use cached values
-                double toGroupFraction = populations_(nodeIdToIndex_[nodeId], a, r, v) / populationNodes_(nodeIdToIndex_[nodeId]);
-
-                double contactRate = contact[stratificationValues[0]][a];
-                double transmissionRate = beta * contactRate * sigma[a] * toGroupFraction;
-
-                // vaccinated stratification == 1
-                if(v == 1)
-                {
-                    transmissionRate *= (1. - vaccineEffectiveness);
-                }
-
-                // contacts can occur within this time range
-                double TcInit = schedule.getInfectedTMin(); // asymptomatic
-                double TcFinal = schedule.getInfectedTMax(); // recovered / deceased
-
-                // the first contact time...
-                double Tc = TcInit + random_exponential(transmissionRate, &rand_);
-
-                while(Tc < TcFinal)
-                {
-                    schedule.insertEvent(StochasticSEATIRDEvent(TcInit, Tc, CONTACT, stratificationValues, toStratificationValues));
-
-                    TcInit = Tc;
-                    Tc = TcInit + random_exponential(transmissionRate, &rand_);
-                }
+                TcInit = Tc;
+                Tc = TcInit + random_exponential(transmissionRate, &rand_);
             }
         }
     }
@@ -276,9 +275,49 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
             break;
 
         case CONTACT:
-            int targetPopulationSize = int(populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], event.toStratificationValues[2]));
+            // contact events only target (age group, risk group)
+            if(event.toStratificationValues.size() != 2)
+            {
+                put_flog(LOG_ERROR, "incorrect event.toStratificationValues; size == %i", event.toStratificationValues.size());
+                return false;
+            }
 
-            if(event.fromStratificationValues == event.toStratificationValues)
+            // determine now if the target individual is vaccinated or not
+            int ageRiskPopulationSize = int(populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], 0) + populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], 1));
+
+            // vaccinated stratification == 1
+            int ageRiskVaccinatedPopulationSize = int(populations_(nodeIdToIndex_[nodeId], event.toStratificationValues[0], event.toStratificationValues[1], 1));
+
+            // random integer between 1 and ageRiskPopulationSize
+            int contact = rand_.randInt(ageRiskPopulationSize - 1) + 1;
+
+            // the vaccinated stratification value
+            int v = 0;
+
+            if(ageRiskVaccinatedPopulationSize >= contact)
+            {
+                // the target individual is vaccinated
+                v = 1;
+
+                // only continue if the vaccine is not effective
+
+                // todo: should be age-specific
+                double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
+
+                if(rand_.rand() <= vaccineEffectiveness)
+                {
+                    // the vaccine is effective
+                    break;
+                }
+            }
+
+            // form the complete toStratificationValues
+            std::vector<int> completeToStratificationValues = event.toStratificationValues;
+            completeToStratificationValues.push_back(v);
+
+            int targetPopulationSize = int(populations_(nodeIdToIndex_[nodeId], completeToStratificationValues[0], completeToStratificationValues[1], completeToStratificationValues[2]));
+
+            if(event.fromStratificationValues == completeToStratificationValues)
             {
                 targetPopulationSize -= 1; // - 1 because randint includes both endpoints
             }
@@ -286,13 +325,15 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
             if(targetPopulationSize > 0)
             {
                 // random integer between 1 and targetPopulationSize
-                int contact = rand_.randInt(targetPopulationSize - 1) + 1;
+                contact = rand_.randInt(targetPopulationSize - 1) + 1;
 
-                if((int)getValue("susceptible", time_+1, nodeId, event.toStratificationValues) >= contact)
+                if((int)getValue("susceptible", time_+1, nodeId, completeToStratificationValues) >= contact)
                 {
-                    expose(1, nodeId, event.toStratificationValues);
+                    expose(1, nodeId, completeToStratificationValues);
                 }
             }
+
+            break;
     }
 
     return true;
