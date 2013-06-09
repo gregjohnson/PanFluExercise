@@ -178,3 +178,19 @@ void StochasticSEATIRDSchedule::cancel()
 {
     canceled_ = true;
 }
+
+void StochasticSEATIRDSchedule::changeStratificationValues(std::vector<int> stratificationValues)
+{
+    stratificationValues_ = stratificationValues;
+
+    // update fromValues in events in queue
+    boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> >::iterator begin = eventQueue_.begin();
+    boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> >::iterator end = eventQueue_.end();
+
+    boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> >::iterator it;
+
+    for(it=begin; it!=end; it++)
+    {
+        (*boost::heap::pairing_heap<StochasticSEATIRDEvent, boost::heap::compare<StochasticSEATIRDEvent::compareByTime> >::s_handle_from_iterator(it)).fromStratificationValues = stratificationValues;
+    }
+}

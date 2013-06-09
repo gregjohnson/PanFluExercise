@@ -7,6 +7,7 @@
 
 // an individual corresponding to a schedule can be in any of these states
 // susceptible is not included, since events start after exposure
+// if these are modified, need to modify applyVaccines()!
 enum StochasticSEATIRDScheduleState
 {
     E,
@@ -50,6 +51,9 @@ class StochasticSEATIRDSchedule
 
         // cancel schedule (e.g. by treatment)
         void cancel();
+
+        // change stratifications (this is used when scheduled individuals are vaccinated)
+        void changeStratificationValues(std::vector<int> stratificationValues);
 
         // todo: we could save the latest event time in this class to make the comparisons faster...
         class compareByNextEventTime
