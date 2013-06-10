@@ -17,6 +17,7 @@ Parameters::Parameters()
     antiviralAdherence_ = 0.8;
     antiviralCapacity_ = 0.1;
     vaccineEffectiveness_ = 0.8;
+    vaccineLatencyPeriod_ = 14;
     vaccineAdherence_ = 0.8;
     vaccineCapacity_ = 0.1;
 }
@@ -74,6 +75,11 @@ double Parameters::getAntiviralCapacity()
 double Parameters::getVaccineEffectiveness()
 {
     return vaccineEffectiveness_;
+}
+
+int Parameters::getVaccineLatencyPeriod()
+{
+    return vaccineLatencyPeriod_;
 }
 
 double Parameters::getVaccineAdherence()
@@ -161,6 +167,13 @@ void Parameters::setVaccineEffectiveness(double value)
     vaccineEffectiveness_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
+}
+
+void Parameters::setVaccineLatencyPeriod(int value)
+{
+    vaccineLatencyPeriod_ = value;
+
+    put_flog(LOG_DEBUG, "%i", value);
 }
 
 void Parameters::setVaccineAdherence(double value)

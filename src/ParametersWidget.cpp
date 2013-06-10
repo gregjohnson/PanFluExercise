@@ -24,6 +24,7 @@ ParametersWidget::ParametersWidget()
     constructParameterWidget("Antiviral adherence", "antiviral adherence", g_parameters.getAntiviralAdherence(), 0., 1., SLOT(setAntiviralAdherence(double)));
     constructParameterWidget("Antiviral capacity", "daily antiviral distribution capacity as a fraction of population", g_parameters.getAntiviralCapacity(), 0., 1., SLOT(setAntiviralCapacity(double)));
     constructParameterWidget("Vaccine effectiveness", "vaccine effectiveness", g_parameters.getVaccineEffectiveness(), 0., 1., SLOT(setVaccineEffectiveness(double)));
+    constructParameterWidget("Vaccine latency period", "number of days before a vaccination becomes effective", g_parameters.getVaccineLatencyPeriod(), 0, 60, SLOT(setVaccineLatencyPeriod(int)));
     constructParameterWidget("Vaccine adherence", "vaccine adherence", g_parameters.getVaccineAdherence(), 0., 1., SLOT(setVaccineAdherence(double)));
     constructParameterWidget("Vaccine capacity", "daily vaccine distribution capacity as a fraction of population", g_parameters.getVaccineCapacity(), 0., 1., SLOT(setVaccineCapacity(double)));
 }
@@ -63,4 +64,38 @@ void ParametersWidget::constructParameterWidget(std::string label, std::string d
     layout_->addWidget(groupBox);
 
     connect(spinBox, SIGNAL(valueChanged(double)), &g_parameters, setSlot);
+}
+
+void ParametersWidget::constructParameterWidget(std::string label, std::string description, int value, int min, int max, const char * setSlot)
+{
+    QGroupBox * groupBox = new QGroupBox();
+    QHBoxLayout * layout = new QHBoxLayout();
+    groupBox->setLayout(layout);
+
+    // label and description
+    QWidget * labelWidget = new QWidget();
+    QVBoxLayout * labelLayout = new QVBoxLayout();
+    labelWidget->setLayout(labelLayout);
+
+    labelLayout->addWidget(new QLabel(label.c_str()));
+
+    QLabel * descriptionLabel = new QLabel(description.c_str());
+    descriptionLabel->setWordWrap(true);
+    labelLayout->addWidget(descriptionLabel);
+
+    layout->addWidget(labelWidget);
+
+    // the spin box
+    QSpinBox * spinBox = new QSpinBox();
+
+    spinBox->setToolTip(description.c_str());
+    spinBox->setRange(min, max);
+    spinBox->setValue(value);
+
+    layout->addWidget(spinBox);
+
+    // add the widgets and make connections
+    layout_->addWidget(groupBox);
+
+    connect(spinBox, SIGNAL(valueChanged(int)), &g_parameters, setSlot);
 }

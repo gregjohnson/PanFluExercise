@@ -31,8 +31,10 @@ StochasticSEATIRD::StochasticSEATIRD()
     newVariable("vaccinated (daily)");
 
     // derived variables
-    derivedVariables_[":infected"] = boost::bind(&StochasticSEATIRD::getInfected, this, _1, _2, _3);
-    derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getHospitalized, this, _1, _2, _3);
+    derivedVariables_[":infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
+    derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getDerivedVarHospitalized, this, _1, _2, _3);
+    derivedVariables_[":vaccine latency period"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod, this, _1, _2, _3);
+    derivedVariables_[":vaccine effective"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines, this, _1, _2, _3);
 
     // initialize start time to 0
     time_ = 0;
@@ -152,7 +154,7 @@ void StochasticSEATIRD::simulate()
     time_++;
 }
 
-float StochasticSEATIRD::getInfected(int time, int nodeId, std::vector<int> stratificationValues)
+float StochasticSEATIRD::getDerivedVarInfected(int time, int nodeId, std::vector<int> stratificationValues)
 {
     float infected = 0.;
     infected += getValue("asymptomatic", time, nodeId, stratificationValues);
@@ -162,7 +164,7 @@ float StochasticSEATIRD::getInfected(int time, int nodeId, std::vector<int> stra
     return infected;
 }
 
-float StochasticSEATIRD::getHospitalized(int time, int nodeId, std::vector<int> stratificationValues)
+float StochasticSEATIRD::getDerivedVarHospitalized(int time, int nodeId, std::vector<int> stratificationValues)
 {
     float hospitalized = 0.;
     hospitalized += getValue("treatable", time, nodeId, stratificationValues);
@@ -172,6 +174,46 @@ float StochasticSEATIRD::getHospitalized(int time, int nodeId, std::vector<int> 
     hospitalized *= 0.05;
 
     return hospitalized;
+}
+
+float StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod(int time, int nodeId, std::vector<int> stratificationValues)
+{
+    // should match the other getPopulationInVaccineLatencyPeriod() method below
+
+    // no need to limit to vaccinated stratification, since non-vaccinated will always be zero for this variable
+
+    int vaccineLatencyPeriod = g_parameters.getVaccineLatencyPeriod();
+
+    float total = 0;
+
+    // with these inequalities, a 0 day latency period will always return 0, as expected
+    for(int t=time; t>=0 && t>(time - vaccineLatencyPeriod); t--)
+    {
+        // vaccinated stratification == 1
+        total += getValue("vaccinated (daily)", t, nodeId, stratificationValues);
+    }
+
+    return total;
+}
+
+float StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines(int time, int nodeId, std::vector<int> stratificationValues)
+{
+    // vaccinated stratification == 1
+    // return 0 if unvaccinated stratification was explicitly specified
+    if(stratificationValues.size() >= 3 && (stratificationValues[2] != 1 && stratificationValues[2] != STRATIFICATIONS_ALL))
+    {
+        return 0.;
+    }
+
+    // make sure stratifications size is full and choose vaccinated stratification
+    for(unsigned int i=stratificationValues.size(); i<3; i++)
+    {
+        stratificationValues.push_back(STRATIFICATIONS_ALL);
+    }
+
+    stratificationValues[2] = 1;
+
+    return getValue("population", time, nodeId, stratificationValues) - getDerivedVarPopulationInVaccineLatencyPeriod(time, nodeId, stratificationValues);
 }
 
 void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues)
@@ -304,13 +346,22 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
 
                 // only continue if the vaccine is not effective
 
-                // todo: should be age-specific
-                double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
+                // if the individual is still in the vaccine latency period, the vaccine is not effective
+                int ageRiskVaccinatedLatencyPopulationSize = getPopulationInVaccineLatencyPeriod(nodeId, event.toStratificationValues[0], event.toStratificationValues[1]);
 
-                if(rand_.rand() <= vaccineEffectiveness)
+                if(ageRiskVaccinatedLatencyPopulationSize < contact)
                 {
-                    // the vaccine is effective
-                    break;
+                    // individual is NOT in the vaccine latency period
+                    // the vaccine therefore might be effective
+
+                    // todo: should be age-specific
+                    double vaccineEffectiveness = g_parameters.getVaccineEffectiveness();
+
+                    if(rand_.rand() <= vaccineEffectiveness)
+                    {
+                        // the vaccine is effective
+                        break;
+                    }
                 }
             }
 
@@ -733,6 +784,26 @@ void StochasticSEATIRD::applyVaccines()
     }
 }
 
+int StochasticSEATIRD::getPopulationInVaccineLatencyPeriod(int nodeId, int ageGroup, int riskGroup)
+{
+    // should match the derived variable method above
+
+    int vaccineLatencyPeriod = g_parameters.getVaccineLatencyPeriod();
+
+    int total = 0;
+
+    // people are vaccinated in the "morning", changing the daily count for time_+1
+    // therefore we start in that bin when we're counting vaccinations
+    // with these inequalities, a 0 day latency period will always return 0, as expected
+    for(int t=time_+1; t>=0 && t>(time_+1 - vaccineLatencyPeriod); t--)
+    {
+        // vaccinated stratification == 1
+        total += int(variables_["vaccinated (daily)"](t, nodeIdToIndex_[nodeId], ageGroup, riskGroup, 1));
+    }
+
+    return total;
+}
+
 void StochasticSEATIRD::travel()
 {
     // todo: these should be parameters defined elsewhere
@@ -823,7 +894,19 @@ void StochasticSEATIRD::travel()
                     // vaccinated stratification == 1
                     if(v == 1)
                     {
-                        probability *= (1. - vaccineEffectiveness);
+                        // determine vaccinated populations for this (age group, risk group):
+                        // - those in the latency period
+                        // - total vaccinated
+                        // - => those with effective vaccinations
+                        int ageRiskVaccinatedLatencyPopulationSize = getPopulationInVaccineLatencyPeriod(sinkNodeId, a, r);
+                        int ageRiskVaccinatedPopulationSize = populations_(nodeIdToIndex_[sinkNodeId], a, r, 1);
+
+                        int ageRiskVaccinatedEffectivePopulationSize = ageRiskVaccinatedPopulationSize - ageRiskVaccinatedLatencyPopulationSize;
+
+                        // the "effective" vaccine effectiveness is weighted by the fraction of the vaccinated population with effective vaccinations
+                        double effectiveVaccineEffectiveness = vaccineEffectiveness * (double)ageRiskVaccinatedEffectivePopulationSize / (double)ageRiskVaccinatedPopulationSize;
+
+                        probability *= (1. - effectiveVaccineEffectiveness);
                     }
 
                     std::vector<int> stratificationValues;

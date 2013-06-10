@@ -22,6 +22,7 @@ class Parameters : public QObject
         double getAntiviralAdherence();
         double getAntiviralCapacity();
         double getVaccineEffectiveness();
+        int getVaccineLatencyPeriod();
         double getVaccineAdherence();
         double getVaccineCapacity();
 
@@ -38,6 +39,7 @@ class Parameters : public QObject
         void setAntiviralAdherence(double value);
         void setAntiviralCapacity(double value);
         void setVaccineEffectiveness(double value);
+        void setVaccineLatencyPeriod(int value);
         void setVaccineAdherence(double value);
         void setVaccineCapacity(double value);
 
@@ -76,6 +78,9 @@ class Parameters : public QObject
 
         // vaccine effectiveness
         double vaccineEffectiveness_;
+
+        // vaccine latency period
+        int vaccineLatencyPeriod_;
 
         // vaccine adherence
         double vaccineAdherence_;

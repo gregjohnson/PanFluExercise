@@ -18,6 +18,7 @@ class ParametersWidget : public QScrollArea
     private:
 
         void constructParameterWidget(std::string label, std::string description, double value, double min, double max, const char * setSlot);
+        void constructParameterWidget(std::string label, std::string description, int value, int min, int max, const char * setSlot);
 
         QVBoxLayout * layout_;
 };

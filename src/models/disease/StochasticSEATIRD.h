@@ -20,8 +20,10 @@ class StochasticSEATIRD : public EpidemicSimulation
         void simulate();
 
         // derived variables
-        float getInfected(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
-        float getHospitalized(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getDerivedVarInfected(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getDerivedVarHospitalized(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getDerivedVarPopulationInVaccineLatencyPeriod(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getDerivedVarPopulationEffectiveVaccines(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
 
     private:
 
@@ -57,6 +59,9 @@ class StochasticSEATIRD : public EpidemicSimulation
         // treatments
         void applyAntivirals();
         void applyVaccines();
+
+        // for vaccines
+        int getPopulationInVaccineLatencyPeriod(int nodeId, int ageGroup, int riskGroup);
 
         // travel between nodes
         void travel();
