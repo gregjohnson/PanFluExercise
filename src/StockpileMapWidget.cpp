@@ -72,7 +72,7 @@ void StockpileMapWidget::setTime(int time)
 
     // force redraw
     update();
-
+	
     exportSVGToDisplayCluster();
 }
 

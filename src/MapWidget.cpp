@@ -212,7 +212,7 @@ void MapWidget::paintEvent(QPaintEvent* event)
 	painter.setBackgroundMode(Qt::TransparentMode);
 	painter.setRenderHint(QPainter::Antialiasing, true);
 	
-	//this will render the MapShape's
+	//this will render the MapShapes and travel (if any)
     render(&painter);
 	
 	
@@ -292,9 +292,10 @@ void MapWidget::resizeGL(int width, int height)
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+	
+	update();
 */
 
-    update();
 }
 
 void MapWidget::setOrthographicView()

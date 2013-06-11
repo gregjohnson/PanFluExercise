@@ -34,7 +34,7 @@ void EpidemicMapWidget::setTime(int time)
 
         // force redraw
         update();
-
+		
         exportSVGToDisplayCluster();
     }
 }
@@ -49,8 +49,6 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 {
 
 	//AARONBAD -- need to convert this to QPainter
-	/*
-
     // parameters
     float infectiousTravelerThreshhold = 1.;
     float infectiousTravelerAlphaScale = 100.;
@@ -60,15 +58,17 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
         return;
     }
 
-    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
+    //glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
 
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glDisable(GL_DEPTH_TEST);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glLineWidth(3.);
+    //glLineWidth(3.);
 
-    glBegin(GL_LINES);
+    //glBegin(GL_LINES);
+
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .07)), .05));
 
     for(std::map<int, boost::shared_ptr<MapShape> >::iterator iter0=counties_.begin(); iter0!=counties_.end(); iter0++)
     {
@@ -100,10 +100,11 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
                 if(infectiousTravelers > infectiousTravelerThreshhold)
                 {
-                    glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
+		   	     	painter->drawLine(lon0, lat0, lon1, lat1);
+                    //glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
 
-                    glVertex2f(lon0, lat0);
-                    glVertex2f(lon1, lat1);
+                    //glVertex2f(lon0, lat0);
+                    //glVertex2f(lon1, lat1);
                 }
             }
         }
@@ -112,5 +113,4 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
     glEnd();
 
     glPopAttrib();
-	*/
 }
