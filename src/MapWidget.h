@@ -32,6 +32,8 @@ class MapWidget : public QGLWidget
         void exportSVGToDisplayCluster();
 
     protected:
+		
+		void paintEvent(QPaintEvent* event);
 
         // indexing used to identify this map
         static int numMapWidgets_;
@@ -61,12 +63,12 @@ class MapWidget : public QGLWidget
 
         // color map for county shapes
         ColorMap countiesColorMap_;
-
+		
         // SVG export
         QTemporaryFile svgTmpFile_;
-
-        // render() method placeholder for derived classes
-        virtual void render() { }
+		
+        // () method placeholder for derived classes
+        virtual void render(QPainter* painter) { }
 
         // reimplemented from QGLWidget
         void initializeGL();
@@ -83,7 +85,7 @@ class MapWidget : public QGLWidget
 
         // counties
         bool loadCountyShapes();
-        void renderCountyShapes();
+        void renderCountyShapes(QPainter* painter);
 };
 
 #endif

@@ -25,7 +25,9 @@ void EpidemicMapWidget::setTime(int time)
 
             // map to color
             float r, g, b;
-            countiesColorMap_.getColor3(infectiousFraction / 0.01, r, g, b);
+            countiesColorMap_.getColor3(infectiousFraction * 100, r, g, b);
+			
+			printf("rgb = %f %f %f\n", r,g,b);
 
             iter->second->setColor(r, g, b);
         }
@@ -37,14 +39,18 @@ void EpidemicMapWidget::setTime(int time)
     }
 }
 
-void EpidemicMapWidget::render()
+void EpidemicMapWidget::render(QPainter* painter)
 {
-    renderCountyShapes();
-    renderCountyTravel();
+    renderCountyShapes(painter);
+    renderCountyTravel(painter);
 }
 
-void EpidemicMapWidget::renderCountyTravel()
+void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 {
+
+	//AARONBAD -- need to convert this to QPainter
+	/*
+
     // parameters
     float infectiousTravelerThreshhold = 1.;
     float infectiousTravelerAlphaScale = 100.;
@@ -106,4 +112,5 @@ void EpidemicMapWidget::renderCountyTravel()
     glEnd();
 
     glPopAttrib();
+	*/
 }

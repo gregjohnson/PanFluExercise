@@ -89,6 +89,14 @@ void MapWidget::exportSVGToDisplayCluster()
 
         QPainter painter;
         painter.begin(&generator);
+		
+		this->makeCurrent();
+		glEnable(GL_MULTISAMPLE);
+		glEnable(GL_LINE_SMOOTH);
+
+		painter.setRenderHint(QPainter::Antialiasing);
+		painter.setRenderHint(QPainter::HighQualityAntialiasing);
+		
 
         // set logical coordinates of the render window
         painter.setWindow(baseMapRect_.toRect());
@@ -98,14 +106,14 @@ void MapWidget::exportSVGToDisplayCluster()
         painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
 
         // don't render the basemap in SVG since it's too expensive
-        // baseMapSvg_->render(&painter, QRect(QPoint(-107,37), QPoint(-93,25)));
+        baseMapSvg_->render(&painter, QRect(QPoint(-107,37), QPoint(-93,25)));
 
         // render shapes
         std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
 
         for(iter=counties_.begin(); iter!=counties_.end(); iter++)
         {
-            iter->second->renderSVG(&painter);
+            iter->second->render(&painter);
         }
 
         // draw title
@@ -122,13 +130,21 @@ void MapWidget::exportSVGToDisplayCluster()
 
         QPoint titlePosition = painter.window().topRight() + QPoint(-600, 100);
         QRect titleRect = QRect(titlePosition, titlePosition + QPoint(600, 3 * titleFontPixelSize));
+		
+        //QPoint titlePosition = painter.window().topRight() + QPoint(0, 0);
+        //QRect titleRect = QRect(titlePosition, titlePosition + QPoint(50, 3 * titleFontPixelSize));
+		
 
         painter.drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 
         // draw legend
-        QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-250, -250);
-        float legendHeight = 200.;
-        float legendWidth = 50.;
+        //QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-250, -250);
+        //float legendHeight = 200.;
+        //float legendWidth = 50.;
+        QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-100, -100);
+        float legendHeight = 100.;
+        float legendWidth = 25.;
+
 
         int legendSubdivisions = 50;
 
@@ -179,18 +195,95 @@ void MapWidget::initializeGL()
     glDisable(GL_LIGHTING);
 }
 
-void MapWidget::paintGL()
+void MapWidget::paintEvent(QPaintEvent* event)
 {
-    setOrthographicView();
+    QPainter painter(this);
 
-    renderBaseMapTexture();
+    painter.setWindow(baseMapRect_.toRect());
+	
+	painter.begin(this);
+		
+	//if (baseMapSvg_->isValid())
+	//	baseMapSvg_->render(&painter, baseMapRect_.toRect());
+	
+    //painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
+		
+		
+	painter.setBackgroundMode(Qt::TransparentMode);
+	painter.setRenderHint(QPainter::Antialiasing, true);
+	
+	//this will render the MapShape's
+    render(&painter);
+	
+	
+    // draw title
+    painter.resetTransform();
 
-    // other derived class rendering
-    render();
+    QFont titleFont = painter.font();
+
+    int titleFontPixelSize = 16;
+    titleFont.setPixelSize(titleFontPixelSize);
+
+    painter.setFont(titleFont);
+    painter.setPen(QColor::fromRgbF(1,1,1,1));
+    painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+
+    QPoint titlePosition = painter.window().topRight() + QPoint(-350, -2);
+    QRect titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));	
+
+    painter.drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
+
+    // draw legend
+    QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-100, -110);
+    float legendHeight = 100.;
+    float legendWidth = 25.;
+
+    int legendSubdivisions = 50;
+
+    float colorMin, colorMax;
+    countiesColorMap_.getColorMap(colorMin, colorMax);
+
+    for(int i=0; i<legendSubdivisions; i++)
+    {
+        QPointF tl = QPointF(legendTopLeft) + QPointF(0., (float)i * legendHeight / (float)legendSubdivisions);
+        QPointF br = tl + QPointF(legendWidth, legendHeight / (float)legendSubdivisions);
+
+        float value = colorMax + (float)i/((float)legendSubdivisions - 1.) * (colorMin - colorMax);
+
+        float r,g,b;
+        countiesColorMap_.getColor3(value, r,g,b);
+
+        painter.setPen(QColor::fromRgbF(r,g,b,1));
+        painter.setBrush(QBrush(QColor::fromRgbF(r,g,b,1)));
+
+        painter.drawRect(QRectF(tl, br));
+    }
+
+    // draw legend labels
+    float textPadding = 25;
+
+    QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
+    QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
+
+    painter.setPen(QColor::fromRgbF(1,1,1,1));
+    painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+
+    painter.drawText(legendMax, colorMapMaxLabel_.c_str());
+    painter.drawText(legendMin, colorMapMinLabel_.c_str());
+
+
+	painter.end();
+	
+	swapBuffers();
+}
+
+void MapWidget::paintGL()
+{		
 }
 
 void MapWidget::resizeGL(int width, int height)
 {
+	/*
     // generate new base map texture of appropriate resolution on window resize
     generateBaseMapTexture(width, height);
 
@@ -199,6 +292,7 @@ void MapWidget::resizeGL(int width, int height)
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+*/
 
     update();
 }
@@ -232,7 +326,7 @@ bool MapWidget::loadBaseMapSvg(const char * filename)
 }
 
 void MapWidget::generateBaseMapTexture(int width, int height)
-{
+{	
     // delete current base map texture
     if(baseMapTextureBound_ == true)
     {
@@ -246,10 +340,12 @@ void MapWidget::generateBaseMapTexture(int width, int height)
 
     baseMapTextureId_ = bindTexture(image, GL_TEXTURE_2D, GL_RGBA, QGLContext::DefaultBindOption);
     baseMapTextureBound_ = true;
+	
+	painter.end();
 }
 
 void MapWidget::renderBaseMapTexture()
-{
+{	
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT);
 
     glColor4f(1,1,1,1);
@@ -341,6 +437,7 @@ bool MapWidget::loadCountyShapes()
             put_flog(LOG_WARN, "no polygon geometry");
         }
 
+
         OGRFeature::DestroyFeature(feature);
     }
 
@@ -349,17 +446,12 @@ bool MapWidget::loadCountyShapes()
     return true;
 }
 
-void MapWidget::renderCountyShapes()
+void MapWidget::renderCountyShapes(QPainter* painter)
 {
     std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
 
     for(iter=counties_.begin(); iter!=counties_.end(); iter++)
     {
-        iter->second->renderBoundary();
-    }
-
-    for(iter=counties_.begin(); iter!=counties_.end(); iter++)
-    {
-        iter->second->renderFilled();
+		iter->second->render(painter);
     }
 }

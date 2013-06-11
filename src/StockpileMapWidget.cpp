@@ -83,7 +83,7 @@ void StockpileMapWidget::setType(STOCKPILE_TYPE type)
     update();
 }
 
-void StockpileMapWidget::render()
+void StockpileMapWidget::render(QPainter* painter)
 {
-    renderCountyShapes();
+    renderCountyShapes(painter);
 }
