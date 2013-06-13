@@ -68,7 +68,7 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
     //glBegin(GL_LINES);
 
-    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .07)), .05));
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .1)), .07));
 
     for(std::map<int, boost::shared_ptr<MapShape> >::iterator iter0=counties_.begin(); iter0!=counties_.end(); iter0++)
     {
@@ -100,11 +100,20 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
                 if(infectiousTravelers > infectiousTravelerThreshhold)
                 {
-		   	     	painter->drawLine(lon0, lat0, lon1, lat1);
+		   	     	//painter->drawLine(QPoint(lat0, lon0), QPoint(lat1, lon1));
+					
                     //glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
 
                     //glVertex2f(lon0, lat0);
                     //glVertex2f(lon1, lat1);
+					
+					
+				    QVector<QPointF> points;
+			        points.push_back(QPointF(lon0, lat0));
+			        points.push_back(QPointF(lon1, lat1));
+
+				    QPolygonF polygon(points);
+				    painter->drawPolygon(polygon);					
                 }
             }
         }
