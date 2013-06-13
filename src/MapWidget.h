@@ -74,6 +74,8 @@ class MapWidget : public QGLWidget
         void initializeGL();
         void paintGL();
         void resizeGL(int width, int height);
+		
+		void renderAll(QPainter* painter);
 
         // setup basic orthographic view
         void setOrthographicView();

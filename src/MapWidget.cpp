@@ -90,94 +90,7 @@ void MapWidget::exportSVGToDisplayCluster()
         QPainter painter;
         painter.begin(&generator);
 		
-		this->makeCurrent();
-		glEnable(GL_MULTISAMPLE);
-		glEnable(GL_LINE_SMOOTH);
-
-		painter.setRenderHint(QPainter::Antialiasing);
-		painter.setRenderHint(QPainter::HighQualityAntialiasing);
-		
-
-        // set logical coordinates of the render window
-        painter.setWindow(baseMapRect_.toRect());
-
-        // draw a black background
-        painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
-        painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
-
-        // don't render the basemap in SVG since it's too expensive
-        baseMapSvg_->render(&painter, QRect(QPoint(-107,37), QPoint(-93,25)));
-
-        // render shapes
-        std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
-
-        for(iter=counties_.begin(); iter!=counties_.end(); iter++)
-        {
-            iter->second->render(&painter);
-        }
-
-        // draw title
-        painter.resetTransform();
-
-        QFont titleFont = painter.font();
-
-        int titleFontPixelSize = 32;
-        titleFont.setPixelSize(titleFontPixelSize);
-
-        painter.setFont(titleFont);
-        painter.setPen(QColor::fromRgbF(1,1,1,1));
-        painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
-
-        QPoint titlePosition = painter.window().topRight() + QPoint(-600, 100);
-        QRect titleRect = QRect(titlePosition, titlePosition + QPoint(600, 3 * titleFontPixelSize));
-		
-        //QPoint titlePosition = painter.window().topRight() + QPoint(0, 0);
-        //QRect titleRect = QRect(titlePosition, titlePosition + QPoint(50, 3 * titleFontPixelSize));
-		
-
-        painter.drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
-
-        // draw legend
-        //QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-250, -250);
-        //float legendHeight = 200.;
-        //float legendWidth = 50.;
-        QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-100, -100);
-        float legendHeight = 100.;
-        float legendWidth = 25.;
-
-
-        int legendSubdivisions = 50;
-
-        float colorMin, colorMax;
-        countiesColorMap_.getColorMap(colorMin, colorMax);
-
-        for(int i=0; i<legendSubdivisions; i++)
-        {
-            QPointF tl = QPointF(legendTopLeft) + QPointF(0., (float)i * legendHeight / (float)legendSubdivisions);
-            QPointF br = tl + QPointF(legendWidth, legendHeight / (float)legendSubdivisions);
-
-            float value = colorMax + (float)i/((float)legendSubdivisions - 1.) * (colorMin - colorMax);
-
-            float r,g,b;
-            countiesColorMap_.getColor3(value, r,g,b);
-
-            painter.setPen(QColor::fromRgbF(r,g,b,1));
-            painter.setBrush(QBrush(QColor::fromRgbF(r,g,b,1)));
-
-            painter.drawRect(QRectF(tl, br));
-        }
-
-        // draw legend labels
-        float textPadding = 25;
-
-        QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
-        QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
-
-        painter.setPen(QColor::fromRgbF(1,1,1,1));
-        painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
-
-        painter.drawText(legendMax, colorMapMaxLabel_.c_str());
-        painter.drawText(legendMin, colorMapMinLabel_.c_str());
+		renderAll(&painter);
 
         painter.end();
 
@@ -195,46 +108,43 @@ void MapWidget::initializeGL()
     glDisable(GL_LIGHTING);
 }
 
-void MapWidget::paintEvent(QPaintEvent* event)
+void MapWidget::renderAll(QPainter* painter)
 {
-    QPainter painter(this);
-
-    painter.setWindow(baseMapRect_.toRect());
+	//AARONBAD -- need to find some way to render the base map
 	
-	painter.begin(this);
-		
 	//if (baseMapSvg_->isValid())
 	//	baseMapSvg_->render(&painter, baseMapRect_.toRect());
 	
     //painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
 		
 		
-	painter.setBackgroundMode(Qt::TransparentMode);
-	painter.setRenderHint(QPainter::Antialiasing, true);
+	painter->setBackgroundMode(Qt::TransparentMode);
+	painter->setRenderHint(QPainter::Antialiasing, true);
+	painter->setRenderHint(QPainter::HighQualityAntialiasing);
 	
 	//this will render the MapShapes and travel (if any)
-    render(&painter);
+    render(painter);
 	
 	
     // draw title
-    painter.resetTransform();
+    painter->resetTransform();
 
-    QFont titleFont = painter.font();
+    QFont titleFont = painter->font();
 
     int titleFontPixelSize = 16;
     titleFont.setPixelSize(titleFontPixelSize);
 
-    painter.setFont(titleFont);
-    painter.setPen(QColor::fromRgbF(1,1,1,1));
-    painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+    painter->setFont(titleFont);
+    painter->setPen(QColor::fromRgbF(1,1,1,1));
+    painter->setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
 
-    QPoint titlePosition = painter.window().topRight() + QPoint(-350, -2);
+    QPoint titlePosition = painter->window().topRight() + QPoint(-350, -2);
     QRect titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));	
 
-    painter.drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
+    painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 
     // draw legend
-    QPointF legendTopLeft = painter.window().bottomRight() + QPointF(-100, -110);
+    QPointF legendTopLeft = painter->window().bottomRight() + QPointF(-100, -110);
     float legendHeight = 100.;
     float legendWidth = 25.;
 
@@ -253,10 +163,10 @@ void MapWidget::paintEvent(QPaintEvent* event)
         float r,g,b;
         countiesColorMap_.getColor3(value, r,g,b);
 
-        painter.setPen(QColor::fromRgbF(r,g,b,1));
-        painter.setBrush(QBrush(QColor::fromRgbF(r,g,b,1)));
+        painter->setPen(QColor::fromRgbF(r,g,b,1));
+        painter->setBrush(QBrush(QColor::fromRgbF(r,g,b,1)));
 
-        painter.drawRect(QRectF(tl, br));
+        painter->drawRect(QRectF(tl, br));
     }
 
     // draw legend labels
@@ -265,13 +175,23 @@ void MapWidget::paintEvent(QPaintEvent* event)
     QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
     QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
 
-    painter.setPen(QColor::fromRgbF(1,1,1,1));
-    painter.setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+    painter->setPen(QColor::fromRgbF(1,1,1,1));
+    painter->setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
 
-    painter.drawText(legendMax, colorMapMaxLabel_.c_str());
-    painter.drawText(legendMin, colorMapMinLabel_.c_str());
+    painter->drawText(legendMax, colorMapMaxLabel_.c_str());
+    painter->drawText(legendMin, colorMapMinLabel_.c_str());
+}
 
+void MapWidget::paintEvent(QPaintEvent* event)
+{
+    QPainter painter(this);
 
+    painter.setWindow(baseMapRect_.toRect());
+	
+	painter.begin(this);
+	
+	renderAll(&painter);
+		
 	painter.end();
 	
 	swapBuffers();

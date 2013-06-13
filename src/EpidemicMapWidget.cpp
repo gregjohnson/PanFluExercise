@@ -47,9 +47,6 @@ void EpidemicMapWidget::render(QPainter* painter)
 
 void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 {
-
-	//AARONBAD -- need to convert this to QPainter
-    // parameters
     float infectiousTravelerThreshhold = 1.;
     float infectiousTravelerAlphaScale = 100.;
 
@@ -57,16 +54,6 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
     {
         return;
     }
-
-    //glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
-
-    //glDisable(GL_DEPTH_TEST);
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    //glLineWidth(3.);
-
-    //glBegin(GL_LINES);
 
     painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .1)), .07));
 
@@ -100,14 +87,6 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
                 if(infectiousTravelers > infectiousTravelerThreshhold)
                 {
-		   	     	//painter->drawLine(QPoint(lat0, lon0), QPoint(lat1, lon1));
-					
-                    //glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
-
-                    //glVertex2f(lon0, lat0);
-                    //glVertex2f(lon1, lat1);
-					
-					
 				    QVector<QPointF> points;
 			        points.push_back(QPointF(lon0, lat0));
 			        points.push_back(QPointF(lon1, lat1));
