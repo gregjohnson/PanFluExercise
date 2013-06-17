@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 #include "EpidemicDataSet.h"
 #include "Event.h"
+#include "EventGroupThreshold.h"
 #include "EventMessage.h"
 #include "log.h"
 
@@ -39,6 +40,8 @@ void EventMonitor::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
     events_.clear();
     messages_.clear();
 
+    emit(clearMessages());
+
     if(dataSet == NULL)
     {
         return;
@@ -50,11 +53,29 @@ void EventMonitor::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 
     for(unsigned int i=0; i<groupNames.size(); i++)
     {
-        std::vector<int> nodeIds = dataSet->getNodeIds(groupNames[i]);
+        std::vector<float> infectedThresholds;
+        infectedThresholds.push_back(0.0025);
+        infectedThresholds.push_back(0.005);
+        infectedThresholds.push_back(0.0075);
+        infectedThresholds.push_back(0.01);
 
-        boost::shared_ptr<Event> event(new Event(nodeIds, ":infected", 5000.));
+        boost::shared_ptr<Event> event1(new EventGroupThreshold(groupNames[i], ":infected", infectedThresholds, true));
 
-        events_.push_back(event);
+        std::vector<float> deceasedThresholds;
+        deceasedThresholds.push_back(1);
+        deceasedThresholds.push_back(5);
+        deceasedThresholds.push_back(10);
+        deceasedThresholds.push_back(25);
+        deceasedThresholds.push_back(50);
+        deceasedThresholds.push_back(100);
+        deceasedThresholds.push_back(250);
+        deceasedThresholds.push_back(500);
+        deceasedThresholds.push_back(1000);
+
+        boost::shared_ptr<Event> event2(new EventGroupThreshold(groupNames[i], "deceased", deceasedThresholds, false));
+
+        events_.push_back(event1);
+        events_.push_back(event2);
     }
 }
 

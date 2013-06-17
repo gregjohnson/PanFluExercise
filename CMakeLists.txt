@@ -79,6 +79,7 @@ set(SRCS ${SRCS}
     src/EpidemicMapWidget.cpp
     src/EpidemicSimulation.cpp
     src/Event.cpp
+    src/EventGroupThreshold.cpp
     src/EventMonitor.cpp
     src/EventMonitorWidget.cpp
     src/log.cpp

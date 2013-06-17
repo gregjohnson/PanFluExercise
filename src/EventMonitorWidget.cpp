@@ -13,6 +13,8 @@ EventMonitorWidget::EventMonitorWidget(EventMonitor * monitor)
     layout->addWidget(&messagesWidget_);
 
     // make connections
+    connect(monitor, SIGNAL(clearMessages()), this, SLOT(clearMessages()));
+
     connect(monitor, SIGNAL(newEventMessage(boost::shared_ptr<EventMessage>)), this, SLOT(insertEventMessage(boost::shared_ptr<EventMessage>)));
 }
 
@@ -39,7 +41,7 @@ void EventMonitorWidget::exportSVGToDisplayCluster()
 {
     if(g_dcSocket != NULL && svgTmpFile_.open())
     {
-        QSize size(1920, 1080);
+        QSize size(1024, 540);
         QRect rect(QPoint(0,0), size);
 
         QSvgGenerator svg;
@@ -52,8 +54,8 @@ void EventMonitorWidget::exportSVGToDisplayCluster()
         QPainter painter(&svg);
 
         // background
-        painter.setBrush(QColor(200,200,200));
-        painter.setPen(QColor(200,200,200));
+        painter.setBrush(QColor(255,255,255));
+        painter.setPen(QColor(255,255,255));
 
         painter.drawRect(rect);
 
@@ -73,8 +75,20 @@ void EventMonitorWidget::exportSVGToDisplayCluster()
     }
 }
 
+void EventMonitorWidget::clearMessages()
+{
+    messagesWidget_.clear();
+
+    exportSVGToDisplayCluster();
+}
+
 void EventMonitorWidget::insertEventMessage(boost::shared_ptr<EventMessage> message)
 {
+    // move cursor to beginning
+    QTextCursor cursor = messagesWidget_.textCursor();
+    cursor.setPosition(0);
+    messagesWidget_.setTextCursor(cursor);
+
     messagesWidget_.insertHtml(message->messageText.c_str() + QString("<br />"));
 
     exportSVGToDisplayCluster();

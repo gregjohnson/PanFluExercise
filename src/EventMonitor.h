@@ -23,6 +23,7 @@ class EventMonitor : public QObject
 
     signals:
 
+        void clearMessages();
         void newEventMessage(boost::shared_ptr<EventMessage> message);
 
     public slots:

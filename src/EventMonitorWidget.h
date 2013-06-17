@@ -20,6 +20,7 @@ class EventMonitorWidget : public QWidget
 
     public slots:
 
+        void clearMessages();
         void insertEventMessage(boost::shared_ptr<EventMessage> message);
 
     private:
