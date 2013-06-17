@@ -84,6 +84,7 @@ void MapWidget::exportSVGToDisplayCluster()
     {
         QSvgGenerator generator;
         generator.setFileName(svgTmpFile_.fileName());
+        generator.setResolution(90);
         generator.setSize(QSize(1400, 1200));
         generator.setViewBox(baseMapRect_);
 
