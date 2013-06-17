@@ -1,6 +1,8 @@
 #include "MainWindow.h"
 #include "EpidemicMapWidget.h"
 #include "StockpileMapWidget.h"
+#include "EventMonitor.h"
+#include "EventMonitorWidget.h"
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
@@ -79,6 +81,13 @@ MainWindow::MainWindow()
     tabWidget->addTab(vaccinesStockpileMapWidget, "Vaccines Stockpile");
 
     setCentralWidget(tabWidget);
+
+    // create event monitor and widget
+    EventMonitor * eventMonitor = new EventMonitor(this);
+
+    QDockWidget * eventMonitorDockWidget = new QDockWidget("Event Monitor", this);
+    eventMonitorDockWidget->setWidget(new EventMonitorWidget(eventMonitor));
+    addDockWidget(Qt::TopDockWidgetArea, eventMonitorDockWidget);
 
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);

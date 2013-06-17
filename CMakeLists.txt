@@ -78,6 +78,9 @@ set(SRCS ${SRCS}
     src/EpidemicInitialCasesWidget.cpp
     src/EpidemicMapWidget.cpp
     src/EpidemicSimulation.cpp
+    src/Event.cpp
+    src/EventMonitor.cpp
+    src/EventMonitorWidget.cpp
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
@@ -105,6 +108,8 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicChartWidget.h
     src/EpidemicInfoWidget.h
     src/EpidemicInitialCasesWidget.h
+    src/EventMonitor.h
+    src/EventMonitorWidget.h
     src/MainWindow.h
     src/MapWidget.h
     src/Parameters.h
