@@ -94,7 +94,10 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 					
 					QVector2D vec = QVector2D(lon1-lon0, lat1-lat0);
 					vec.normalize();
-					vec *= .08;					
+					vec *= .006;
+					points.push_back(QPointF(lon1 - vec.y(), lat1 + vec.x()));
+
+					vec *= 10;					
 					points.push_back(QPointF(lon0 - vec.y(), lat0 + vec.x()));
 
 				    QPolygonF polygon(points);

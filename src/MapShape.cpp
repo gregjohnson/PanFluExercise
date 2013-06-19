@@ -54,6 +54,6 @@ void MapShape::render(QPainter* painter)
     QPolygonF polygon(points);
 
     painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, .3)));
-    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 1, 1, 1.)), .03));
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(.5, .5, .5, 1.)), .03));
     painter->drawPolygon(polygon);
 }

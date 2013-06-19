@@ -122,7 +122,7 @@ void MapWidget::renderAll(QPainter* painter)
 	  generateBaseMapTexture(width(), height());
 	  once=false;
 	}
-	
+
 	renderBaseMapTexture();	
 	
 	//this will render the MapShapes and travel (if any)
@@ -138,8 +138,8 @@ void MapWidget::renderAll(QPainter* painter)
     titleFont.setPixelSize(titleFontPixelSize);
 
     painter->setFont(titleFont);
-    painter->setPen(QColor::fromRgbF(1,1,1,1));
-    painter->setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+    painter->setPen(QColor::fromRgbF(.5,.5,.5,1));
+    painter->setBrush(QBrush(QColor::fromRgbF(.5,.5,.5,1)));
 
     QPoint titlePosition = painter->window().topRight() + QPoint(-350, -2);
     QRect titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));	
@@ -178,8 +178,8 @@ void MapWidget::renderAll(QPainter* painter)
     QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
     QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
 
-    painter->setPen(QColor::fromRgbF(1,1,1,1));
-    painter->setBrush(QBrush(QColor::fromRgbF(1,1,1,1)));
+    painter->setPen(QColor::fromRgbF(.5,.5,.5,1));
+    painter->setBrush(QBrush(QColor::fromRgbF(.5,.5,.5,1)));
 
     painter->drawText(legendMax, colorMapMaxLabel_.c_str());
     painter->drawText(legendMin, colorMapMinLabel_.c_str());
@@ -189,32 +189,8 @@ void MapWidget::paintEvent(QPaintEvent* event)
 {
 	makeCurrent();
 	
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
-    glEnable (GL_LINE_SMOOTH);
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    glEnable (GL_POLYGON_SMOOTH_HINT);
-	
-	setOrthographicView();
-	renderBaseMapTexture();
-
-	
-    //qglClearColor(QColor::fromRgbF(0,0,0,1));
-    //glShadeModel(GL_SMOOTH);
-	//glEnable(GL_BLEND);
-	//glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
-    //setupViewport(width(), height());
-	
-	//  Reset OpenGL state for overlays.
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_BLEND );
-	glDisable( GL_LINE_SMOOTH );
-	
+	setOrthographicView();	
+			
     QPainter painter(this);
 
     painter.setWindow(baseMapRect_.toRect());	
@@ -224,8 +200,6 @@ void MapWidget::paintEvent(QPaintEvent* event)
 	renderAll(&painter);
 		
 	painter.end();
-	
-	//swapBuffers();
 }
 
 void MapWidget::resizeEvent(QResizeEvent* event)
@@ -235,13 +209,7 @@ void MapWidget::resizeEvent(QResizeEvent* event)
 	
     generateBaseMapTexture(width, height);
 
-    //glViewport(0, 0, width, height);
-    //glMatrixMode(GL_PROJECTION);
-    //glLoadIdentity();
-    //glMatrixMode(GL_MODELVIEW);
-    //glLoadIdentity();
-
-    //update();
+    update();
 }
 
 void MapWidget::resizeGL(int width, int height)
@@ -260,8 +228,16 @@ void MapWidget::setOrthographicView()
     glLoadIdentity();
 
     glClearColor(0,0,0,0);
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glEnable (GL_LINE_SMOOTH);
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    glEnable (GL_POLYGON_SMOOTH_HINT);
 }
 
 void MapWidget::paintGL()
