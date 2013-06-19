@@ -33,7 +33,9 @@ class MapWidget : public QGLWidget
 
     protected:
 		
-		void paintEvent(QPaintEvent* event);
+		virtual void paintEvent(QPaintEvent* event);
+		virtual void resizeEvent(QResizeEvent * event);
+
 
         // indexing used to identify this map
         static int numMapWidgets_;

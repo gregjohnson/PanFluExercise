@@ -32,13 +32,15 @@ MapWidget::MapWidget()
         put_flog(LOG_FATAL, "could not load base map %s", svgFilename.c_str());
         exit(1);
     }
-
+	
     // load county shapes
     if(loadCountyShapes() != true)
     {
         put_flog(LOG_FATAL, "could not load county shapes");
         exit(1);
     }
+	
+	//setAutoFillBackground(false);
 
     // default counties color map
     countiesColorMap_.setColorMap(0., 1.);
@@ -110,17 +112,18 @@ void MapWidget::initializeGL()
 
 void MapWidget::renderAll(QPainter* painter)
 {
-	//AARONBAD -- need to find some way to render the base map
-	
-	//if (baseMapSvg_->isValid())
-	//	baseMapSvg_->render(&painter, baseMapRect_.toRect());
-	
-    //painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
-		
-		
 	painter->setBackgroundMode(Qt::TransparentMode);
 	painter->setRenderHint(QPainter::Antialiasing, true);
 	painter->setRenderHint(QPainter::HighQualityAntialiasing);
+	
+	static bool once = true;
+	if (once)
+	{
+	  generateBaseMapTexture(width(), height());
+	  once=false;
+	}
+	
+	renderBaseMapTexture();	
 	
 	//this will render the MapShapes and travel (if any)
     render(painter);
@@ -184,38 +187,65 @@ void MapWidget::renderAll(QPainter* painter)
 
 void MapWidget::paintEvent(QPaintEvent* event)
 {
+	makeCurrent();
+	
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	
+    glEnable (GL_LINE_SMOOTH);
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glHint (GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    glEnable (GL_POLYGON_SMOOTH_HINT);
+	
+	setOrthographicView();
+	renderBaseMapTexture();
+
+	
+    //qglClearColor(QColor::fromRgbF(0,0,0,1));
+    //glShadeModel(GL_SMOOTH);
+	//glEnable(GL_BLEND);
+	//glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_CULL_FACE);
+    //setupViewport(width(), height());
+	
+	//  Reset OpenGL state for overlays.
+	glDisable( GL_DEPTH_TEST );
+	glDisable( GL_BLEND );
+	glDisable( GL_LINE_SMOOTH );
+	
     QPainter painter(this);
 
-    painter.setWindow(baseMapRect_.toRect());
-	
+    painter.setWindow(baseMapRect_.toRect());	
+		
 	painter.begin(this);
 	
 	renderAll(&painter);
 		
 	painter.end();
 	
-	swapBuffers();
+	//swapBuffers();
 }
 
-void MapWidget::paintGL()
-{		
+void MapWidget::resizeEvent(QResizeEvent* event)
+{
+	int width = event->size().width();
+	int height = event->size().height();
+	
+    generateBaseMapTexture(width, height);
+
+    //glViewport(0, 0, width, height);
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
+
+    //update();
 }
 
 void MapWidget::resizeGL(int width, int height)
 {
-	/*
-    // generate new base map texture of appropriate resolution on window resize
-    generateBaseMapTexture(width, height);
-
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-	
-	update();
-*/
-
 }
 
 void MapWidget::setOrthographicView()
@@ -234,6 +264,10 @@ void MapWidget::setOrthographicView()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void MapWidget::paintGL()
+{
+}
+
 bool MapWidget::loadBaseMapSvg(const char * filename)
 {
     boost::shared_ptr<QSvgRenderer> baseMapSvg(new QSvgRenderer(QString(filename)));
@@ -243,7 +277,7 @@ bool MapWidget::loadBaseMapSvg(const char * filename)
 
     viewRect_ = baseMapRect_;
 
-    return baseMapSvg_->isValid();
+    return baseMapSvg_->isValid();	
 }
 
 void MapWidget::generateBaseMapTexture(int width, int height)
@@ -261,8 +295,6 @@ void MapWidget::generateBaseMapTexture(int width, int height)
 
     baseMapTextureId_ = bindTexture(image, GL_TEXTURE_2D, GL_RGBA, QGLContext::DefaultBindOption);
     baseMapTextureBound_ = true;
-	
-	painter.end();
 }
 
 void MapWidget::renderBaseMapTexture()

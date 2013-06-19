@@ -16,7 +16,9 @@ StockpileMapWidget::StockpileMapWidget()
 
     countiesColorMap_.setColorVector(colorVector);
 
-    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County as a Fraction of Population"));
+    //setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County as a Fraction of Population"));
+    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County"));
+	
     setColorMapMinLabel("0%");
     setColorMapMaxLabel("1%");
 }

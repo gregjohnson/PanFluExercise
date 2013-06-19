@@ -26,8 +26,6 @@ void EpidemicMapWidget::setTime(int time)
             // map to color
             float r, g, b;
             countiesColorMap_.getColor3(infectiousFraction * 100, r, g, b);
-			
-			printf("rgb = %f %f %f\n", r,g,b);
 
             iter->second->setColor(r, g, b);
         }
@@ -37,6 +35,8 @@ void EpidemicMapWidget::setTime(int time)
 		
         exportSVGToDisplayCluster();
     }
+	
+	
 }
 
 void EpidemicMapWidget::render(QPainter* painter)
@@ -55,7 +55,8 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
         return;
     }
 
-    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .1)), .07));
+    painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, .3)));
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .025)), .1));
 
     for(std::map<int, boost::shared_ptr<MapShape> >::iterator iter0=counties_.begin(); iter0!=counties_.end(); iter0++)
     {
@@ -90,9 +91,15 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 				    QVector<QPointF> points;
 			        points.push_back(QPointF(lon0, lat0));
 			        points.push_back(QPointF(lon1, lat1));
+					
+					QVector2D vec = QVector2D(lon1-lon0, lat1-lat0);
+					vec.normalize();
+					vec *= .08;					
+					points.push_back(QPointF(lon0 - vec.y(), lat0 + vec.x()));
 
 				    QPolygonF polygon(points);
-				    painter->drawPolygon(polygon);					
+				    painter->drawPolygon(polygon);
+					painter->drawLine(QPointF(lon0, lat0), QPointF(lon0, lat0));
                 }
             }
         }
