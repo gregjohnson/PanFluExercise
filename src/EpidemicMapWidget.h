@@ -15,7 +15,7 @@ class EpidemicMapWidget : public MapWidget
     private:
 
         // re-implemented virtual render method
-        void render(QPainter* painter);
+        void render(QPainter* painter, bool transparent);
 
         // travel between counties
         void renderCountyTravel(QPainter* painter);

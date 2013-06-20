@@ -26,7 +26,7 @@ class StockpileMapWidget : public MapWidget
         STOCKPILE_TYPE type_;
 
         // re-implemented virtual render method
-        void render(QPainter* painter);
+        void render(QPainter* painter, bool transparent);
 };
 
 #endif

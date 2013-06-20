@@ -42,7 +42,7 @@ void MapShape::setColor(float r, float g, float b)
     b_ = b;
 }
 
-void MapShape::render(QPainter* painter)
+void MapShape::render(QPainter* painter, bool transparent)
 {
     QVector<QPointF> points;
 
@@ -53,7 +53,16 @@ void MapShape::render(QPainter* painter)
 
     QPolygonF polygon(points);
 
-    painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, .3)));
-    painter->setPen(QPen(QBrush(QColor::fromRgbF(.5, .5, .5, 1.)), .03));
+	if (transparent)
+	{
+    	painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, .3)));
+    	painter->setPen(QPen(QBrush(QColor::fromRgbF(.5, .5, .5, 1.)), .03));
+	}
+	else
+	{
+		painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, 1.)));
+    	painter->setPen(QPen(QBrush(QColor::fromRgbF(.5, .5, .5, 1.)), .03));
+	}
+	
     painter->drawPolygon(polygon);
 }

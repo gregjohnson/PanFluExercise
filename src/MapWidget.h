@@ -70,14 +70,14 @@ class MapWidget : public QGLWidget
         QTemporaryFile svgTmpFile_;
 		
         // () method placeholder for derived classes
-        virtual void render(QPainter* painter) { }
+        virtual void render(QPainter* painter, bool transparent) { }
 
         // reimplemented from QGLWidget
         void initializeGL();
         void paintGL();
         void resizeGL(int width, int height);
 		
-		void renderAll(QPainter* painter);
+		void renderAll(QPainter* painter, bool showBaseMap);
 
         // setup basic orthographic view
         void setOrthographicView();
@@ -89,7 +89,7 @@ class MapWidget : public QGLWidget
 
         // counties
         bool loadCountyShapes();
-        void renderCountyShapes(QPainter* painter);
+        void renderCountyShapes(QPainter* painter, bool transparent);
 };
 
 #endif

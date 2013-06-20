@@ -86,13 +86,21 @@ void MapWidget::exportSVGToDisplayCluster()
     {
         QSvgGenerator generator;
         generator.setFileName(svgTmpFile_.fileName());
+		generator.setResolution(90);
         generator.setSize(QSize(1400, 1200));
         generator.setViewBox(baseMapRect_);
 
         QPainter painter;
         painter.begin(&generator);
 		
-		renderAll(&painter);
+        // set logical coordinates of the render window
+        painter.setWindow(baseMapRect_.toRect());
+		
+        // draw a black background
+        painter.setBrush(QBrush(QColor::fromRgbF(.3,.3,.3,1)));
+        painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
+		
+		renderAll(&painter, false);
 
         painter.end();
 
@@ -110,23 +118,28 @@ void MapWidget::initializeGL()
     glDisable(GL_LIGHTING);
 }
 
-void MapWidget::renderAll(QPainter* painter)
+void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
 {
-	painter->setBackgroundMode(Qt::TransparentMode);
+	static bool once = true;
+	if (showBaseMap)
+	{
+		if (once)
+		{
+		  generateBaseMapTexture(width(), height());
+		  once=false;
+		}
+
+		renderBaseMapTexture();	
+		glDisable(GL_TEXTURE_2D);
+
+	}
+	
+	painter->setBackgroundMode(Qt::TransparentMode);			
 	painter->setRenderHint(QPainter::Antialiasing, true);
 	painter->setRenderHint(QPainter::HighQualityAntialiasing);
 	
-	static bool once = true;
-	if (once)
-	{
-	  generateBaseMapTexture(width(), height());
-	  once=false;
-	}
-
-	renderBaseMapTexture();	
-	
 	//this will render the MapShapes and travel (if any)
-    render(painter);
+    render(painter, showBaseMap);
 	
 	
     // draw title
@@ -134,22 +147,61 @@ void MapWidget::renderAll(QPainter* painter)
 
     QFont titleFont = painter->font();
 
-    int titleFontPixelSize = 16;
+    int titleFontPixelSize;
+	
+	if (showBaseMap)
+		titleFontPixelSize = 16;
+	else
+		titleFontPixelSize = 32;
+	
+	QColor titleColor;
+	if (showBaseMap)
+	{
+		titleColor = QColor::fromRgbF(.5,.5,.5,1);
+	}
+	else
+	{
+		titleColor = QColor::fromRgbF(1,1,1,1);		
+	}
+		
     titleFont.setPixelSize(titleFontPixelSize);
 
     painter->setFont(titleFont);
-    painter->setPen(QColor::fromRgbF(.5,.5,.5,1));
-    painter->setBrush(QBrush(QColor::fromRgbF(.5,.5,.5,1)));
+    painter->setPen(titleColor);
+    painter->setBrush(QBrush(titleColor));
+	
+	QPoint titlePosition;
+	QRect titleRect;
 
-    QPoint titlePosition = painter->window().topRight() + QPoint(-350, -2);
-    QRect titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));	
+	if (showBaseMap)
+	{
+    	titlePosition = painter->window().topRight() + QPoint(-350, -2);
+    	titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));
+	}
+	else
+	{
+        titlePosition = painter->window().topRight() + QPoint(-600, 100);
+        titleRect = QRect(titlePosition, titlePosition + QPoint(600, 3 * titleFontPixelSize));
+	}
 
     painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 
     // draw legend
-    QPointF legendTopLeft = painter->window().bottomRight() + QPointF(-100, -110);
-    float legendHeight = 100.;
-    float legendWidth = 25.;
+	QPointF legendTopLeft;
+	float legendHeight, legendWidth;
+	
+	if (showBaseMap)
+	{
+    	legendTopLeft = painter->window().bottomRight() + QPointF(-100, -110);
+    	legendHeight = 100.;
+    	legendWidth = 25.;
+	}
+	else
+	{
+        legendTopLeft = painter->window().bottomRight() + QPointF(-250, -250);
+        legendHeight = 200.;
+        legendWidth = 50.;
+	}
 
     int legendSubdivisions = 50;
 
@@ -178,8 +230,8 @@ void MapWidget::renderAll(QPainter* painter)
     QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
     QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
 
-    painter->setPen(QColor::fromRgbF(.5,.5,.5,1));
-    painter->setBrush(QBrush(QColor::fromRgbF(.5,.5,.5,1)));
+    painter->setPen(titleColor);
+    painter->setBrush(QBrush(titleColor));
 
     painter->drawText(legendMax, colorMapMaxLabel_.c_str());
     painter->drawText(legendMin, colorMapMinLabel_.c_str());
@@ -197,7 +249,7 @@ void MapWidget::paintEvent(QPaintEvent* event)
 		
 	painter.begin(this);
 	
-	renderAll(&painter);
+	renderAll(&painter, true);
 		
 	painter.end();
 }
@@ -375,12 +427,12 @@ bool MapWidget::loadCountyShapes()
     return true;
 }
 
-void MapWidget::renderCountyShapes(QPainter* painter)
+void MapWidget::renderCountyShapes(QPainter* painter, bool transparent)
 {
     std::map<int, boost::shared_ptr<MapShape> >::iterator iter;
 
     for(iter=counties_.begin(); iter!=counties_.end(); iter++)
     {
-		iter->second->render(painter);
+		iter->second->render(painter, transparent);
     }
 }

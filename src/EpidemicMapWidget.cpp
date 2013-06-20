@@ -39,9 +39,9 @@ void EpidemicMapWidget::setTime(int time)
 	
 }
 
-void EpidemicMapWidget::render(QPainter* painter)
+void EpidemicMapWidget::render(QPainter* painter, bool transparent)
 {
-    renderCountyShapes(painter);
+    renderCountyShapes(painter, transparent);
     renderCountyTravel(painter);
 }
 
@@ -86,8 +86,12 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
                 float infectiousTravelers = infectiousNode0 * travel;
 
-                if(infectiousTravelers > infectiousTravelerThreshhold)
+                if(infectiousTravelers >= infectiousTravelerThreshhold)
                 {
+					float alpha = std::min<float>(.5, std::max<float>(.01, 10 * infectiousTravelers / infectiousTravelerAlphaScale));
+				    painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, alpha)));
+				    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, alpha * .1)), .1));
+					
 				    QVector<QPointF> points;
 			        points.push_back(QPointF(lon0, lat0));
 			        points.push_back(QPointF(lon1, lat1));
