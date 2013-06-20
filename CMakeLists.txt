@@ -78,6 +78,10 @@ set(SRCS ${SRCS}
     src/EpidemicInitialCasesWidget.cpp
     src/EpidemicMapWidget.cpp
     src/EpidemicSimulation.cpp
+    src/Event.cpp
+    src/EventGroupThreshold.cpp
+    src/EventMonitor.cpp
+    src/EventMonitorWidget.cpp
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
@@ -105,6 +109,8 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicChartWidget.h
     src/EpidemicInfoWidget.h
     src/EpidemicInitialCasesWidget.h
+    src/EventMonitor.h
+    src/EventMonitorWidget.h
     src/MainWindow.h
     src/MapWidget.h
     src/Parameters.h
@@ -139,7 +145,7 @@ if(APPLE OR WIN32)
     set(CPACK_PACKAGE_NAME "Exercise")
     set(CPACK_PACKAGE_VENDOR "The University of Texas at Austin")
     set(CPACK_PACKAGE_VERSION_MAJOR 0)
-    set(CPACK_PACKAGE_VERSION_MINOR 2)
+    set(CPACK_PACKAGE_VERSION_MINOR 3)
     set(CPACK_PACKAGE_VERSION_PATCH 0)
 
     if(APPLE)
