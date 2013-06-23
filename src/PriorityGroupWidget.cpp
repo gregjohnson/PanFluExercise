@@ -1,24 +1,21 @@
 #include "PriorityGroupWidget.h"
+#include "Parameters.h"
 #include "EpidemicDataSet.h"
 #include "log.h"
 
-PriorityGroupWidget::PriorityGroupWidget(boost::shared_ptr<EpidemicDataSet> dataSet)
+PriorityGroupWidget::PriorityGroupWidget()
 {
-    dataSet_ = dataSet;
-
     initialize();
 }
 
-PriorityGroupWidget::PriorityGroupWidget(boost::shared_ptr<EpidemicDataSet> dataSet, PriorityGroup priorityGroup)
+PriorityGroupWidget::PriorityGroupWidget(boost::shared_ptr<PriorityGroup> priorityGroup)
 {
-    dataSet_ = dataSet;
-
     initialize();
 
     // set values according to priorityGroup and disable changes
-    nameLineEdit_->setText(priorityGroup.getName().c_str());
+    nameLineEdit_->setText(priorityGroup->getName().c_str());
 
-    std::vector<std::vector<int> > stratificationVectorValues = priorityGroup.getStratificationVectorValues();
+    std::vector<std::vector<int> > stratificationVectorValues = priorityGroup->getStratificationVectorValues();
 
     for(unsigned int i=0; i<stratificationVectorValues.size(); i++)
     {
@@ -174,8 +171,8 @@ void PriorityGroupWidget::save()
     }
 
     // create the priority group
-    PriorityGroup priorityGroup(nameLineEdit_->text().toStdString(), stratificationVectorValues);
+    boost::shared_ptr<PriorityGroup> priorityGroup = boost::shared_ptr<PriorityGroup>(new PriorityGroup(nameLineEdit_->text().toStdString(), stratificationVectorValues));
 
-    // add it to the simulation
-    dataSet_->addPriorityGroup(priorityGroup);
+    // add it to the parameters
+    g_parameters.addPriorityGroup(priorityGroup);
 }

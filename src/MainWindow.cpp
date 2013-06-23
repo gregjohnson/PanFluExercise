@@ -132,7 +132,7 @@ MainWindow::MainWindow()
 
     // priority group definition dock
     QDockWidget * priorityGroupDefinitionDockWidget = new QDockWidget("Priority Groups", this);
-    priorityGroupDefinitionDockWidget->setWidget(new PriorityGroupDefinitionWidget(this));
+    priorityGroupDefinitionDockWidget->setWidget(new PriorityGroupDefinitionWidget());
     addDockWidget(Qt::LeftDockWidgetArea, priorityGroupDefinitionDockWidget);
 
     // info dock

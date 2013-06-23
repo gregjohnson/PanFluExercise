@@ -1,4 +1,5 @@
 #include "Parameters.h"
+#include "EpidemicDataSet.h"
 #include "log.h"
 
 Parameters g_parameters;
@@ -20,6 +21,23 @@ Parameters::Parameters()
     vaccineLatencyPeriod_ = 14;
     vaccineAdherence_ = 0.8;
     vaccineCapacity_ = 0.1;
+
+    // default priority groups
+    std::vector<std::vector<int> > stratificationVectorValues;
+
+    // all stratifications
+    stratificationVectorValues.clear();
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    addPriorityGroup(boost::shared_ptr<PriorityGroup>(new PriorityGroup("All", stratificationVectorValues)));
+
+    // high risk only
+    stratificationVectorValues.clear();
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    stratificationVectorValues.push_back(std::vector<int>(1, 1));
+    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
+    addPriorityGroup(boost::shared_ptr<PriorityGroup>(new PriorityGroup("High risk", stratificationVectorValues)));
 }
 
 double Parameters::getR0()
@@ -90,6 +108,11 @@ double Parameters::getVaccineAdherence()
 double Parameters::getVaccineCapacity()
 {
     return vaccineCapacity_;
+}
+
+std::vector<boost::shared_ptr<PriorityGroup> > Parameters::getPriorityGroups()
+{
+    return priorityGroups_;
 }
 
 void Parameters::setR0(double value)
@@ -188,4 +211,11 @@ void Parameters::setVaccineCapacity(double value)
     vaccineCapacity_ = value;
 
     put_flog(LOG_DEBUG, "%f", value);
+}
+
+void Parameters::addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup)
+{
+    priorityGroups_.push_back(priorityGroup);
+
+    emit(priorityGroupAdded(priorityGroup));
 }

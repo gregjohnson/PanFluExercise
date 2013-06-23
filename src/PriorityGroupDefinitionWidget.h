@@ -3,10 +3,7 @@
 
 #include <QtGui>
 #include <vector>
-#include <boost/shared_ptr.hpp>
 
-class MainWindow;
-class EpidemicDataSet;
 class PriorityGroupWidget;
 
 class PriorityGroupDefinitionWidget : public QScrollArea
@@ -15,24 +12,16 @@ class PriorityGroupDefinitionWidget : public QScrollArea
 
     public:
 
-        PriorityGroupDefinitionWidget(MainWindow * mainWindow);
-
-    public slots:
-
-        void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
-        void setTime(int time);
+        PriorityGroupDefinitionWidget();
 
     private:
-
-        // data set information
-        boost::shared_ptr<EpidemicDataSet> dataSet_;
-        int time_;
 
         // UI elements
         QVBoxLayout layout_;
         std::vector<PriorityGroupWidget *> priorityGroupWidgets_;
 
         void clearWidgets();
+        void updatePriorityGroups();
 
     private slots:
 

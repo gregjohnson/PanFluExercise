@@ -1,6 +1,8 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
+#include "PriorityGroup.h"
+#include <boost/shared_ptr.hpp>
 #include <QtGui>
 
 class Parameters : public QObject
@@ -26,6 +28,14 @@ class Parameters : public QObject
         double getVaccineAdherence();
         double getVaccineCapacity();
 
+        // for parameters not exposed through ParametersWidget
+        std::vector<boost::shared_ptr<PriorityGroup> > getPriorityGroups();
+
+    signals:
+
+        // for parameters not exposed through ParametersWidget
+        void priorityGroupAdded(boost::shared_ptr<PriorityGroup> priorityGroup);
+
     public slots:
 
         void setR0(double value);
@@ -42,6 +52,9 @@ class Parameters : public QObject
         void setVaccineLatencyPeriod(int value);
         void setVaccineAdherence(double value);
         void setVaccineCapacity(double value);
+
+        // for parameters not exposed through ParametersWidget
+        void addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup);
 
     private:
 
@@ -87,6 +100,13 @@ class Parameters : public QObject
 
         // vaccine capacity (possible distributions per day as a fraction of total population)
         double vaccineCapacity_;
+
+        //////////////////////////////////////////////////////////////////
+        // the parameters below are not exposed through ParametersWidget!
+        //////////////////////////////////////////////////////////////////
+
+        // priority groups
+        std::vector<boost::shared_ptr<PriorityGroup> > priorityGroups_;
 };
 
 // global parameters object

@@ -2,10 +2,8 @@
 #define PRIORITY_GROUP_WIDGET_H
 
 #include "PriorityGroup.h"
-#include <QtGui>
 #include <boost/shared_ptr.hpp>
-
-class EpidemicDataSet;
+#include <QtGui>
 
 class PriorityGroupWidget : public QGroupBox
 {
@@ -13,16 +11,13 @@ class PriorityGroupWidget : public QGroupBox
 
     public:
 
-        PriorityGroupWidget(boost::shared_ptr<EpidemicDataSet> dataSet);
+        PriorityGroupWidget();
 
         // this constructor creates the widget corresponding to priorityGroup, and disables it for modification
-        // it assumes the priority group has already been added to the data set
-        PriorityGroupWidget(boost::shared_ptr<EpidemicDataSet> dataSet, PriorityGroup priorityGroup);
+        // it assumes the priority group has already been added
+        PriorityGroupWidget(boost::shared_ptr<PriorityGroup> priorityGroup);
 
     private:
-
-        // data set information
-        boost::shared_ptr<EpidemicDataSet> dataSet_;
 
         QLineEdit * nameLineEdit_;
         std::vector<std::vector<QCheckBox *> > stratificationVectorCheckBoxes_;
