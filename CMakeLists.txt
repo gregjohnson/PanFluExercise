@@ -92,7 +92,10 @@ set(SRCS ${SRCS}
     src/PriorityGroup.cpp
     src/PriorityGroupWidget.cpp
     src/PriorityGroupDefinitionWidget.cpp
+    src/PriorityGroupSelections.cpp
+    src/PriorityGroupSelectionsWidget.cpp
     src/Stockpile.cpp
+    src/StockpileConsumptionWidget.cpp
     src/StockpileMapWidget.cpp
     src/StockpileNetwork.cpp
     src/StockpileNetworkDistribution.cpp
@@ -117,7 +120,9 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/ParametersWidget.h
     src/PriorityGroupWidget.h
     src/PriorityGroupDefinitionWidget.h
+    src/PriorityGroupSelectionsWidget.h
     src/Stockpile.h
+    src/StockpileConsumptionWidget.h
     src/StockpileNetworkWidget.h
     src/StockpileNetworkDistribution.h
     src/StockpileNetworkDistributionWidget.h

@@ -1,5 +1,7 @@
 #include "Parameters.h"
 #include "EpidemicDataSet.h"
+#include "PriorityGroup.h"
+#include "PriorityGroupSelections.h"
 #include "log.h"
 
 Parameters g_parameters;
@@ -115,6 +117,16 @@ std::vector<boost::shared_ptr<PriorityGroup> > Parameters::getPriorityGroups()
     return priorityGroups_;
 }
 
+boost::shared_ptr<PriorityGroupSelections> Parameters::getAntiviralPriorityGroupSelections()
+{
+    return antiviralPriorityGroupSelections_;
+}
+
+boost::shared_ptr<PriorityGroupSelections> Parameters::getVaccinePriorityGroupSelections()
+{
+    return vaccinePriorityGroupSelections_;
+}
+
 void Parameters::setR0(double value)
 {
     R0_ = value;
@@ -218,4 +230,38 @@ void Parameters::addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup
     priorityGroups_.push_back(priorityGroup);
 
     emit(priorityGroupAdded(priorityGroup));
+}
+
+void Parameters::setAntiviralPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
+{
+    antiviralPriorityGroupSelections_ = priorityGroupSelections;
+
+    // log message
+    std::string message;
+
+    std::vector<boost::shared_ptr<PriorityGroup> > priorityGroups = priorityGroupSelections->getPriorityGroups();
+
+    for(unsigned int i=0; i<priorityGroups.size(); i++)
+    {
+        message += priorityGroups[i]->getName() + ", ";
+    }
+
+    put_flog(LOG_DEBUG, "%s", message.c_str());
+}
+
+void Parameters::setVaccinePriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
+{
+    vaccinePriorityGroupSelections_ = priorityGroupSelections;
+
+    // log message
+    std::string message;
+
+    std::vector<boost::shared_ptr<PriorityGroup> > priorityGroups = priorityGroupSelections->getPriorityGroups();
+
+    for(unsigned int i=0; i<priorityGroups.size(); i++)
+    {
+        message += priorityGroups[i]->getName() + ", ";
+    }
+
+    put_flog(LOG_DEBUG, "%s", message.c_str());
 }
