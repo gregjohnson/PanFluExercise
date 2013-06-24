@@ -3,6 +3,8 @@
 #include "../random.h"
 #include "../../Stockpile.h"
 #include "../../StockpileNetwork.h"
+#include "../../PriorityGroup.h"
+#include "../../PriorityGroupSelections.h"
 #include "../../log.h"
 #include <boost/bind.hpp>
 
@@ -26,6 +28,12 @@ StochasticSEATIRD::StochasticSEATIRD()
 
     // the "treated" variable keeps tracks of those treated with antivirals
     newVariable("treated");
+
+    // need to keep track of number treated each day
+    newVariable("treated (daily)");
+
+    // need to keep track of number ineffectively treated each day
+    newVariable("treated (ineffective daily)");
 
     // need to keep track of number vaccinated each day
     newVariable("vaccinated (daily)");
@@ -103,8 +111,25 @@ void StochasticSEATIRD::simulate()
 #endif
 
     // apply treatments
-    applyAntivirals();
-    applyVaccines();
+
+    // create a priority group selection for all of the population, for pure pro-rata treatments
+    std::vector<int> stratificationValues(1, STRATIFICATIONS_ALL);
+    std::vector<std::vector<int> > stratificationVectorValues(3, stratificationValues);
+    boost::shared_ptr<PriorityGroup> priorityGroupAll = boost::shared_ptr<PriorityGroup>(new PriorityGroup("_ALL_", stratificationVectorValues));
+    boost::shared_ptr<PriorityGroupSelections> priorityGroupSelectionsAll(new PriorityGroupSelections(std::vector<boost::shared_ptr<PriorityGroup> >(1, priorityGroupAll)));
+
+    // reset number treated for today
+    // do this here since we may have multiple treatments in one day
+    variables_["treated (daily)"](time_+1, blitz::Range::all(), blitz::Range::all(), blitz::Range::all(), blitz::Range::all()) = 0.;
+    variables_["treated (ineffective daily)"](time_+1, blitz::Range::all(), blitz::Range::all(), blitz::Range::all(), blitz::Range::all()) = 0.;
+    variables_["vaccinated (daily)"](time_+1, blitz::Range::all(), blitz::Range::all(), blitz::Range::all(), blitz::Range::all()) = 0.;
+
+    // apply treatments to priority group selections; then remaining to the entire population
+    applyAntiviralsToPriorityGroupSelections(g_parameters.getAntiviralPriorityGroupSelections());
+    applyAntiviralsToPriorityGroupSelections(priorityGroupSelectionsAll);
+
+    applyVaccinesToPriorityGroupSelections(g_parameters.getVaccinePriorityGroupSelections());
+    applyVaccinesToPriorityGroupSelections(priorityGroupSelectionsAll);
 
     // pre-compute some frequently used values
     // this should be done after applyVaccines() since individuals may be changing stratifications
@@ -393,8 +418,14 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
     return true;
 }
 
-void StochasticSEATIRD::applyAntivirals()
+void StochasticSEATIRD::applyAntiviralsToPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
 {
+    if(priorityGroupSelections == NULL || priorityGroupSelections->getPriorityGroups().size() == 0)
+    {
+        put_flog(LOG_DEBUG, "no priority groups in selection");
+        return;
+    }
+
     double antiviralEffectiveness = g_parameters.getAntiviralEffectiveness();
     double antiviralAdherence = g_parameters.getAntiviralAdherence();
     double antiviralCapacity = g_parameters.getAntiviralCapacity();
@@ -421,10 +452,12 @@ void StochasticSEATIRD::applyAntivirals()
             continue;
         }
 
+        // the total populations below correspond to the priority group selections
+
         // determine total number of adherent treatable
-        float totalPopulation = getValue("population", time_+1, nodeIds[i]);
-        float totalTreated = getValue("treated", time_+1, nodeIds[i]);
-        float totalTreatable = getValue("treatable", time_+1, nodeIds[i]);
+        float totalPopulation = getValue("population", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
+        float totalTreated = getValue("treated", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
+        float totalTreatable = getValue("treatable", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet()) - getValue("treated (ineffective daily)", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
 
         // do nothing if this population is zero
         if(totalPopulation <= 0.)
@@ -443,9 +476,15 @@ void StochasticSEATIRD::applyAntivirals()
             stockpileAmountUsed = (int)totalAdherentTreatable;
         }
 
-        if(stockpileAmountUsed > (int)(antiviralCapacity * totalPopulation))
+        // capacity corresponds to total population, not just for these priority group selections
+        float capacityTotalPopulation = getValue("population", time_+1, nodeIds[i]);
+
+        // consider capacity used in previous treatments on this day
+        float todayUsedCapacity = blitz::sum(variables_["treated (daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], blitz::Range::all(), blitz::Range::all(), blitz::Range::all()));
+
+        if(stockpileAmountUsed > (int)(antiviralCapacity * capacityTotalPopulation - todayUsedCapacity))
         {
-            stockpileAmountUsed = (int)(antiviralCapacity * totalPopulation);
+            stockpileAmountUsed = (int)(antiviralCapacity * capacityTotalPopulation - todayUsedCapacity);
         }
 
         // do nothing if no stockpile is used
@@ -466,59 +505,72 @@ void StochasticSEATIRD::applyAntivirals()
         // we also need the number treatable for probabilistically choosing who got the treatment
         blitz::Array<float, NUM_STRATIFICATION_DIMENSIONS> numberTreatable(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_, StochasticSEATIRD::numVaccinatedGroups_);
 
-        for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
+        // initialize to zero, since we might not be seeing all possible stratifications
+        adherentTreatable = 0.;
+        numberTreated = 0;
+        numberEffectivelyTreated = 0;
+        numberTreatable = 0.;
+
+        // iterate through all stratifications in priority group selections
+        std::vector<std::vector<int> > stratificationValuesSet = priorityGroupSelections->getStratificationValuesSet();
+
+        for(unsigned int s=0; s<stratificationValuesSet.size(); s++)
         {
-            for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
+            int a = stratificationValuesSet[s][0];
+            int r = stratificationValuesSet[s][1];
+            int v = stratificationValuesSet[s][2];
+
+            std::vector<int> stratificationValues;
+            stratificationValues.push_back(a);
+            stratificationValues.push_back(r);
+            stratificationValues.push_back(v);
+
+            // determine number of adherent treatable
+            float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
+            float treated = getValue("treated", time_+1, nodeIds[i], stratificationValues);
+            float treatable = getValue("treatable", time_+1, nodeIds[i], stratificationValues) - getValue("treated (ineffective daily)", time_+1, nodeIds[i], stratificationValues);
+
+            // do nothing if this population is zero
+            if(population <= 0.)
             {
-                for(int v=0; v<StochasticSEATIRD::numVaccinatedGroups_; v++)
-                {
-                    std::vector<int> stratificationValues;
-                    stratificationValues.push_back(a);
-                    stratificationValues.push_back(r);
-                    stratificationValues.push_back(v);
+                adherentTreatable(a, r, v) = 0.;
+                numberTreated(a, r, v) = 0;
+                numberEffectivelyTreated(a, r, v) = 0;
+                numberTreatable(a, r, v) = 0.;
 
-                    // determine number of adherent treatable
-                    float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
-                    float treated = getValue("treated", time_+1, nodeIds[i], stratificationValues);
-                    float treatable = getValue("treatable", time_+1, nodeIds[i], stratificationValues);
-
-                    // do nothing if this population is zero
-                    if(population <= 0.)
-                    {
-                        adherentTreatable(a, r, v) = 0.;
-                        numberTreated(a, r, v) = 0;
-                        numberEffectivelyTreated(a, r, v) = 0;
-                        numberTreatable(a, r, v) = 0.;
-
-                        continue;
-                    }
-
-                    // == (adherent untreated population) * (fraction of population that is treatable)
-                    adherentTreatable(a, r, v) = (antiviralAdherence * population - treated) * treatable / population;
-
-                    // pro-rata by adherent treatable population
-                    numberTreated(a, r, v) = int(adherentTreatable(a, r, v) / totalAdherentTreatable * (float)stockpileAmountUsed);
-
-                    // considering effectiveness
-                    numberEffectivelyTreated(a, r, v) = int(antiviralEffectiveness * float(numberTreated(a, r, v)));
-
-                    // for probabilistically choosing who got the treatment
-                    numberTreatable(a, r, v) = treatable;
-
-                    if(numberTreated(a, r, v) <= 0)
-                    {
-                        continue;
-                    }
-
-                    // put_flog(LOG_DEBUG, "adherentTreatable = %f, numberTreated = %i, numberEffectivelyTreated = %i", adherentTreatable(a, r, v), numberTreated(a, r, v), numberEffectivelyTreated(a, r, v));
-
-                    // transition those effectively treated from "treatable" to "recovered"
-                    transition(numberEffectivelyTreated(a, r, v), "treatable", "recovered", nodeIds[i], stratificationValues);
-
-                    // need to keep track of those treated (regardless of effectiveness)
-                    variables_["treated"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, v) += numberTreated(a, r, v);
-                }
+                continue;
             }
+
+            // == (adherent untreated population) * (fraction of population that is treatable)
+            adherentTreatable(a, r, v) = (antiviralAdherence * population - treated) * treatable / population;
+
+            // pro-rata by adherent treatable population
+            numberTreated(a, r, v) = int(adherentTreatable(a, r, v) / totalAdherentTreatable * (float)stockpileAmountUsed);
+
+            // considering effectiveness
+            numberEffectivelyTreated(a, r, v) = int(antiviralEffectiveness * float(numberTreated(a, r, v)));
+
+            // for probabilistically choosing who got the treatment
+            numberTreatable(a, r, v) = treatable;
+
+            if(numberTreated(a, r, v) <= 0)
+            {
+                continue;
+            }
+
+            // put_flog(LOG_DEBUG, "adherentTreatable = %f, numberTreated = %i, numberEffectivelyTreated = %i", adherentTreatable(a, r, v), numberTreated(a, r, v), numberEffectivelyTreated(a, r, v));
+
+            // transition those effectively treated from "treatable" to "recovered"
+            transition(numberEffectivelyTreated(a, r, v), "treatable", "recovered", nodeIds[i], stratificationValues);
+
+            // need to keep track of number treated each day
+            variables_["treated (daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, v) += numberTreated(a, r, v);
+
+            // need to keep track of number ineffectively treated each day
+            variables_["treated (ineffective daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, v) += (numberTreated(a, r, v) - numberEffectivelyTreated(a, r, v));
+
+            // need to keep track of those treated (regardless of effectiveness)
+            variables_["treated"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, v) += numberTreated(a, r, v);
         }
 
         // the sum over numberTreated should equal stockpileAmountUsed
@@ -543,7 +595,7 @@ void StochasticSEATIRD::applyAntivirals()
 
                 if(numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)) > 0)
                 {
-                    if(rand_.rand() <= float(numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))) / numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)))
+                    if((*it).canceled() != true && rand_.rand() <= float(numberEffectivelyTreated(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues))) / numberTreatable(BOOST_PP_ENUM(NUM_STRATIFICATION_DIMENSIONS, VECTOR_TO_ARGS, stratificationValues)))
                     {
                         // cancel the remaining schedule
                         (*boost::heap::pairing_heap<StochasticSEATIRDSchedule, boost::heap::compare<StochasticSEATIRDSchedule::compareByNextEventTime> >::s_handle_from_iterator(it)).cancel();
@@ -564,13 +616,16 @@ void StochasticSEATIRD::applyAntivirals()
     }
 }
 
-void StochasticSEATIRD::applyVaccines()
+void StochasticSEATIRD::applyVaccinesToPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
 {
+    if(priorityGroupSelections == NULL || priorityGroupSelections->getPriorityGroups().size() == 0)
+    {
+        put_flog(LOG_DEBUG, "no priority groups in selection");
+        return;
+    }
+
     double vaccineAdherence = g_parameters.getVaccineAdherence();
     double vaccineCapacity = g_parameters.getVaccineCapacity();
-
-    // reset number vaccinated for today
-    variables_["vaccinated (daily)"](time_+1, blitz::Range::all(), blitz::Range::all(), blitz::Range::all(), blitz::Range::all()) = 0.;
 
     // treatments for each node
     std::vector<int> nodeIds = getNodeIds();
@@ -594,17 +649,12 @@ void StochasticSEATIRD::applyVaccines()
             continue;
         }
 
-        // stratifications that we'll use...
-        std::vector<int> stratificationValuesVaccinated(3, STRATIFICATIONS_ALL);
-        stratificationValuesVaccinated[2] = 1; // vaccinated
-
-        std::vector<int> stratificationValuesUnvaccinated(3, STRATIFICATIONS_ALL);
-        stratificationValuesUnvaccinated[2] = 0; // unvaccinated
+        // the total populations below correspond to the priority group selections
 
         // determine total number of adherent unvaccinated
-        float totalPopulation = getValue("population", time_+1, nodeIds[i]);
-        float totalVaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesVaccinated);
-        float totalUnvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValuesUnvaccinated);
+        float totalPopulation = getValue("population", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet2(STRATIFICATIONS_ALL));
+        float totalVaccinatedPopulation = getValue("population", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet2(1)); // vaccinated == 1
+        float totalUnvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet2(0)); // unvaccinated == 0
 
         // do nothing if this population is zero
         if(totalUnvaccinatedPopulation <= 0.)
@@ -623,9 +673,15 @@ void StochasticSEATIRD::applyVaccines()
             stockpileAmountUsed = (int)totalAdherentUnvaccinated;
         }
 
-        if(stockpileAmountUsed > (int)(vaccineCapacity * totalPopulation))
+        // capacity corresponds to total population, not just for these priority group selections
+        float capacityTotalPopulation = getValue("population", time_+1, nodeIds[i]);
+
+        // consider capacity used in previous treatments on this day
+        float todayUsedCapacity = blitz::sum(variables_["vaccinated (daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], blitz::Range::all(), blitz::Range::all(), 1));
+
+        if(stockpileAmountUsed > (int)(vaccineCapacity * capacityTotalPopulation - todayUsedCapacity))
         {
-            stockpileAmountUsed = (int)(vaccineCapacity * totalPopulation);
+            stockpileAmountUsed = (int)(vaccineCapacity * capacityTotalPopulation - todayUsedCapacity);
         }
 
         // do nothing if no stockpile is used
@@ -657,65 +713,74 @@ void StochasticSEATIRD::applyVaccines()
         // for probabilistically choosing which event schedules to change stratifications
         blitz::Array<int, 1 + NUM_STRATIFICATION_DIMENSIONS-1> numberVaccinatable(compartments.size(), StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_);
 
+        // initialize to zero, since we might not be seeing all possible stratifications
+        numberVaccinated = 0;
+        numberVaccinatable = 0;
+
         for(unsigned int c=0; c<compartments.size(); c++)
         {
             blitz::Array<float, NUM_STRATIFICATION_DIMENSIONS-1> adherentCompartmentUnvaccinated(StochasticSEATIRD::numAgeGroups_, StochasticSEATIRD::numRiskGroups_);
 
-            for(int a=0; a<StochasticSEATIRD::numAgeGroups_; a++)
+            adherentCompartmentUnvaccinated = 0.;
+
+            // iterate through all stratifications in priority group selections (only for age group, risk group)
+            std::vector<std::vector<int> > stratificationValuesSet2 = priorityGroupSelections->getStratificationValuesSet2(STRATIFICATIONS_ALL);
+
+            for(unsigned int s=0; s<stratificationValuesSet2.size(); s++)
             {
-                for(int r=0; r<StochasticSEATIRD::numRiskGroups_; r++)
+                int a = stratificationValuesSet2[s][0];
+                int r = stratificationValuesSet2[s][1];
+
+                std::vector<int> stratificationValues(3, STRATIFICATIONS_ALL);
+                stratificationValues[0] = a;
+                stratificationValues[1] = r;
+
+                // determine number of adherent compartment unvaccinated
+                stratificationValues[2] = STRATIFICATIONS_ALL;
+                float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
+
+                stratificationValues[2] = 1; // vaccinated
+                float vaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
+
+                stratificationValues[2] = 0; // unvaccinated
+                float unvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
+                float compartmentUnvaccinated = getValue(compartments[c], time_+1, nodeIds[i], stratificationValues);
+
+                // for probabilistically choosing which event schedules to change stratifications
+                numberVaccinatable((int)c, a, r) = int(compartmentUnvaccinated);
+
+                // do nothing if this population is zero
+                if(unvaccinatedPopulation <= 0.)
                 {
-                    std::vector<int> stratificationValues(3, STRATIFICATIONS_ALL);
-                    stratificationValues[0] = a;
-                    stratificationValues[1] = r;
+                    adherentCompartmentUnvaccinated(a, r) = 0.;
+                    numberVaccinated((int)c, a, r) = 0;
 
-                    // determine number of adherent compartment unvaccinated
-                    stratificationValues[2] = STRATIFICATIONS_ALL;
-                    float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
-
-                    stratificationValues[2] = 1; // vaccinated
-                    float vaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
-
-                    stratificationValues[2] = 0; // unvaccinated
-                    float unvaccinatedPopulation = getValue("population", time_+1, nodeIds[i], stratificationValues);
-                    float compartmentUnvaccinated = getValue(compartments[c], time_+1, nodeIds[i], stratificationValues);
-
-                    // for probabilistically choosing which event schedules to change stratifications
-                    numberVaccinatable((int)c, a, r) = int(compartmentUnvaccinated);
-
-                    // do nothing if this population is zero
-                    if(unvaccinatedPopulation <= 0.)
-                    {
-                        adherentCompartmentUnvaccinated(a, r) = 0.;
-                        numberVaccinated((int)c, a, r) = 0;
-
-                        continue;
-                    }
-
-                    // == (adherent unvaccinated population) * (fraction of unvaccinated population that is in compartment)
-                    adherentCompartmentUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * compartmentUnvaccinated / unvaccinatedPopulation;
-
-                    // pro-rata by adherent compartment unvaccinated population
-                    numberVaccinated((int)c, a, r) = int(adherentCompartmentUnvaccinated(a, r) / totalAdherentUnvaccinated * (float)stockpileAmountUsed);
-
-                    if(numberVaccinated((int)c, a, r) <= 0)
-                    {
-                        continue;
-                    }
-
-                    // put_flog(LOG_DEBUG, "adherentCompartmentUnvaccinated = %f, numberVaccinated = %i", adherentCompartmentUnvaccinated(a, r), numberVaccinated((int)c, a, r));
-
-                    // move individuals from compartment unvaccinated to compartment vaccinated
-                    variables_[compartments[c]](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated((int)c, a, r);
-                    variables_[compartments[c]](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
-
-                    // need to also manipulate the total population variable: individuals are changing stratifications as well as state
-                    variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated((int)c, a, r);
-                    variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
-
-                    // need to keep track of number vaccinated each day
-                    variables_["vaccinated (daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
+                    continue;
                 }
+
+                // == (adherent unvaccinated population) * (fraction of unvaccinated population that is in compartment)
+                adherentCompartmentUnvaccinated(a, r) = (vaccineAdherence * population - vaccinatedPopulation) * compartmentUnvaccinated / unvaccinatedPopulation;
+
+                // pro-rata by adherent compartment unvaccinated population
+                numberVaccinated((int)c, a, r) = int(adherentCompartmentUnvaccinated(a, r) / totalAdherentUnvaccinated * (float)stockpileAmountUsed);
+
+                if(numberVaccinated((int)c, a, r) <= 0)
+                {
+                    continue;
+                }
+
+                // put_flog(LOG_DEBUG, "adherentCompartmentUnvaccinated = %f, numberVaccinated = %i", adherentCompartmentUnvaccinated(a, r), numberVaccinated((int)c, a, r));
+
+                // move individuals from compartment unvaccinated to compartment vaccinated
+                variables_[compartments[c]](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated((int)c, a, r);
+                variables_[compartments[c]](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
+
+                // need to also manipulate the total population variable: individuals are changing stratifications as well as state
+                variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 0) -= numberVaccinated((int)c, a, r);
+                variables_["population"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
+
+                // need to keep track of number vaccinated each day
+                variables_["vaccinated (daily)"](time_+1, nodeIdToIndex_[nodeIds[i]], a, r, 1) += numberVaccinated((int)c, a, r);
             }
         }
 

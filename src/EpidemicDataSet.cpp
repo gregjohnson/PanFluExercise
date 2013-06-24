@@ -271,6 +271,18 @@ float EpidemicDataSet::getValue(const std::string &varName, const int &time, con
     return blitz::sum(variable(subdomain));
 }
 
+float EpidemicDataSet::getValue(const std::string &varName, const int &time, const int &nodeId, const std::vector<std::vector<int> > &stratificationValuesSet)
+{
+    float value = 0.;
+
+    for(unsigned int i=0; i<stratificationValuesSet.size(); i++)
+    {
+        value += getValue(varName, time, nodeId, stratificationValuesSet[i]);
+    }
+
+    return value;
+}
+
 float EpidemicDataSet::getValue(const std::string &varName, const int &time, const std::string &groupName, const std::vector<int> &stratificationValues)
 {
     if(variables_.count(varName) == 0 && derivedVariables_.count(varName) == 0)

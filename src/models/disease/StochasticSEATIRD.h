@@ -8,6 +8,8 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+class PriorityGroupSelections;
+
 class StochasticSEATIRD : public EpidemicSimulation
 {
     public:
@@ -57,8 +59,8 @@ class StochasticSEATIRD : public EpidemicSimulation
         bool processEvent(const int &nodeId, const StochasticSEATIRDEvent &event);
 
         // treatments
-        void applyAntivirals();
-        void applyVaccines();
+        void applyAntiviralsToPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections);
+        void applyVaccinesToPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections);
 
         // for vaccines
         int getPopulationInVaccineLatencyPeriod(int nodeId, int ageGroup, int riskGroup);

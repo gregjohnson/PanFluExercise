@@ -50,6 +50,7 @@ class EpidemicDataSet
         float getTravel(int nodeId0, int nodeId1);
 
         float getValue(const std::string &varName, const int &time, const int &nodeId, const std::vector<int> &stratificationValues=std::vector<int>());
+        float getValue(const std::string &varName, const int &time, const int &nodeId, const std::vector<std::vector<int> > &stratificationValuesSet);
         float getValue(const std::string &varName, const int &time, const std::string &groupName, const std::vector<int> &stratificationValues=std::vector<int>());
 
         bool newVariable(std::string varName);
