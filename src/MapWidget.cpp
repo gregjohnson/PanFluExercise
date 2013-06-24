@@ -97,7 +97,7 @@ void MapWidget::exportSVGToDisplayCluster()
         painter.setWindow(baseMapRect_.toRect());
 		
         // draw a black background
-        painter.setBrush(QBrush(QColor::fromRgbF(.3,.3,.3,1)));
+        painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
         painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
 		
 		renderAll(&painter, false);
@@ -132,11 +132,11 @@ void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
 		renderBaseMapTexture();	
 		glDisable(GL_TEXTURE_2D);
 
+		painter->setBackgroundMode(Qt::TransparentMode);			
+		painter->setRenderHint(QPainter::Antialiasing, true);
+		painter->setRenderHint(QPainter::HighQualityAntialiasing);
 	}
 	
-	painter->setBackgroundMode(Qt::TransparentMode);			
-	painter->setRenderHint(QPainter::Antialiasing, true);
-	painter->setRenderHint(QPainter::HighQualityAntialiasing);
 	
 	//this will render the MapShapes and travel (if any)
     render(painter, showBaseMap);
