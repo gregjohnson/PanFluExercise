@@ -36,7 +36,7 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
 
         if(fractional_ == false && value >= thresholds_[i])
         {
-            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b>: ";
+            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b> : ";
 
             if(varName_ == "deceased")
             {
@@ -60,7 +60,7 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
             char percentageString[64];
             sprintf(percentageString, "%.2f", value / population * 100.);
 
-            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b>: ";
+            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b> : ";
 
             if(varName_ == ":infected")
             {
