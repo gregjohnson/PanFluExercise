@@ -80,6 +80,8 @@ void StockpileMapWidget::setType(STOCKPILE_TYPE type)
 {
     type_ = type;
 
+    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County as a Fraction of Population"));
+
     update();
 }
 
