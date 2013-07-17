@@ -8,10 +8,13 @@
 class MainWindow;
 class EpidemicDataSet;
 class Event;
+class TimelineWidget;
 struct EventMessage;
 
 class EventMonitor : public QObject
-{
+{	
+	friend class TimelineWidget;
+	
     Q_OBJECT
 
     public:
@@ -21,6 +24,8 @@ class EventMonitor : public QObject
         boost::shared_ptr<EpidemicDataSet> getDataSet();
         int getTime();
 
+
+		
     signals:
 
         void clearMessages();
@@ -34,7 +39,9 @@ class EventMonitor : public QObject
         // check for new events on the latest time step
         void checkForEvents();
 
-    private:
+	private:
+        // the resulting event messages
+        std::vector<boost::shared_ptr<EventMessage> > messages_;
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
@@ -43,8 +50,6 @@ class EventMonitor : public QObject
         // events to monitor for
         std::vector<boost::shared_ptr<Event> > events_;
 
-        // the resulting event messages
-        std::vector<boost::shared_ptr<EventMessage> > messages_;
 };
 
 #endif

@@ -100,6 +100,7 @@ set(SRCS ${SRCS}
     src/StockpileNetworkWidget.cpp
     src/StockpileNetworkDistributionWidget.cpp
     src/StockpileChartWidget.cpp
+    src/TimelineWidget.cpp
     src/models/random.cpp
     src/models/disease/StochasticSEATIRD.cpp
     src/models/disease/StochasticSEATIRDSchedule.cpp
@@ -111,6 +112,7 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EpidemicInitialCasesWidget.h
     src/EventMonitor.h
     src/EventMonitorWidget.h
+    src/TimelineWidget.h
     src/MainWindow.h
     src/MapWidget.h
     src/Parameters.h

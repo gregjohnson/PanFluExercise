@@ -3,6 +3,7 @@
 #include "StockpileMapWidget.h"
 #include "EventMonitor.h"
 #include "EventMonitorWidget.h"
+#include "TimelineWidget.h"
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
@@ -88,6 +89,10 @@ MainWindow::MainWindow()
     QDockWidget * eventMonitorDockWidget = new QDockWidget("Event Monitor", this);
     eventMonitorDockWidget->setWidget(new EventMonitorWidget(eventMonitor));
     addDockWidget(Qt::TopDockWidgetArea, eventMonitorDockWidget);
+
+    QDockWidget * timelineDockWidget = new QDockWidget("Timeline", this);
+    timelineDockWidget->setWidget(new TimelineWidget(this, eventMonitor));
+    addDockWidget(Qt::TopDockWidgetArea, timelineDockWidget);
 
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
