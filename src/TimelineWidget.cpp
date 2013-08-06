@@ -68,7 +68,8 @@ void TimelineWidget::render(QPainter* painter)
 	int height = painter->window().height();
 	
 	//idea: fix the window width; change the width of 
-	
+#if 0
+	//working old timeline
 	int t = 1;
 	int lastTime = 0;
 	//if (monitor_->messages_.size())
@@ -78,13 +79,26 @@ void TimelineWidget::render(QPainter* painter)
 	
 	//AARONBAD -- this is actually timeWindow+1. So if you want a window of 7, set to 6.
 	int timeWindow = 6;
-	float wSpacing = (width * 1.0) / ( (lastTime - timeWindow + 1) * .15 + timeWindow+1 );	
+	float minTimeWindowRelativeSize = .5;
+	
+	//float wSpacing;
+	
+	float icon_wSpacing = .15;
+	
+	if ( (lastTime - timeWindow + 1) * icon_wSpacing * minTimeWindowRelativeSize > (timeWindow+1) * (1.f - minTimeWindowRelativeSize) )
+	{
+		//make icon_wSpacing whatever it needs to be
+		icon_wSpacing = (timeWindow+1) * (1.f - minTimeWindowRelativeSize) / ((lastTime - timeWindow + 1) * minTimeWindowRelativeSize);
+	}
+	
+	float wSpacing = (width * 1.0) / ( (lastTime - timeWindow + 1) * icon_wSpacing + timeWindow+1 );	
+	
+	//the minimum size of the timeWindow, relative to the full window size
 	
     QFont titleFont = painter->font();
-	titleFont.setPixelSize(wSpacing / 12.f);
+	titleFont.setPixelSize(std::min<float>(wSpacing / 12.f, 10.f));
     painter->setFont(titleFont);
-	
-		
+			
 	float hSpacing = std::min<float>(10, height / 5);
 	
 	int currentSliderTime = std::min<int>(time_, lastTime);
@@ -93,9 +107,7 @@ void TimelineWidget::render(QPainter* painter)
 	int windowStartTime = std::max<int>(1, currentSliderTime - timeWindow);
 	int h=1;
 	float hOffset = hSpacing;
-	float wOffset = wSpacing * .15f;
-
-	//draw the first timestep
+	float wOffset = wSpacing * icon_wSpacing;
 
     for(unsigned int i=0; i<monitor_->messages_.size(); i++)
     {
@@ -116,7 +128,7 @@ void TimelineWidget::render(QPainter* painter)
 			    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
 				if (t != lastTime)
 					painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing * .2, hSpacing * .1));
-				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .05, hSpacing * .2));
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .015, hSpacing * .2));
 				if (lastTime <= 20 ||
 					(lastTime > 20 && lastTime <= 30 && t % 2 == 0) ||
 					(lastTime > 30 && lastTime <= 40 && t % 3 == 0) ||
@@ -126,7 +138,7 @@ void TimelineWidget::render(QPainter* painter)
 					(lastTime > 200 && lastTime <= 500 && t % 20 == 0) ||	
 					(lastTime > 500 && t % 50 == 0))
 						painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));				
-				wNextOffset = wOffset + wSpacing * .15;
+				wNextOffset = wOffset + wSpacing * icon_wSpacing;
 			}
 			else
 			{
@@ -143,25 +155,27 @@ void TimelineWidget::render(QPainter* painter)
 				wOffset = wNextOffset;
 			t++;
 		}
+		
+		float iconSize = std::min<float>(wSpacing * icon_wSpacing * .9, hSpacing * .75);
 
 		if (message->type == 0)
 		{
 	    	painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
 	    	painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
-			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * h, hSpacing * 3/4, hSpacing * 3/4));
+			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * h, iconSize, iconSize));
 		}
 		else
 		{
 	    	painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, 1)));		
 	    	painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, 1)), .1));
-			painter->drawPie(QRectF(wOffset, hOffset + hSpacing * h, hSpacing * 3/4, hSpacing * 3/4), 0, 5760);		
+			painter->drawPie(QRectF(wOffset, hOffset + hSpacing * h, iconSize, iconSize), 0, 5760);		
 		}
 		
 		if (t >= windowStartTime && t <= windowStartTime + timeWindow)
 		{
 		    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));
 		    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
-			painter->drawText(QRectF(wOffset + wSpacing * .12, hOffset + hSpacing * h, wSpacing * 4/5, hSpacing), QString(message->shortMessageText.c_str()));		
+			painter->drawText(QRectF(wOffset + wSpacing * .1, hOffset + hSpacing * h, wSpacing * .8, hSpacing * .9), QString(message->shortMessageText.c_str()));		
 		}
 				
 		wOffset = wNextOffset;
@@ -181,7 +195,7 @@ void TimelineWidget::render(QPainter* painter)
 		    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
 			if (t != lastTime)
 				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing * .2, hSpacing * .1));
-			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .05, hSpacing * .2));		
+			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .015, hSpacing * .2));		
 			if (lastTime <= 20 ||
 				(lastTime > 20 && lastTime <= 30 && t % 2 == 0) ||
 				(lastTime > 30 && lastTime <= 40 && t % 3 == 0) ||
@@ -191,7 +205,7 @@ void TimelineWidget::render(QPainter* painter)
 				(lastTime > 200 && lastTime <= 500 && t % 20 == 0) ||	
 				(lastTime > 500 && t % 50 == 0))
 					painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));
-			wOffset += wSpacing * .15;
+			wOffset += wSpacing * icon_wSpacing;
 		}
 		else
 		{
@@ -206,6 +220,187 @@ void TimelineWidget::render(QPainter* painter)
 
 		t++;
 	}
+
+#else
+
+	//ok, the idea here is to pick some maxTotalWindowSize, and cut off everything outside of that
+	
+	const int totalShownTime = int(width / 30);
+
+	int lastTime = 0;
+	//if (monitor_->messages_.size())
+	//	lastTime = monitor_->messages_[monitor_->messages_.size()-1]->time;
+	if (monitor_->getDataSet() && monitor_->messages_.size())
+		lastTime = std::max<int>(monitor_->getDataSet()->getNumTimes()-1, monitor_->messages_[monitor_->messages_.size()-1]->time);
+
+	const int currentSliderTime = std::max<int>(1, std::min<int>(time_, lastTime));
+	
+	const int firstShownTime = std::max<int>(currentSliderTime - totalShownTime, 1);
+	const int lastShownTime = std::min<int>(firstShownTime + totalShownTime, lastTime);
+	const int actualShownTime = lastShownTime - firstShownTime;
+		
+	//AARONBAD -- this is actually timeWindow+1. So if you want a window of 7, set to 6.
+	const int timeWindow = 6;
+	const float minTimeWindowRelativeSize = .5;
+	
+	int t = firstShownTime;	
+		
+	float icon_wSpacing = .15;
+	
+	if ( (actualShownTime - timeWindow + 1) * icon_wSpacing * minTimeWindowRelativeSize > (timeWindow+1) * (1.f - minTimeWindowRelativeSize) )
+	{
+		//make icon_wSpacing whatever it needs to be
+		icon_wSpacing = (timeWindow+1) * (1.f - minTimeWindowRelativeSize) / ((actualShownTime - timeWindow + 1) * minTimeWindowRelativeSize);
+	}
+	
+	const float wSpacing = (width * 1.0) / ( (actualShownTime - timeWindow + 1) * icon_wSpacing + timeWindow+1 );	
+	
+	//the minimum size of the timeWindow, relative to the full window size
+	
+    QFont titleFont = painter->font();
+	titleFont.setPixelSize(std::min<float>(wSpacing / 10.f, 10.f));
+    painter->setFont(titleFont);
+			
+	const float hSpacing = std::min<float>(10, height / 5);
+				
+	const int windowStartTime = std::max<int>(1, currentSliderTime - timeWindow);
+	int h=1;
+	float hOffset = hSpacing;
+	float wOffset = wSpacing * icon_wSpacing;
+	
+    for(unsigned int i=0; i<monitor_->messages_.size(); i++)
+    {
+        boost::shared_ptr<EventMessage> message = monitor_->messages_[i];
+			
+		float wNextOffset = wOffset;
+		
+		if (message->time < firstShownTime || message->time > lastShownTime)
+			continue;
+					
+		//draw axis ticks until we're caught up with current timestep
+		while (t < message->time)
+		{
+			h = 1;			
+			char timeStr[4];
+			sprintf(timeStr, "%d", t);
+
+			if (t < windowStartTime || t > windowStartTime + timeWindow)
+			{
+				//not in time window
+			    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
+			    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+				if (t != lastShownTime)
+				{
+					if (t == firstShownTime && t > 1)
+						painter->drawRect(QRectF(wOffset - .1*wSpacing, hOffset + hSpacing * .5, wSpacing * .3, hSpacing * .1));
+					else
+						painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing * .2, hSpacing * .1));						
+				}
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .015, hSpacing * .2));
+				if (actualShownTime <= 20 ||
+					(actualShownTime > 20 && actualShownTime <= 30 && (t-firstShownTime) % 2 == 0) ||
+					(actualShownTime > 30 && actualShownTime <= 40 && (t-firstShownTime) % 3 == 0) ||
+					(actualShownTime > 40 && actualShownTime <= 50 && (t-firstShownTime) % 4 == 0) ||
+					(actualShownTime > 50 && actualShownTime <= 100 && (t-firstShownTime) % 5 == 0) ||
+					(actualShownTime > 100 && actualShownTime <= 200 && (t-firstShownTime) % 10 == 0) ||		
+					(actualShownTime > 200 && actualShownTime <= 500 && (t-firstShownTime) % 20 == 0) ||	
+					(actualShownTime > 500 && (t-actualShownTime) % 50 == 0))
+						painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));				
+				wNextOffset = wOffset + wSpacing * icon_wSpacing;
+			}
+			else
+			{
+				//in time window
+			    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
+			    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+				if (t != lastShownTime)
+				{
+					if (t == firstShownTime && t > 1)
+						painter->drawRect(QRectF(wOffset - wSpacing * .1, hOffset + hSpacing * .5, wSpacing * 1.1, hSpacing * .1));						
+					else						
+						painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing, hSpacing * .1));
+				}
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .05, hSpacing * .2));
+				painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));				
+				wNextOffset = wOffset + wSpacing;
+			}
+			
+			if (t < message->time)
+				wOffset = wNextOffset;
+			t++;
+		}
+		
+		float iconSize = std::min<float>(wSpacing * icon_wSpacing * .9, hSpacing * .75);
+
+		if (message->type == 0)
+		{
+	    	painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
+	    	painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * h, iconSize, iconSize));
+		}
+		else
+		{
+	    	painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, 1)));		
+	    	painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, 1)), .1));
+			painter->drawPie(QRectF(wOffset, hOffset + hSpacing * h, iconSize, iconSize), 0, 5760);		
+		}
+		
+		if (t >= windowStartTime && t <= windowStartTime + timeWindow)
+		{
+		    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));
+		    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+			painter->drawText(QRectF(wOffset + wSpacing * .11, hOffset + hSpacing * h, wSpacing * .8, hSpacing * .9), QString(message->shortMessageText.c_str()));		
+		}
+				
+		wOffset = wNextOffset;
+		h++;	
+    }
+
+	//draw axis ticks until we're caught up with last timestep
+	while (t <= lastShownTime)
+	{
+		h = 1;			
+		char timeStr[4];
+		sprintf(timeStr, "%d", t);
+
+		if (t < windowStartTime || t > windowStartTime + timeWindow)
+		{
+		    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
+		    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+			if (t != lastShownTime)
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing * .2, hSpacing * .1));
+			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .015, hSpacing * .2));		
+			if (actualShownTime <= 20 ||
+				(actualShownTime > 20 && actualShownTime <= 30 && (t-firstShownTime) % 2 == 0) ||
+				(actualShownTime > 30 && actualShownTime <= 40 && (t-firstShownTime) % 3 == 0) ||
+				(actualShownTime > 40 && actualShownTime <= 50 && (t-firstShownTime) % 4 == 0) ||
+				(actualShownTime > 50 && actualShownTime <= 100 && (t-firstShownTime) % 5 == 0) ||
+				(actualShownTime > 100 && actualShownTime <= 200 && (t-firstShownTime) % 10 == 0) ||		
+				(actualShownTime > 200 && actualShownTime <= 500 && (t-firstShownTime) % 20 == 0) ||	
+				(actualShownTime > 500 && (t-actualShownTime) % 50 == 0))
+					painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));
+			wOffset += wSpacing * icon_wSpacing;
+		}
+		else
+		{
+		    painter->setBrush(QBrush(QColor::fromRgbF(0, 0, 0, 1)));		
+		    painter->setPen(QPen(QBrush(QColor::fromRgbF(0, 0, 0, 1)), .1));
+			if (t != lastShownTime)
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing, hSpacing * .1));
+			else if (lastShownTime < lastTime)
+				painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .5, wSpacing * .5, hSpacing * .1));
+				
+			painter->drawRect(QRectF(wOffset, hOffset + hSpacing * .45, wSpacing * .05, hSpacing * .2));	
+			painter->drawText(QRectF(wOffset - wSpacing * .01, hOffset - hSpacing * .5, wSpacing * .2, hSpacing), QString(timeStr));
+			wOffset += wSpacing;
+		}
+
+		t++;
+	}
+
+	
+	
+#endif
 
 	
 }

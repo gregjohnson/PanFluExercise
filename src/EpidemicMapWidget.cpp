@@ -88,9 +88,14 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
 
                 if(infectiousTravelers >= infectiousTravelerThreshhold)
                 {
-					float alpha = std::min<float>(.5, std::max<float>(.01, 10 * infectiousTravelers / infectiousTravelerAlphaScale));
-				    painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, alpha)));
-				    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, alpha * .1)), .1));
+					float alpha = std::min<float>(.5, std::max<float>(.005, 2.5 * infectiousTravelers / infectiousTravelerAlphaScale));
+					
+				    //painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, alpha)));
+				    //painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, alpha * .1)), .1));
+
+					painter->setBrush(QBrush(QColor::fromRgbF(.415, .353, .803, alpha)));
+					painter->setPen(QPen(QBrush(QColor::fromRgbF(.415, .353, .803, alpha * .1)), .1));
+
 					
 				    QVector<QPointF> points;
 			        points.push_back(QPointF(lon0, lat0));
