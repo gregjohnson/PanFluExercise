@@ -157,7 +157,7 @@ void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
 	QColor titleColor;
 	if (showBaseMap)
 	{
-		titleColor = QColor::fromRgbF(.5,.5,.5,1);
+		titleColor = QColor::fromRgbF(.1,.1,.1,1);
 	}
 	else
 	{
@@ -175,32 +175,36 @@ void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
 
 	if (showBaseMap)
 	{
-    	titlePosition = painter->window().topRight() + QPoint(-350, -2);
-    	titleRect = QRect(titlePosition, titlePosition + QPoint(300, 1.0 * titleFontPixelSize));
+		titlePosition = painter->window().topLeft() + QPoint(painter->window().width() * 1./4., .1 * titleFontPixelSize);
+		titleRect = QRect(titlePosition, titlePosition + QPoint(250, 1.0 * titleFontPixelSize));
+		painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 	}
 	else
 	{
         titlePosition = painter->window().topRight() + QPoint(-600, 100);
         titleRect = QRect(titlePosition, titlePosition + QPoint(600, 3 * titleFontPixelSize));
+	    painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 	}
 
-    painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
 
     // draw legend
 	QPointF legendTopLeft;
 	float legendHeight, legendWidth;
+    float textPadding;
 	
 	if (showBaseMap)
 	{
-    	legendTopLeft = painter->window().bottomRight() + QPointF(-100, -110);
-    	legendHeight = 100.;
-    	legendWidth = 25.;
+    	legendTopLeft = painter->window().bottomRight() + QPointF(-60, -90);
+    	legendHeight = 80.;
+    	legendWidth = 10.;
+		textPadding = 10;
 	}
 	else
 	{
         legendTopLeft = painter->window().bottomRight() + QPointF(-250, -250);
         legendHeight = 200.;
         legendWidth = 50.;
+		textPadding = 25;
 	}
 
     int legendSubdivisions = 50;
@@ -225,7 +229,6 @@ void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
     }
 
     // draw legend labels
-    float textPadding = 25;
 
     QPointF legendMax = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, titleFontPixelSize);
     QPointF legendMin = QPointF(legendTopLeft) + QPointF(legendWidth + textPadding, legendHeight);
