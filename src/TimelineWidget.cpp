@@ -243,6 +243,7 @@ void TimelineWidget::render(QPainter* painter)
 
 void TimelineWidget::exportSVGToDisplayCluster()
 {
+#if USE_DISPLAYCLUSTER
     if(g_dcSocket != NULL && svgTmpFile_.open())
     {
         QSvgGenerator generator;
@@ -271,6 +272,7 @@ void TimelineWidget::exportSVGToDisplayCluster()
         // now, send it to DisplayCluster
         sendSVGToDisplayCluster((svgTmpFile_.fileName()).toStdString(), (QString("ExerciseTimeline.svg")).toStdString());
     }
+#endif
 }
 
 void TimelineWidget::setTime(int time)

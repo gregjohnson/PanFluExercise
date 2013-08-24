@@ -383,6 +383,7 @@ void MainWindow::resetTimeSlider()
 
 void MainWindow::connectToDisplayCluster()
 {
+#if USE_DISPLAYCLUSTER
     bool ok = false;
 
     QString hostname = QInputDialog::getText(this, "Connect to DisplayCluster", "Hostname:", QLineEdit::Normal, "localhost", &ok);
@@ -398,13 +399,16 @@ void MainWindow::connectToDisplayCluster()
             messageBox.exec();
         }
     }
+#endif
 }
 
 void MainWindow::disconnectFromDisplayCluster()
 {
+#if USE_DISPLAYCLUSTER
     if(g_dcSocket != NULL)
     {
         dcStreamDisconnect(g_dcSocket);
         g_dcSocket = NULL;
     }
+#endif
 }

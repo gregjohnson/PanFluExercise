@@ -87,7 +87,9 @@ void StockpileChartWidget::setTime(int time)
         timeIndicator_->addPoint(time_, 999999999.);
     }
 
+#if USE_DISPLAYCLUSTER
     chartWidget_.exportSVGToDisplayCluster();
+#endif
 }
 
 void StockpileChartWidget::update()

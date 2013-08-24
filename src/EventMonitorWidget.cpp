@@ -39,6 +39,7 @@ EventMonitorWidget::~EventMonitorWidget()
 
 void EventMonitorWidget::exportSVGToDisplayCluster()
 {
+#if USE_DISPLAYCLUSTER
     if(g_dcSocket != NULL && svgTmpFile_.open())
     {
         QSize size(1024, 540);
@@ -73,6 +74,7 @@ void EventMonitorWidget::exportSVGToDisplayCluster()
         // now, send it to DisplayCluster
         sendSVGToDisplayCluster((svgTmpFile_.fileName()).toStdString() + ".svg", (QString("ExerciseEventMonitor.svg")).toStdString());
     }
+#endif
 }
 
 void EventMonitorWidget::clearMessages()

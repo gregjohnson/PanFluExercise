@@ -7,7 +7,10 @@
 
 MainWindow * g_mainWindow = NULL;
 std::string g_dataDirectory;
+
+#if USE_DISPLAYCLUSTER
 DcSocket * g_dcSocket = NULL;
+#endif
 
 int main(int argc, char * argv[])
 {
@@ -23,6 +26,9 @@ int main(int argc, char * argv[])
     dataDirectory.cdUp();
     dataDirectory.cd("Resources");
     dataDirectory.cd("data");
+#elif WIN32
+    dataDirectory.cdUp();
+    dataDirectory.cd("data");	
 #endif
 
     g_dataDirectory = dataDirectory.absolutePath().toStdString();
@@ -42,6 +48,7 @@ int main(int argc, char * argv[])
     return 0;
 }
 
+#if USE_DISPLAYCLUSTER
 bool sendSVGToDisplayCluster(std::string filename, std::string name)
 {
     if(g_dcSocket == NULL || g_dcSocket->state() != QAbstractSocket::ConnectedState)
@@ -78,3 +85,4 @@ bool sendSVGToDisplayCluster(std::string filename, std::string name)
 
     return success;
 }
+#endif

@@ -1,17 +1,25 @@
+#include "main.h"
 #include "MapWidget.h"
 #include "MapShape.h"
 #include "EpidemicDataSet.h"
-#include "main.h"
 #include "log.h"
 #include <QtOpenGL>
 #include <string>
 #include <ogrsf_frmts.h>
 
+#ifdef WIN32
+#include <windows.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#else
 #ifdef __APPLE__
-    #include <OpenGL/glu.h>
+    #include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
 #else
     #include <GL/glu.h>
 #endif
+#endif
+
 
 int MapWidget::numMapWidgets_ = 0;
 
@@ -82,6 +90,7 @@ void MapWidget::setTime(int time)
 
 void MapWidget::exportSVGToDisplayCluster()
 {
+#ifdef USE_DISPLAYCLUSTER
     if(g_dcSocket != NULL && svgTmpFile_.open())
     {
         QSvgGenerator generator;
@@ -109,6 +118,7 @@ void MapWidget::exportSVGToDisplayCluster()
         // now, send it to DisplayCluster
         sendSVGToDisplayCluster((svgTmpFile_.fileName()).toStdString(), (QString("ExerciseMap-") + QString::number(index_) + ".svg").toStdString());
     }
+#endif
 }
 
 void MapWidget::initializeGL()
@@ -390,8 +400,11 @@ bool MapWidget::loadCountyShapes()
         boost::shared_ptr<MapShape> county(new MapShape());
         counties_[nodeId] = county;
 
+#ifdef WIN32
+        OGRGeometry * geometry = feature->GetGeometryRef();
+#else
         OGRGeometry * geometry = feature->GetGeometryRef()->Simplify(0.01);
-
+#endif
         if(geometry != NULL && geometry->getGeometryType() == wkbPolygon)
         {
             OGRPolygon * polygon = (OGRPolygon *)geometry;

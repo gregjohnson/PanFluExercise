@@ -7,9 +7,6 @@ if(COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-# show all warnings
-set(CMAKE_CXX_FLAGS "-Wall")
-
 # keep the library path in installed executables
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -23,8 +20,12 @@ set(QT_USE_QTSVG TRUE)
 set(QT_USE_QTNETWORK TRUE)
 
 if(WIN32)
+    set(CMAKE_CXX_FLAGS "/Ox /W0 /EHsc")
     set(QT_USE_QTMAIN TRUE)
-endif()
+    add_definitions(-DWIN32)
+else(WIN32)
+    set(CMAKE_CXX_FLAGS "-Wall")
+endif(WIN32)
 
 find_package(Qt4 REQUIRED)
 
@@ -35,7 +36,9 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${OPENGL_LIBRARIES})
 
-find_package(Boost REQUIRED)
+find_package(Boost)
+set(Boost_DIR $ENV{BOOST_ROOT})
+find_package(Boost COMPONENTS thread)
 include_directories(${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
@@ -43,9 +46,15 @@ find_package(GDAL REQUIRED)
 include_directories(${GDAL_INCLUDE_DIR})
 set(LIBS ${LIBS} ${GDAL_LIBRARY})
 
-find_package(NetCDF REQUIRED)
-include_directories(${NetCDF_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${NetCDF_LIBRARIES})
+
+set(USE_NETCDF OFF CACHE BOOL "NetCDF file support.")
+
+if (USE_NETCDF)
+  add_definitions(-DUSE_NETCDF)
+  find_package(NetCDF REQUIRED)
+  include_directories(${NetCDF_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${NetCDF_LIBRARIES})
+endif (USE_NETCDF)
 
 find_package(Blitz REQUIRED)
 include_directories(${Blitz_INCLUDE_DIRS})
@@ -59,13 +68,19 @@ find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${GSL_LIBRARIES})
 
-find_package(DisplayCluster REQUIRED)
-include_directories(${DisplayCluster_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${DisplayCluster_LIBRARIES})
+set(USE_DISPLAYCLUSTER OFF CACHE BOOL "DisplayCluster streaming support.")
 
-find_package(LibJpegTurbo REQUIRED)
-include_directories(${LibJpegTurbo_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${LibJpegTurbo_LIBRARIES})
+if (USE_DISPLAYCLUSTER)
+  add_definitions(-DUSE_DISPLAYCLUSTER)
+
+  find_package(DisplayCluster REQUIRED)
+  include_directories(${DisplayCluster_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${DisplayCluster_LIBRARIES})
+
+  find_package(LibJpegTurbo REQUIRED)
+  include_directories(${LibJpegTurbo_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${LibJpegTurbo_LIBRARIES})
+endif (USE_DISPLAYCLUSTER)
 
 set(SRCS ${SRCS}
     src/ChartWidget.cpp
@@ -128,6 +143,7 @@ set(MOC_HEADERS ${MOC_HEADERS}
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})
 
+
 add_executable(exercise MACOSX_BUNDLE WIN32
     ${SRCS} ${MOC_OUTFILES})
 
@@ -181,8 +197,11 @@ if(APPLE OR WIN32)
         set(DEPENDENCY_DIRS ${VTK_LIBRARY_DIRS})
     elseif(WIN32)
         # directories to look for dependencies
-        set(DEPENDENCY_DIRS ${QT_BINARY_DIR})
-
+	#C:/Users/amk3264/Downloads/VTK-6.0.0-win32-install/lib/cmake/vtk-6.0
+        #set(DEPENDENCY_DIRS ${QT_BINARY_DIR} ${GDAL_INCLUDE_DIRS}/../bin ${VTK_DIR}/../../bin)
+	#set(DEPENDENCY_DIRS ${QT_BINARY_DIR} "C:/Users/amk3264/Downloads/gsl-1.15-dev-win32/bin" "C:/Users/amk3264/Downloads/gsl-1.15-dev-win32/bin" "C:/Users/amk3264/Downloads/gdalwin32-1.4.1/bin/" "C:/Users/amk3264/Downloads/VTK-6.0.0-win32-install/bin")
+	#AARONBAD -- need to manually specify VTK binaries dir where dll's live. Everything else is ok.
+	set(DEPENDENCY_DIRS ${QT_BINARY_DIR} "C:/Users/amk3264/Downloads/gdalwin32-1.4.1/bin/" "C:/Users/amk3264/Downloads/VTK-6.0.0-win32-install/bin")
         include(InstallRequiredSystemLibraries)
     endif()
 

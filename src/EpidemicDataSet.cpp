@@ -1,7 +1,11 @@
 #include "EpidemicDataSet.h"
 #include "main.h"
 #include "log.h"
+
+#if USE_NETCDF
 #include <netcdfcpp.h>
+#endif
+
 #include <fstream>
 #include <boost/tokenizer.hpp>
 
@@ -436,6 +440,7 @@ void EpidemicDataSet::addPriorityGroup(PriorityGroup priorityGroup)
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
+#if USE_NETCDF
     // change netcdf library error behavior
     NcError err(NcError::verbose_nonfatal);
 
@@ -508,7 +513,7 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
             variables_[std::string(ncVar->name())].reference(var);
         }
     }
-
+#endif
     return true;
 }
 

@@ -1,12 +1,20 @@
+#include "main.h"
 #include "ColorMap.h"
 #include "log.h"
 #include <cmath>
 
+#ifdef WIN32
+#include <windows.h>
+#include <GL/gl.h>
+#else
 #ifdef __APPLE__
     #include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
 #else
-    #include <GL/gl.h>
+    #include <GL/glu.h>
 #endif
+#endif
+
 
 ColorMap::ColorMap()
 {
