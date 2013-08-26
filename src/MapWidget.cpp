@@ -133,12 +133,16 @@ void MapWidget::renderAll(QPainter* painter, bool showBaseMap)
 	static bool once = true;
 	if (showBaseMap)
 	{
+#ifdef WIN32
+		//AARONBAD -- fixes a bug in windows with baseMap redraw
+		generateBaseMapTexture(width(), height());
+#else
 		if (once)
 		{
 		  generateBaseMapTexture(width(), height());
 		  once=false;
 		}
-
+#endif
 		renderBaseMapTexture();	
 		glDisable(GL_TEXTURE_2D);
 
@@ -400,12 +404,9 @@ bool MapWidget::loadCountyShapes()
         boost::shared_ptr<MapShape> county(new MapShape());
         counties_[nodeId] = county;
 
-#ifdef WIN32
         OGRGeometry * geometry = feature->GetGeometryRef();
-#else
-        OGRGeometry * geometry = feature->GetGeometryRef()->Simplify(0.01);
-#endif
-        if(geometry != NULL && geometry->getGeometryType() == wkbPolygon)
+
+		if(geometry != NULL && geometry->getGeometryType() == wkbPolygon)
         {
             OGRPolygon * polygon = (OGRPolygon *)geometry;
 

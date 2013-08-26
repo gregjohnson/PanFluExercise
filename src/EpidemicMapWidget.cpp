@@ -30,19 +30,19 @@ void EpidemicMapWidget::setTime(int time)
             iter->second->setColor(r, g, b);
         }
 
-        // force redraw
-        update();
+	}
+
+	// force redraw
+    update();
 		
-        exportSVGToDisplayCluster();
-    }
-	
+    exportSVGToDisplayCluster();	
 	
 }
 
 void EpidemicMapWidget::render(QPainter* painter, bool transparent)
 {
-    renderCountyShapes(painter, transparent);
     renderCountyTravel(painter);
+	renderCountyShapes(painter, transparent);
 }
 
 void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
@@ -55,8 +55,8 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
         return;
     }
 
-    painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, .3)));
-    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, .025)), .1));
+    painter->setBrush(QBrush(QColor::fromRgbF(1., 0., 0., .3)));
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(1., 0., 0., .025)), .1));
 
     for(std::map<int, boost::shared_ptr<MapShape> >::iterator iter0=counties_.begin(); iter0!=counties_.end(); iter0++)
     {
@@ -116,8 +116,4 @@ void EpidemicMapWidget::renderCountyTravel(QPainter* painter)
             }
         }
     }
-
-    glEnd();
-
-    glPopAttrib();
 }

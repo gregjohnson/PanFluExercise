@@ -225,7 +225,7 @@ void StockpileChartWidget::updateTimeSeries()
         // plot the variable
         boost::shared_ptr<ChartWidgetLine> line = chartWidget_.getLine(NEW_LINE, STACKED);
 
-        line->setWidth(2.);
+        line->setWidth(2);
 
         // clear any existing bar labels
         line->clearBarLabels();
