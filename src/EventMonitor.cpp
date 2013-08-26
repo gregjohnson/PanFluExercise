@@ -59,7 +59,7 @@ void EventMonitor::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
         infectedThresholds.push_back(0.0075);
         infectedThresholds.push_back(0.01);
 
-        boost::shared_ptr<Event> event1(new EventGroupThreshold(groupNames[i], ":infected", infectedThresholds, true));
+        boost::shared_ptr<Event> event1(new EventGroupThreshold(groupNames[i], "All infected", infectedThresholds, true));
 
         std::vector<float> deceasedThresholds;
         deceasedThresholds.push_back(1);

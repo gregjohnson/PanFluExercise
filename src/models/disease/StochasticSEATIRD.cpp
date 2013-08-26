@@ -39,10 +39,10 @@ StochasticSEATIRD::StochasticSEATIRD()
     newVariable("vaccinated (daily)");
 
     // derived variables
-    derivedVariables_[":infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
     derivedVariables_[":hospitalized"] = boost::bind(&StochasticSEATIRD::getDerivedVarHospitalized, this, _1, _2, _3);
     derivedVariables_[":vaccine latency period"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod, this, _1, _2, _3);
     derivedVariables_[":vaccine effective"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines, this, _1, _2, _3);
+    derivedVariables_["All infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
 
     // initialize start time to 0
     time_ = 0;

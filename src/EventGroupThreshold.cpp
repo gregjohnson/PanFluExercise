@@ -62,7 +62,7 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
 
             std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b> : ";
 
-            if(varName_ == ":infected")
+            if(varName_ == "All infected")
             {
                 messageString += boost::lexical_cast<std::string>(percentageString) + "% (" +  boost::lexical_cast<std::string>((int)value) + " individuals) are now infected in " + groupName_ + ".";
             }
