@@ -97,21 +97,21 @@ MainWindow::MainWindow()
     toolbarBottom->addWidget(timeSlider_);
 
     // previous timestep button
-    QAction * previousTimestepAction = new QAction(QIcon::fromTheme("media-seek-backward"), "Previous Timestep", this);
-    previousTimestepAction->setStatusTip(tr("Previous timestep"));
+    QAction * previousTimestepAction = new QAction(QIcon::fromTheme("media-seek-backward"), "Back", this);
+    previousTimestepAction->setStatusTip(tr("Move backward one day"));
     connect(previousTimestepAction, SIGNAL(triggered()), this, SLOT(previousTimestep()));
     toolbarBottom->addAction(previousTimestepAction);
 
     // play timesteps button
-    playTimestepsAction_ = new QAction(QIcon::fromTheme("media-seek-play"), "Play Timesteps", this);
-    playTimestepsAction_->setStatusTip(tr("Play timesteps"));
+    playTimestepsAction_ = new QAction(QIcon::fromTheme("media-seek-play"), "Run", this);
+    playTimestepsAction_->setStatusTip(tr("Run simulation"));
     playTimestepsAction_->setCheckable(true);
     connect(playTimestepsAction_, SIGNAL(toggled(bool)), this, SLOT(playTimesteps(bool)));
     toolbarBottom->addAction(playTimestepsAction_);
 
     // next timestep button
-    QAction * nextTimestepAction = new QAction(QIcon::fromTheme("media-seek-forward"), "Next Timestep", this);
-    nextTimestepAction->setStatusTip(tr("Next timestep"));
+    QAction * nextTimestepAction = new QAction(QIcon::fromTheme("media-seek-forward"), "Forward", this);
+    nextTimestepAction->setStatusTip(tr("Move forward one day"));
     connect(nextTimestepAction, SIGNAL(triggered()), this, SLOT(nextTimestep()));
     toolbarBottom->addAction(nextTimestepAction);
 
