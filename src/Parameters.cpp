@@ -18,11 +18,11 @@ Parameters::Parameters()
     nu_ = 0.0001;
     antiviralEffectiveness_ = 0.15;
     antiviralAdherence_ = 0.8;
-    antiviralCapacity_ = 0.1;
+    antiviralCapacity_ = 0.02;
     vaccineEffectiveness_ = 0.8;
     vaccineLatencyPeriod_ = 14;
     vaccineAdherence_ = 0.8;
-    vaccineCapacity_ = 0.1;
+    vaccineCapacity_ = 0.02;
 
     // default priority groups
     std::vector<std::vector<int> > stratificationVectorValues;
