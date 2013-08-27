@@ -247,6 +247,13 @@ void Parameters::setAntiviralPriorityGroupSelections(boost::shared_ptr<PriorityG
     }
 
     put_flog(LOG_DEBUG, "%s", message.c_str());
+
+    std::vector<std::vector<int> > stratificationValuesSet = priorityGroupSelections->getStratificationValuesSet();
+
+    for(unsigned int i=0; i<stratificationValuesSet.size(); i++)
+    {
+        put_flog(LOG_DEBUG, "%i %i %i", stratificationValuesSet[i][0], stratificationValuesSet[i][1], stratificationValuesSet[i][2]);
+    }
 }
 
 void Parameters::setVaccinePriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
@@ -264,4 +271,11 @@ void Parameters::setVaccinePriorityGroupSelections(boost::shared_ptr<PriorityGro
     }
 
     put_flog(LOG_DEBUG, "%s", message.c_str());
+
+    std::vector<std::vector<int> > stratificationValuesSet = priorityGroupSelections->getStratificationValuesSet2();
+
+    for(unsigned int i=0; i<stratificationValuesSet.size(); i++)
+    {
+        put_flog(LOG_DEBUG, "%i %i %i", stratificationValuesSet[i][0], stratificationValuesSet[i][1], stratificationValuesSet[i][2]);
+    }
 }
