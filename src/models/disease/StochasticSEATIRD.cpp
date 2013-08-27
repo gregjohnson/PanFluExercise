@@ -825,7 +825,7 @@ void StochasticSEATIRD::applyVaccinesToPriorityGroupSelections(boost::shared_ptr
 
                 if(numberVaccinated(c, stratificationValues[0], stratificationValues[1]) > 0)
                 {
-                    if(rand_.rand() <= float(numberVaccinated(c, stratificationValues[0], stratificationValues[1])) / float(numberVaccinatable(c, stratificationValues[0], stratificationValues[1])))
+                    if((*it).canceled() != true && rand_.rand() <= float(numberVaccinated(c, stratificationValues[0], stratificationValues[1])) / float(numberVaccinatable(c, stratificationValues[0], stratificationValues[1])))
                     {
                         // change stratification to vaccinated
                         // vaccinated stratification == 1
