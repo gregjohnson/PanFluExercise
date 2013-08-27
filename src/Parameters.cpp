@@ -23,23 +23,6 @@ Parameters::Parameters()
     vaccineLatencyPeriod_ = 14;
     vaccineAdherence_ = 0.8;
     vaccineCapacity_ = 0.02;
-
-    // default priority groups
-    std::vector<std::vector<int> > stratificationVectorValues;
-
-    // all stratifications
-    stratificationVectorValues.clear();
-    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
-    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
-    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
-    addPriorityGroup(boost::shared_ptr<PriorityGroup>(new PriorityGroup("All", stratificationVectorValues)));
-
-    // high risk only
-    stratificationVectorValues.clear();
-    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
-    stratificationVectorValues.push_back(std::vector<int>(1, 1));
-    stratificationVectorValues.push_back(std::vector<int>(1, STRATIFICATIONS_ALL));
-    addPriorityGroup(boost::shared_ptr<PriorityGroup>(new PriorityGroup("High risk", stratificationVectorValues)));
 }
 
 double Parameters::getR0()
