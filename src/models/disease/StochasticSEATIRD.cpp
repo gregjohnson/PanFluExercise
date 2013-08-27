@@ -614,6 +614,8 @@ void StochasticSEATIRD::applyAntiviralsToPriorityGroupSelections(boost::shared_p
 
 void StochasticSEATIRD::applyVaccinesToPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)
 {
+    // TODO: need to consider deceased in adherent individual totals! they reduce the adherent unvaccinated population
+
     if(priorityGroupSelections == NULL || priorityGroupSelections->getPriorityGroups().size() == 0)
     {
         put_flog(LOG_DEBUG, "no priority groups in selection");
@@ -867,6 +869,8 @@ int StochasticSEATIRD::getPopulationInVaccineLatencyPeriod(int nodeId, int ageGr
 
 void StochasticSEATIRD::travel()
 {
+    // TODO: review where travel() is called time-wise, and which time indices it uses here!
+
     // todo: these should be parameters defined elsewhere
     double RHO = 0.39;
 
