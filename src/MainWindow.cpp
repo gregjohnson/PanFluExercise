@@ -100,6 +100,9 @@ MainWindow::MainWindow()
     timelineDockWidget->setWidget(new TimelineWidget(this, eventMonitor));
     addDockWidget(Qt::TopDockWidgetArea, timelineDockWidget);
 
+    // tabify event monitor and timeline widgets
+    tabifyDockWidget(eventMonitorDockWidget, timelineDockWidget);
+
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
     connect(timeSlider_, SIGNAL(valueChanged(int)), this, SLOT(setTime(int)));
