@@ -11,6 +11,7 @@
 #include "StockpileNetworkWidget.h"
 #include "StockpileConsumptionWidget.h"
 #include "PriorityGroupDefinitionWidget.h"
+#include "NpiDefinitionWidget.h"
 #include "EpidemicInfoWidget.h"
 #include "EpidemicChartWidget.h"
 #include "StockpileChartWidget.h"
@@ -154,6 +155,11 @@ MainWindow::MainWindow()
     priorityGroupDefinitionDockWidget->setWidget(new PriorityGroupDefinitionWidget());
     addDockWidget(Qt::LeftDockWidgetArea, priorityGroupDefinitionDockWidget);
 
+    // NPI definition dock
+    QDockWidget * npiDefinitionDockWidget = new QDockWidget("Non-pharmaceutical Interventions", this);
+    npiDefinitionDockWidget->setWidget(new NpiDefinitionWidget());
+    addDockWidget(Qt::LeftDockWidgetArea, npiDefinitionDockWidget);
+
     // info dock
     QDockWidget * infoDockWidget = new QDockWidget("Info", this);
     infoDockWidget->setWidget(new EpidemicInfoWidget(this));
@@ -164,6 +170,7 @@ MainWindow::MainWindow()
     tabifyDockWidget(parametersDockWidget, stockpileNetworkDockWidget);
     tabifyDockWidget(parametersDockWidget, stockpileConsumptionDockWidget);
     tabifyDockWidget(parametersDockWidget, priorityGroupDefinitionDockWidget);
+    tabifyDockWidget(parametersDockWidget, npiDefinitionDockWidget);
     tabifyDockWidget(parametersDockWidget, infoDockWidget);
 
     // chart docks

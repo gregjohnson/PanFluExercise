@@ -5,6 +5,7 @@
 #include <QtGui>
 
 class PriorityGroup;
+class Npi;
 class PriorityGroupSelections;
 
 class Parameters : public QObject
@@ -41,6 +42,8 @@ class Parameters : public QObject
         // for parameters not exposed through ParametersWidget
         void priorityGroupAdded(boost::shared_ptr<PriorityGroup> priorityGroup);
 
+        void npiAdded(boost::shared_ptr<Npi> npi);
+
     public slots:
 
         void setR0(double value);
@@ -60,6 +63,8 @@ class Parameters : public QObject
 
         // for parameters not exposed through ParametersWidget
         void addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup);
+
+        void addNpi(boost::shared_ptr<Npi> npi);
 
         void setAntiviralPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections);
         void setVaccinePriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections);
@@ -115,6 +120,9 @@ class Parameters : public QObject
 
         // priority groups
         std::vector<boost::shared_ptr<PriorityGroup> > priorityGroups_;
+
+        // NPIs
+        std::vector<boost::shared_ptr<Npi> > npis_;
 
         // antiviral priority group selections
         boost::shared_ptr<PriorityGroupSelections> antiviralPriorityGroupSelections_;

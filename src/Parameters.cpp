@@ -1,6 +1,7 @@
 #include "Parameters.h"
 #include "EpidemicDataSet.h"
 #include "PriorityGroup.h"
+#include "Npi.h"
 #include "PriorityGroupSelections.h"
 #include "log.h"
 
@@ -213,6 +214,13 @@ void Parameters::addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup
     priorityGroups_.push_back(priorityGroup);
 
     emit(priorityGroupAdded(priorityGroup));
+}
+
+void Parameters::addNpi(boost::shared_ptr<Npi> npi)
+{
+    npis_.push_back(npi);
+
+    emit(npiAdded(npi));
 }
 
 void Parameters::setAntiviralPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections)

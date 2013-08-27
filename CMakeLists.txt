@@ -102,6 +102,9 @@ set(SRCS ${SRCS}
     src/MainWindow.cpp
     src/MapShape.cpp
     src/MapWidget.cpp
+    src/Npi.cpp
+    src/NpiWidget.cpp
+    src/NpiDefinitionWidget.cpp
     src/Parameters.cpp
     src/ParametersWidget.cpp
     src/PriorityGroup.cpp
@@ -132,6 +135,8 @@ set(MOC_HEADERS ${MOC_HEADERS}
     src/EventMonitorWidget.h
     src/MainWindow.h
     src/MapWidget.h
+    src/NpiWidget.h
+    src/NpiDefinitionWidget.h
     src/Parameters.h
     src/ParametersWidget.h
     src/PriorityGroupWidget.h
