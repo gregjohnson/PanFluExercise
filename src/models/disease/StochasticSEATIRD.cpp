@@ -455,18 +455,16 @@ void StochasticSEATIRD::applyAntiviralsToPriorityGroupSelections(boost::shared_p
         // the total populations below correspond to the priority group selections
 
         // determine total number of adherent treatable
-        float totalPopulation = getValue("population", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
-        float totalTreated = getValue("treated", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
         float totalTreatable = getValue("treatable", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet()) - getValue("treated (ineffective daily)", time_+1, nodeIds[i], priorityGroupSelections->getStratificationValuesSet());
 
         // do nothing if this population is zero
-        if(totalPopulation <= 0.)
+        if(totalTreatable <= 0.)
         {
             continue;
         }
 
-        // == (adherent untreated population) * (fraction of population that is treatable)
-        float totalAdherentTreatable = (antiviralAdherence * totalPopulation - totalTreated) * totalTreatable / totalPopulation;
+        // since we fix the treatable period to one day, we can simplify our adherence calculations...
+        float totalAdherentTreatable = antiviralAdherence * totalTreatable;
 
         // we will use all of our available stockpile (subject to capacity constraint) to treat the adherent treatable population
         int stockpileAmountUsed = stockpileAmount;
@@ -526,12 +524,10 @@ void StochasticSEATIRD::applyAntiviralsToPriorityGroupSelections(boost::shared_p
             stratificationValues.push_back(v);
 
             // determine number of adherent treatable
-            float population = getValue("population", time_+1, nodeIds[i], stratificationValues);
-            float treated = getValue("treated", time_+1, nodeIds[i], stratificationValues);
             float treatable = getValue("treatable", time_+1, nodeIds[i], stratificationValues) - getValue("treated (ineffective daily)", time_+1, nodeIds[i], stratificationValues);
 
             // do nothing if this population is zero
-            if(population <= 0.)
+            if(treatable <= 0.)
             {
                 adherentTreatable(a, r, v) = 0.;
                 numberTreated(a, r, v) = 0;
@@ -541,8 +537,8 @@ void StochasticSEATIRD::applyAntiviralsToPriorityGroupSelections(boost::shared_p
                 continue;
             }
 
-            // == (adherent untreated population) * (fraction of population that is treatable)
-            adherentTreatable(a, r, v) = (antiviralAdherence * population - treated) * treatable / population;
+            // since we fix the treatable period to one day, we can simplify our adherence calculations...
+            adherentTreatable(a, r, v) = antiviralAdherence * treatable;
 
             // pro-rata by adherent treatable population
             numberTreated(a, r, v) = int(adherentTreatable(a, r, v) / totalAdherentTreatable * (float)stockpileAmountUsed);
