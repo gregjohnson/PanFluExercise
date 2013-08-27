@@ -21,6 +21,8 @@ class EventMonitor : public QObject
         boost::shared_ptr<EpidemicDataSet> getDataSet();
         int getTime();
 
+        std::vector<boost::shared_ptr<EventMessage> > getMessages();
+
     signals:
 
         void clearMessages();

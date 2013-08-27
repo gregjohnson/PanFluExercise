@@ -29,6 +29,8 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
         return boost::shared_ptr<EventMessage>();
     }
 
+    int time = dataSet->getNumTimes()-1;
+
     for(int i=thresholds_.size()-1; i>=0; i--)
     {
         float value = dataSet->getValue(varName_, dataSet->getNumTimes()-1, groupName_);
@@ -36,18 +38,20 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
 
         if(fractional_ == false && value >= thresholds_[i])
         {
-            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b> : ";
+            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(time) + "</b>: ";
+            std::string shortMessageString = "";
 
             if(varName_ == "deceased")
             {
                 messageString += "There are now " + boost::lexical_cast<std::string>((int)value) + " deceased individuals in " + groupName_ + ".";
+                shortMessageString += boost::lexical_cast<std::string>((int)value) +  "d-" + groupName_ + "";
             }
             else
             {
                 messageString = "cannot generate event message for variable " + varName_;
             }
 
-            message_ = boost::shared_ptr<EventMessage>(new EventMessage(shared_from_this(), messageString));
+            message_ = boost::shared_ptr<EventMessage>(new EventMessage(shared_from_this(), messageString, shortMessageString, time, 0));
 
             // erase this and previous thresholds, since they've already been exceeded
             thresholds_.erase(thresholds_.begin(), thresholds_.begin() + i+1);
@@ -60,11 +64,13 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
             char percentageString[64];
             sprintf(percentageString, "%.2f", value / population * 100.);
 
-            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(dataSet->getNumTimes()-1) + "</b> : ";
+            std::string messageString = "<b>Day " + boost::lexical_cast<std::string>(time) + "</b>: ";
+            std::string shortMessageString = "";
 
             if(varName_ == "All infected")
             {
                 messageString += boost::lexical_cast<std::string>(percentageString) + "% (" +  boost::lexical_cast<std::string>((int)value) + " individuals) are now infected in " + groupName_ + ".";
+                shortMessageString += boost::lexical_cast<std::string>(percentageString) + "%i-" + groupName_ + "";
             }
             else
             {
@@ -74,7 +80,7 @@ boost::shared_ptr<EventMessage> EventGroupThreshold::check(EventMonitor * monito
             // erase this and previous thresholds, since they've already been exceeded
             thresholds_.erase(thresholds_.begin(), thresholds_.begin() + i+1);
 
-            message_ = boost::shared_ptr<EventMessage>(new EventMessage(shared_from_this(), messageString));
+            message_ = boost::shared_ptr<EventMessage>(new EventMessage(shared_from_this(), messageString, shortMessageString, time, 1));
 
             return message_;
         }

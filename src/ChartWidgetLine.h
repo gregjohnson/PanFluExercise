@@ -6,7 +6,7 @@
 #include <vtkTable.h>
 #include <vector>
 
-enum CHART_WIDGET_LINE_TYPE { LINE, POINTS, STACKED, BAR };
+enum CHART_WIDGET_LINE_TYPE { LINE, CWLT_POINTS, STACKED, BAR };
 
 class ChartWidget;
 

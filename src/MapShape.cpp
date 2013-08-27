@@ -42,54 +42,7 @@ void MapShape::setColor(float r, float g, float b)
     b_ = b;
 }
 
-void MapShape::renderBoundary()
-{
-    glPushAttrib(GL_CURRENT_BIT);
-
-    glColor4f(0.,0.,0.,1.);
-
-    glPushMatrix();
-    glTranslatef(0.,0.,0.2);
-
-    glBegin(GL_LINE_STRIP);
-
-    for(unsigned int i=0; i<vertices_.size(); i++)
-    {
-        glVertex2d(vertices_[i].lon, vertices_[i].lat);
-    }
-
-    glEnd();
-
-    glPopMatrix();
-    glPopAttrib();
-}
-
-void MapShape::renderFilled()
-{
-    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glColor4f(r_, g_, b_, 0.5);
-
-    glPushMatrix();
-    glTranslatef(0.,0.,0.1);
-
-    glBegin(GL_POLYGON);
-
-    for(unsigned int i=0; i<vertices_.size(); i++)
-    {
-        glVertex2d(vertices_[i].lon, vertices_[i].lat);
-    }
-
-    glEnd();
-
-    glPopMatrix();
-    glPopAttrib();
-}
-
-void MapShape::renderSVG(QPainter * painter)
+void MapShape::render(QPainter * painter)
 {
     QVector<QPointF> points;
 
@@ -101,6 +54,7 @@ void MapShape::renderSVG(QPainter * painter)
     QPolygonF polygon(points);
 
     painter->setBrush(QBrush(QColor::fromRgbF(r_ , g_, b_, 1.)));
-    painter->setPen(QPen(QBrush(), .01));
+    painter->setPen(QPen(QBrush(QColor::fromRgbF(.5, .5, .5, 1.)), .03));
+
     painter->drawPolygon(polygon);
 }

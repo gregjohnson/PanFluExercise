@@ -37,6 +37,7 @@ EventMonitorWidget::~EventMonitorWidget()
     }
 }
 
+#if USE_DISPLAYCLUSTER
 void EventMonitorWidget::exportSVGToDisplayCluster()
 {
     if(g_dcSocket != NULL && svgTmpFile_.open())
@@ -74,12 +75,15 @@ void EventMonitorWidget::exportSVGToDisplayCluster()
         sendSVGToDisplayCluster((svgTmpFile_.fileName()).toStdString() + ".svg", (QString("ExerciseEventMonitor.svg")).toStdString());
     }
 }
+#endif
 
 void EventMonitorWidget::clearMessages()
 {
     messagesWidget_.clear();
 
+#if USE_DISPLAYCLUSTER
     exportSVGToDisplayCluster();
+#endif
 }
 
 void EventMonitorWidget::insertEventMessage(boost::shared_ptr<EventMessage> message)
@@ -91,5 +95,7 @@ void EventMonitorWidget::insertEventMessage(boost::shared_ptr<EventMessage> mess
 
     messagesWidget_.insertHtml(message->messageText.c_str() + QString("<br />"));
 
+#if USE_DISPLAYCLUSTER
     exportSVGToDisplayCluster();
+#endif
 }

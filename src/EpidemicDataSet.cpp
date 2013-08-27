@@ -1,9 +1,12 @@
 #include "EpidemicDataSet.h"
 #include "main.h"
 #include "log.h"
-#include <netcdfcpp.h>
 #include <fstream>
 #include <boost/tokenizer.hpp>
+
+#if USE_NETCDF
+    #include <netcdfcpp.h>
+#endif
 
 std::vector<std::string> EpidemicDataSet::stratificationNames_;
 std::vector<std::vector<std::string> > EpidemicDataSet::stratifications_;
@@ -438,6 +441,7 @@ boost::shared_ptr<StockpileNetwork> EpidemicDataSet::getStockpileNetwork()
 
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
+#if USE_NETCDF // TODO: should handle this differently
     // change netcdf library error behavior
     NcError err(NcError::verbose_nonfatal);
 
@@ -510,7 +514,7 @@ bool EpidemicDataSet::loadNetCdfFile(const char * filename)
             variables_[std::string(ncVar->name())].reference(var);
         }
     }
-
+#endif
     return true;
 }
 

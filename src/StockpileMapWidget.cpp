@@ -16,7 +16,7 @@ StockpileMapWidget::StockpileMapWidget()
 
     countiesColorMap_.setColorVector(colorVector);
 
-    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County as a Fraction of Population"));
+    setTitle(std::string("Available ") + Stockpile::getTypeName(type_) + std::string(" by County"));
     setColorMapMinLabel("0%");
     setColorMapMaxLabel("1%");
 }
@@ -73,7 +73,9 @@ void StockpileMapWidget::setTime(int time)
     // force redraw
     update();
 
+#if USE_DISPLAYCLUSTER
     exportSVGToDisplayCluster();
+#endif
 }
 
 void StockpileMapWidget::setType(STOCKPILE_TYPE type)
@@ -85,7 +87,7 @@ void StockpileMapWidget::setType(STOCKPILE_TYPE type)
     update();
 }
 
-void StockpileMapWidget::render()
+void StockpileMapWidget::render(QPainter * painter)
 {
-    renderCountyShapes();
+    renderCountyShapes(painter);
 }

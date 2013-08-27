@@ -3,6 +3,7 @@
 #include "StockpileMapWidget.h"
 #include "EventMonitor.h"
 #include "EventMonitorWidget.h"
+#include "TimelineWidget.h"
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
@@ -45,6 +46,7 @@ MainWindow::MainWindow()
     newChartAction->setStatusTip("New chart");
     connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
 
+#if USE_DISPLAYCLUSTER
     // connect to DisplayCluster action
     QAction * connectToDisplayClusterAction = new QAction("Connect to DisplayCluster", this);
     connectToDisplayClusterAction->setStatusTip("Connect to DisplayCluster");
@@ -54,13 +56,17 @@ MainWindow::MainWindow()
     QAction * disconnectFromDisplayClusterAction = new QAction("Disconnect from DisplayCluster", this);
     disconnectFromDisplayClusterAction->setStatusTip("Disconnect from DisplayCluster");
     connect(disconnectFromDisplayClusterAction, SIGNAL(triggered()), this, SLOT(disconnectFromDisplayCluster()));
+#endif
 
     // add actions to menus
     fileMenu->addAction(newSimulationAction);
     fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
+
+#if USE_DISPLAYCLUSTER
     fileMenu->addAction(connectToDisplayClusterAction);
     fileMenu->addAction(disconnectFromDisplayClusterAction);
+#endif
 
     // add actions to toolbar
     toolbar->addAction(newSimulationAction);
@@ -89,6 +95,10 @@ MainWindow::MainWindow()
     QDockWidget * eventMonitorDockWidget = new QDockWidget("Event Monitor", this);
     eventMonitorDockWidget->setWidget(new EventMonitorWidget(eventMonitor));
     addDockWidget(Qt::TopDockWidgetArea, eventMonitorDockWidget);
+
+    QDockWidget * timelineDockWidget = new QDockWidget("Timeline", this);
+    timelineDockWidget->setWidget(new TimelineWidget(this, eventMonitor));
+    addDockWidget(Qt::TopDockWidgetArea, timelineDockWidget);
 
     // setup time slider and add it to bottom toolbar with label
     timeSlider_ = new QSlider(Qt::Horizontal, this);
@@ -383,6 +393,7 @@ void MainWindow::resetTimeSlider()
     }
 }
 
+#if USE_DISPLAYCLUSTER
 void MainWindow::connectToDisplayCluster()
 {
     bool ok = false;
@@ -401,7 +412,9 @@ void MainWindow::connectToDisplayCluster()
         }
     }
 }
+#endif
 
+#if USE_DISPLAYCLUSTER
 void MainWindow::disconnectFromDisplayCluster()
 {
     if(g_dcSocket != NULL)
@@ -410,3 +423,4 @@ void MainWindow::disconnectFromDisplayCluster()
         g_dcSocket = NULL;
     }
 }
+#endif

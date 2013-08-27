@@ -29,21 +29,23 @@ void EpidemicMapWidget::setTime(int time)
 
             iter->second->setColor(r, g, b);
         }
-
-        // force redraw
-        update();
-
-        exportSVGToDisplayCluster();
     }
+
+    // force redraw
+    update();
+
+#if USE_DISPLAYCLUSTER
+    exportSVGToDisplayCluster();
+#endif
 }
 
-void EpidemicMapWidget::render()
+void EpidemicMapWidget::render(QPainter * painter)
 {
-    renderCountyShapes();
-    renderCountyTravel();
+    renderCountyShapes(painter);
+    renderCountyTravel(painter);
 }
 
-void EpidemicMapWidget::renderCountyTravel()
+void EpidemicMapWidget::renderCountyTravel(QPainter * painter)
 {
     // parameters
     float infectiousTravelerThreshhold = 1.;
@@ -53,16 +55,6 @@ void EpidemicMapWidget::renderCountyTravel()
     {
         return;
     }
-
-    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glLineWidth(3.);
-
-    glBegin(GL_LINES);
 
     for(std::map<int, boost::shared_ptr<MapShape> >::iterator iter0=counties_.begin(); iter0!=counties_.end(); iter0++)
     {
@@ -92,18 +84,29 @@ void EpidemicMapWidget::renderCountyTravel()
 
                 float infectiousTravelers = infectiousNode0 * travel;
 
-                if(infectiousTravelers > infectiousTravelerThreshhold)
+                if(infectiousTravelers >= infectiousTravelerThreshhold)
                 {
-                    glColor4f(1.,0.,0., infectiousTravelers / infectiousTravelerAlphaScale);
+                    float alpha = std::min<float>(.5, std::max<float>(.005, infectiousTravelers / infectiousTravelerAlphaScale));
 
-                    glVertex2f(lon0, lat0);
-                    glVertex2f(lon1, lat1);
+                    painter->setBrush(QBrush(QColor::fromRgbF(1, 0, 0, alpha)));
+                    painter->setPen(QPen(QBrush(QColor::fromRgbF(1, 0, 0, alpha * .1)), .1));
+
+                    QVector<QPointF> points;
+                    points.push_back(QPointF(lon0, lat0));
+                    points.push_back(QPointF(lon1, lat1));
+
+                    QVector2D vec = QVector2D(lon1-lon0, lat1-lat0);
+                    vec.normalize();
+                    vec *= .006;
+                    points.push_back(QPointF(lon1 - vec.y(), lat1 + vec.x()));
+
+                    vec *= 10;
+                    points.push_back(QPointF(lon0 - vec.y(), lat0 + vec.x()));
+
+                    QPolygonF polygon(points);
+                    painter->drawPolygon(polygon);
                 }
             }
         }
     }
-
-    glEnd();
-
-    glPopAttrib();
 }

@@ -29,13 +29,18 @@ class MapWidget : public QGLWidget
         virtual void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
         virtual void setTime(int time);
 
+#if USE_DISPLAYCLUSTER
         void exportSVGToDisplayCluster();
+#endif
 
     protected:
 
         // indexing used to identify this map
         static int numMapWidgets_;
         int index_;
+
+        // window view rectangle
+        QRectF viewRect_;
 
         // title and color map labels
         std::string title_;
@@ -47,15 +52,6 @@ class MapWidget : public QGLWidget
         boost::shared_ptr<EpidemicDataSet> dataSet_;
         int time_;
 
-        // window view rectangle
-        QRectF viewRect_;
-
-        // base map information
-        boost::shared_ptr<QSvgRenderer> baseMapSvg_;
-        QRectF baseMapRect_;
-        GLuint baseMapTextureId_;
-        bool baseMapTextureBound_;
-
         // county shapes
         std::map<int, boost::shared_ptr<MapShape> > counties_;
 
@@ -66,24 +62,17 @@ class MapWidget : public QGLWidget
         QTemporaryFile svgTmpFile_;
 
         // render() method placeholder for derived classes
-        virtual void render() { }
+        virtual void render(QPainter * painter) { }
+
+        void renderAll(QPainter * painter, bool uiRender);
 
         // reimplemented from QGLWidget
-        void initializeGL();
-        void paintGL();
-        void resizeGL(int width, int height);
-
-        // setup basic orthographic view
-        void setOrthographicView();
-
-        // base map
-        bool loadBaseMapSvg(const char * filename);
-        void generateBaseMapTexture(int width, int height);
-        void renderBaseMapTexture();
+        void paintEvent(QPaintEvent* event);
+        void resizeEvent(QResizeEvent * event);
 
         // counties
         bool loadCountyShapes();
-        void renderCountyShapes();
+        void renderCountyShapes(QPainter * painter);
 };
 
 #endif

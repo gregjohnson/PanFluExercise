@@ -24,9 +24,7 @@ class MapShape
 
         void setColor(float r, float g, float b);
 
-        void renderBoundary();
-        void renderFilled();
-        void renderSVG(QPainter * painter);
+        void render(QPainter * painter);
 
     private:
 

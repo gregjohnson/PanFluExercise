@@ -34,7 +34,7 @@ ChartWidgetLine::ChartWidgetLine(ChartWidget * parent, CHART_WIDGET_LINE_TYPE li
     {
         plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::LINE);
     }
-    else if(lineType == POINTS)
+    else if(lineType == CWLT_POINTS)
     {
         plot_ = (vtkPlotPoints *)parent_->getChart()->AddPlot(vtkChart::POINTS);
 

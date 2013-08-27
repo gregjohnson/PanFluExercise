@@ -32,6 +32,11 @@ int EventMonitor::getTime()
     return time_;
 }
 
+std::vector<boost::shared_ptr<EventMessage> > EventMonitor::getMessages()
+{
+    return messages_;
+}
+
 void EventMonitor::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     dataSet_ = dataSet;

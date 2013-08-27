@@ -1,5 +1,4 @@
 #include "ChartWidget.h"
-#include "dcStream.h"
 #include "main.h"
 #include "log.h"
 #include <vtkRenderer.h>
@@ -9,6 +8,10 @@
 #include <vtkContextMouseEvent.h>
 #include <vtkAxis.h>
 #include <vtkChartLegend.h>
+
+#if USE_DISPLAYCLUSTER
+    #include "dcStream.h"
+#endif
 
 int ChartWidget::numChartWidgets_ = 0;
 
@@ -135,6 +138,7 @@ void ChartWidget::clear()
     lines_.clear();
 }
 
+#if USE_DISPLAYCLUSTER
 void ChartWidget::exportSVGToDisplayCluster()
 {
     if(g_dcSocket != NULL && svgTmpFile_.open())
@@ -157,3 +161,4 @@ void ChartWidget::exportSVGToDisplayCluster()
         sendSVGToDisplayCluster((svgTmpFile_.fileName() + ".svg").toStdString(), (QString("ExerciseChart-") + QString::number(index_) + ".svg").toStdString());
     }
 }
+#endif
