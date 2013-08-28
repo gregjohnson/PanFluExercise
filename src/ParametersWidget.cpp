@@ -23,7 +23,7 @@ ParametersWidget::ParametersWidget()
     // treatment period is currently fixed to 1 day (required by antiviral distribution implemention)
     // constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
     constructParameterWidget("gamma", "Average total infectious period (days)", g_parameters.getGamma(), 0.1, 10., SLOT(setGamma(double)), 2);
-    constructParameterWidget("CFR", "Case fatality rate", g_parameters.getNu(), 0., 0.999, SLOT(setNu(double)));
+    constructParameterWidget("CFR", "Case fatality rate", g_parameters.getNu(), 0.000001, 0.999, SLOT(setNu(double)));
     constructParameterWidget("Antiviral effectiveness", "probability that an individual treated within the treatment window will recover", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)), 3);
     constructParameterWidget("Antiviral adherence", "proportion of individuals that will seek antiviral treatments", g_parameters.getAntiviralAdherence(), 0., 1., SLOT(setAntiviralAdherence(double)), 3);
     constructParameterWidget("Antiviral capacity", "daily antiviral distribution capacity as a fraction of population", g_parameters.getAntiviralCapacity(), 0., 1., SLOT(setAntiviralCapacity(double)), 3);
