@@ -156,7 +156,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::LeftDockWidgetArea, priorityGroupDefinitionDockWidget);
 
     // NPI definition dock
-    QDockWidget * npiDefinitionDockWidget = new QDockWidget("Non-pharmaceutical Interventions", this);
+    QDockWidget * npiDefinitionDockWidget = new QDockWidget("Interventions", this);
     npiDefinitionDockWidget->setWidget(new NpiDefinitionWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, npiDefinitionDockWidget);
 
