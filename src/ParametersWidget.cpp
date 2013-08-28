@@ -17,7 +17,8 @@ ParametersWidget::ParametersWidget()
     // hide betaScale parameter: constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
     constructParameterWidget("tau", "exposed -> asymptomatic transition rate (determines average latency period)", g_parameters.getTau(), 0., WIDGET_MAX_VALUE, SLOT(setTau(double)));
     constructParameterWidget("kappa", "asymptomatic -> treatable transition rate (determines average asymptomatic infectious period)", g_parameters.getKappa(), 0., WIDGET_MAX_VALUE, SLOT(setKappa(double)));
-    constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
+    // treatment period is currently fixed to 1 day (required by antiviral distribution implemention)
+    // constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
     constructParameterWidget("gamma", "asymptomatic, treatable, or infectious -> recovered transition rate (determines average infectious period)", g_parameters.getGamma(), 0., WIDGET_MAX_VALUE, SLOT(setGamma(double)));
     constructParameterWidget("nu", "asymptomatic, treatable, or infectious -> deceased transition rate (determines case fatality rates)", g_parameters.getNu(), 0., WIDGET_MAX_VALUE, SLOT(setNu(double)));
     constructParameterWidget("Antiviral effectiveness", "probability that an individual treated within the treatment window will recover", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)));
