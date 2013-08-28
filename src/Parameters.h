@@ -80,16 +80,19 @@ class Parameters : public QObject
         // scaling factor for beta (transmission rate given contact). beta = R0 / betaScale
         double betaScale_;
 
-        // exposed -> asymptomatic transition rate
+        // inverse of: exposed -> asymptomatic transition rate
+        // => average latency period
         double tau_;
 
-        // asymptomatic -> treatable transition rate
+        // inverse of: asymptomatic -> treatable transition rate
+        // => average asymptomatic infectious period
         double kappa_;
 
         // time spent before progressing from treatable to infectious
         double chi_;
 
-        // asymptomatic, treatable, or infectious -> recovered transition rate
+        // inverse of: asymptomatic, treatable, or infectious -> recovered transition rate
+        // => average total infectious period
         double gamma_;
 
         // asymptomatic, treatable, or infectious -> deceased transition rate

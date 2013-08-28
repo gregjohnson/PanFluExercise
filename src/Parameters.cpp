@@ -12,10 +12,10 @@ Parameters::Parameters()
     // defaults
     R0_ = 1.2;
     betaScale_ = 65.;
-    tau_ = 0.833333;
-    kappa_ = 0.52631579;
+    tau_ = 1. / 0.833333;
+    kappa_ = 1. / 0.52631579;
     chi_ = 1.; // must be fixed at 1 with current antiviral distribution implementation!
-    gamma_ = 0.243902439024;
+    gamma_ = 1. / 0.243902439024;
     nu_ = 0.0001;
     antiviralEffectiveness_ = 0.15;
     antiviralAdherence_ = 0.8;
