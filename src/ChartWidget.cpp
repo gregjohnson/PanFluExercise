@@ -56,6 +56,9 @@ ChartWidget::ChartWidget()
     svgExporter_->CompressOff();
     svgExporter_->SetSortToOff();
     svgExporter_->TextAsPathOn();
+
+    // set minimum height
+    setMinimumHeight(150);
 }
 
 ChartWidget::~ChartWidget()
