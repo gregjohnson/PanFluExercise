@@ -14,7 +14,7 @@ ParametersWidget::ParametersWidget()
 
     // add widgets for all parameters
     constructParameterWidget("R0", "Basic reproduction number", g_parameters.getR0(), 0., WIDGET_MAX_VALUE, SLOT(setR0(double)));
-    constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
+    // hide betaScale parameter: constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
     constructParameterWidget("tau", "exposed -> asymptomatic transition rate (determines average latency period)", g_parameters.getTau(), 0., WIDGET_MAX_VALUE, SLOT(setTau(double)));
     constructParameterWidget("kappa", "asymptomatic -> treatable transition rate (determines average asymptomatic infectious period)", g_parameters.getKappa(), 0., WIDGET_MAX_VALUE, SLOT(setKappa(double)));
     constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
