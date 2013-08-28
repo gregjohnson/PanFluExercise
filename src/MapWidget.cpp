@@ -145,8 +145,11 @@ void MapWidget::renderAll(QPainter * painter, bool uiRender)
 
     if(uiRender)
     {
-        titlePosition = painter->window().topLeft() + QPoint(painter->window().width() * 1./4., .1 * titleFontPixelSize);
-        titleRect = QRect(titlePosition, titlePosition + QPoint(250, 1.0 * titleFontPixelSize));
+        int titleWidth = painter->window().width() * 0.4;
+        int titleHeight = painter->window().height() * 0.5;
+
+        titlePosition = painter->window().topRight() - QPoint(titleWidth, 0);
+        titleRect = QRect(titlePosition, titlePosition + QPoint(titleWidth, titleHeight));
         painter->drawText(titleRect, Qt::TextWordWrap, title_.c_str(), &titleRect);
     }
     else
