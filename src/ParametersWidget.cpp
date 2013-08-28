@@ -12,6 +12,9 @@ ParametersWidget::ParametersWidget()
     setWidgetResizable(true);
     setWidget(widget);
 
+    // maximum width to prevent left docks from expanding too wide
+    setMaximumWidth(400);
+
     // add widgets for all parameters
     constructParameterWidget("R0", "Basic reproduction number", g_parameters.getR0(), 0., WIDGET_MAX_VALUE, SLOT(setR0(double)), 3);
     // hide betaScale parameter: constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
