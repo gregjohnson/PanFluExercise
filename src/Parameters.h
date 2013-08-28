@@ -95,7 +95,8 @@ class Parameters : public QObject
         // => average total infectious period
         double gamma_;
 
-        // asymptomatic, treatable, or infectious -> deceased transition rate
+        // transform: asymptomatic, treatable, or infectious -> deceased transition rate
+        // => case fatality rate (CFR)
         // todo: this should be age stratified
         double nu_;
 

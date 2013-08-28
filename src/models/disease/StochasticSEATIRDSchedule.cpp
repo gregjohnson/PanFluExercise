@@ -25,10 +25,13 @@ StochasticSEATIRDSchedule::StochasticSEATIRDSchedule(const double &now, MTRand &
 
     eventQueue_.push(StochasticSEATIRDEvent(now, Ta, EtoA, stratificationValues, stratificationValues));
 
+    // compute nu (rate) from nu (CFR)
+    double nu = -1./g_parameters.getGamma() * log(1. - g_parameters.getNu());
+
     // asymptomatic transition: -> treatable, -> recovered, or -> deceased
     double Tt =  Ta + random_exponential(1. / g_parameters.getKappa(), &rand); // time to progress from asymptomatic to treatable
     double Tr_a = Ta + random_exponential(1. / g_parameters.getGamma(), &rand); // time to recover from asymptomatic
-    double Td_a = Ta + random_exponential(g_parameters.getNu(), &rand); // time to death from asymptomatic
+    double Td_a = Ta + random_exponential(nu, &rand); // time to death from asymptomatic
 
     if(Tt < Tr_a && Tt < Td_a)
     {
@@ -38,7 +41,7 @@ StochasticSEATIRDSchedule::StochasticSEATIRDSchedule(const double &now, MTRand &
         // treatable transitions: -> infectious, -> recovered, or -> deceased
         double Ti = Tt + g_parameters.getChi(); // time to progress from treatable to infectious
         double Tr_ti = Tt + random_exponential(1. / g_parameters.getGamma(), &rand); // time to recover from treatable/infectious
-        double Td_ti = Tt + random_exponential(g_parameters.getNu(), &rand); // time to death from treatable/infectious
+        double Td_ti = Tt + random_exponential(nu, &rand); // time to death from treatable/infectious
 
         if(Ti < Tr_ti && Ti < Td_ti)
         {

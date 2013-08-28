@@ -16,7 +16,12 @@ Parameters::Parameters()
     kappa_ = 1. / 0.52631579;
     chi_ = 1.; // must be fixed at 1 with current antiviral distribution implementation!
     gamma_ = 1. / 0.243902439024;
-    nu_ = 0.0001;
+
+    // previous default nu = 0.0001
+    // transform by CFR = 1 - exp(-nu / gamma) ... but note we have the inverse of gamma above
+    // can get back to standard nu (rate) with: nu = -gamma * ln(1 - CFR). with transformations: nu = -1./gamma * ln(1 - CFR)
+    nu_ = 1 - exp(-0.0001 * gamma_);
+
     antiviralEffectiveness_ = 0.15;
     antiviralAdherence_ = 0.8;
     antiviralCapacity_ = 0.02;
