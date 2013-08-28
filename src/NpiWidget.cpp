@@ -349,7 +349,7 @@ void NpiWidget::save()
     disable();
 
     // create the NPI
-    boost::shared_ptr<Npi> npi = boost::shared_ptr<Npi>(new Npi(nameLineEdit_->text().toStdString()));
+    boost::shared_ptr<Npi> npi = boost::shared_ptr<Npi>(new Npi(nameLineEdit_->text().toStdString(), duration, ageEffectiveness, nodeIds));
 
     // add it to the parameters
     g_parameters.addNpi(npi);
