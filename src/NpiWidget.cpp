@@ -234,10 +234,89 @@ void NpiWidget::save()
         return;
     }
 
+    // get values from UI
+    int duration = durationSpinBox_->value();
+
+    std::vector<double> ageEffectiveness;
+
+    for(unsigned int i=0; i<ageEffectivenessSpinBoxes_.size(); i++)
+    {
+        ageEffectiveness.push_back(ageEffectivenessSpinBoxes_[i]->value());
+    }
+
+    std::string locationType = locationTypeComboBox_.itemData(locationTypeComboBox_.currentIndex()).toString().toStdString();
+
+    // get nodeIds depending on locationType
+    std::vector<int> nodeIds;
+
+    if(locationType == "statewide")
+    {
+        nodeIds = dataSet_->getNodeIds();
+    }
+    else if(locationType == "region")
+    {
+        std::vector<std::string> groupNames = dataSet_->getGroupNames();
+
+        // for each group name checkbox
+        for(unsigned int i=0; i<groupNames.size(); i++)
+        {
+            if(groupCheckBoxes_[i]->checkState() == Qt::Checked)
+            {
+                std::vector<int> groupNodeIds = dataSet_->getNodeIds(groupNames[i]);
+
+                // append
+                nodeIds.insert(nodeIds.end(), groupNodeIds.begin(), groupNodeIds.end());
+            }
+        }
+    }
+    else if(locationType == "county")
+    {
+        std::vector<int> allNodeIds = dataSet_->getNodeIds();
+
+        // for each node checkbox
+        for(unsigned int i=0; i<allNodeIds.size(); i++)
+        {
+            if(nodeCheckBoxes_[i]->checkState() == Qt::Checked)
+            {
+                nodeIds.push_back(allNodeIds[i]);
+            }
+        }
+    }
+    else
+    {
+        put_flog(LOG_ERROR, "unknown location type");
+    }
+
+    put_flog(LOG_DEBUG, "values: duration = %i, ageEffectiveness[0] = %f, locationType = %s, numNodes = %i", duration, ageEffectiveness[0], locationType.c_str(), nodeIds.size());
+
+    // other validation
+    double totalAgeEffectiveness = 0.;
+
+    for(unsigned int i=0; i<ageEffectiveness.size(); i++)
+    {
+        totalAgeEffectiveness += ageEffectiveness[i];
+    }
+
+    if(totalAgeEffectiveness == 0.)
+    {
+        put_flog(LOG_ERROR, "totalAgeEffectiveness == 0.0");
+
+        QMessageBox::warning(this, "Error", "The intervention must have a non-zero effectiveness for at least one age group.", QMessageBox::Ok, QMessageBox::Ok);
+
+        return;
+    }
+
+    if(nodeIds.size() == 0)
+    {
+        put_flog(LOG_ERROR, "no nodeIds selected");
+
+        QMessageBox::warning(this, "Error", "You must specify at least one location for the intervention.", QMessageBox::Ok, QMessageBox::Ok);
+
+        return;
+    }
+
     // disable the widgets for further modification
     disable();
-
-    // get values from UI
 
     // create the NPI
     boost::shared_ptr<Npi> npi = boost::shared_ptr<Npi>(new Npi(nameLineEdit_->text().toStdString()));
