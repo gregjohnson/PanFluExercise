@@ -15,11 +15,11 @@ ParametersWidget::ParametersWidget()
     // add widgets for all parameters
     constructParameterWidget("R0", "Basic reproduction number", g_parameters.getR0(), 0., WIDGET_MAX_VALUE, SLOT(setR0(double)));
     // hide betaScale parameter: constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
-    constructParameterWidget("tau", "Average latency period (days)", g_parameters.getTau(), 0., WIDGET_MAX_VALUE, SLOT(setTau(double)));
-    constructParameterWidget("kappa", "Average asymptomatic infectious period (days)", g_parameters.getKappa(), 0., WIDGET_MAX_VALUE, SLOT(setKappa(double)));
+    constructParameterWidget("tau", "Average latency period (days)", g_parameters.getTau(), 0.1, 10., SLOT(setTau(double)));
+    constructParameterWidget("kappa", "Average asymptomatic infectious period (days)", g_parameters.getKappa(), 0.1, 10., SLOT(setKappa(double)));
     // treatment period is currently fixed to 1 day (required by antiviral distribution implemention)
     // constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
-    constructParameterWidget("gamma", "Average total infectious period (days)", g_parameters.getGamma(), 0., WIDGET_MAX_VALUE, SLOT(setGamma(double)));
+    constructParameterWidget("gamma", "Average total infectious period (days)", g_parameters.getGamma(), 0.1, 10., SLOT(setGamma(double)));
     constructParameterWidget("CFR", "Case fatality rate", g_parameters.getNu(), 0., 0.999, SLOT(setNu(double)));
     constructParameterWidget("Antiviral effectiveness", "probability that an individual treated within the treatment window will recover", g_parameters.getAntiviralEffectiveness(), 0., 1., SLOT(setAntiviralEffectiveness(double)));
     constructParameterWidget("Antiviral adherence", "proportion of individuals that will seek antiviral treatments", g_parameters.getAntiviralAdherence(), 0., 1., SLOT(setAntiviralAdherence(double)));
