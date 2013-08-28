@@ -1,6 +1,8 @@
 #ifndef STOCKPILE_NETWORK_DISTRIBUTION_WIDGET_H
 #define STOCKPILE_NETWORK_DISTRIBUTION_WIDGET_H
 
+#define STOCKPILE_WIDGET_NUM_MAX 99999999
+
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
 

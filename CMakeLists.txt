@@ -117,7 +117,6 @@ set(SRCS ${SRCS}
     src/StockpileMapWidget.cpp
     src/StockpileNetwork.cpp
     src/StockpileNetworkDistribution.cpp
-    src/StockpileWidget.cpp
     src/StockpileNetworkWidget.cpp
     src/StockpileNetworkDistributionWidget.cpp
     src/StockpileChartWidget.cpp

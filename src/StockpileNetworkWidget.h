@@ -6,7 +6,6 @@
 
 class MainWindow;
 class EpidemicDataSet;
-class StockpileWidget;
 class StockpileNetworkDistributionWidget;
 
 class StockpileNetworkWidget : public QScrollArea
@@ -31,7 +30,6 @@ class StockpileNetworkWidget : public QScrollArea
 
         // UI elements
         QVBoxLayout layout_;
-        std::vector<StockpileWidget *> stockpileWidgets_;
         std::vector<StockpileNetworkDistributionWidget *> stockpileNetworkDistributionWidgets_;
 
         void clearWidgets();

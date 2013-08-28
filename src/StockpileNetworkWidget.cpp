@@ -3,7 +3,6 @@
 #include "EpidemicSimulation.h"
 #include "StockpileNetwork.h"
 #include "Stockpile.h"
-#include "StockpileWidget.h"
 #include "StockpileNetworkDistributionWidget.h"
 #include "log.h"
 
@@ -47,15 +46,7 @@ void StockpileNetworkWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataS
 
         if(stockpileNetwork != NULL)
         {
-            std::vector<boost::shared_ptr<Stockpile> > stockpiles = stockpileNetwork->getStockpiles();
-
-            for(unsigned int i=0; i<stockpiles.size(); i++)
-            {
-                StockpileWidget * stockpileWidget = new StockpileWidget(stockpiles[i]);
-
-                stockpileWidgets_.push_back(stockpileWidget);
-                layout_.addWidget(stockpileWidget);
-            }
+            // nothing necessary
         }
     }
 }
@@ -63,23 +54,11 @@ void StockpileNetworkWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataS
 void StockpileNetworkWidget::setTime(int time)
 {
     time_ = time;
-
-    for(unsigned int i=0; i<stockpileWidgets_.size(); i++)
-    {
-        stockpileWidgets_[i]->setTime(time);
-    }
 }
 
 void StockpileNetworkWidget::clearWidgets()
 {
     // delete all existing widgets
-    for(unsigned int i=0; i<stockpileWidgets_.size(); i++)
-    {
-        delete stockpileWidgets_[i];
-    }
-
-    stockpileWidgets_.clear();
-
     for(unsigned int i=0; i<stockpileNetworkDistributionWidgets_.size(); i++)
     {
         delete stockpileNetworkDistributionWidgets_[i];

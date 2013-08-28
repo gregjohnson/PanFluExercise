@@ -1,5 +1,4 @@
 #include "StockpileNetworkDistributionWidget.h"
-#include "StockpileWidget.h"
 #include "EpidemicDataSet.h"
 #include "EpidemicSimulation.h"
 #include "StockpileNetwork.h"
