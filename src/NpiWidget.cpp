@@ -315,6 +315,36 @@ void NpiWidget::save()
         return;
     }
 
+    // validated
+
+    // hide unnecessary checkboxes
+    if(locationType == "region")
+    {
+        std::vector<std::string> groupNames = dataSet_->getGroupNames();
+
+        // for each group name checkbox
+        for(unsigned int i=0; i<groupNames.size(); i++)
+        {
+            if(groupCheckBoxes_[i]->checkState() != Qt::Checked)
+            {
+                groupCheckBoxes_[i]->hide();
+            }
+        }
+    }
+    else if(locationType == "county")
+    {
+        std::vector<int> allNodeIds = dataSet_->getNodeIds();
+
+        // for each node checkbox
+        for(unsigned int i=0; i<allNodeIds.size(); i++)
+        {
+            if(nodeCheckBoxes_[i]->checkState() != Qt::Checked)
+            {
+                nodeCheckBoxes_[i]->hide();
+            }
+        }
+    }
+
     // disable the widgets for further modification
     disable();
 
