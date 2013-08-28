@@ -41,6 +41,44 @@ void NpiWidget::initialize()
         connect(&locationTypeComboBox_, SIGNAL(currentIndexChanged(int)), this, SLOT(setLocationType(int)));
     }
 
+    // add stratification effectiveness widgets (age group only)
+    {
+        QGroupBox * groupBox = new QGroupBox();
+        groupBox->setTitle("Age-specific effectiveness");
+
+        QVBoxLayout * vBox = new QVBoxLayout();
+        groupBox->setLayout(vBox);
+
+        std::vector<std::vector<std::string> > stratifications = EpidemicDataSet::getStratifications();
+
+        // add stratification checkboxes for first stratification type
+        for(unsigned int j=0; j<stratifications[0].size(); j++)
+        {
+            QDoubleSpinBox * spinBox = new QDoubleSpinBox();
+            spinBox->setMinimum(0.);
+            spinBox->setMaximum(1.0);
+            spinBox->setSingleStep(0.01);
+
+            ageEffectivenessSpinBoxes_.push_back(spinBox);
+
+            // add in horizontal layout with label
+            QWidget * widget = new QWidget();
+            QHBoxLayout * hBox = new QHBoxLayout();
+            widget->setLayout(hBox);
+
+            hBox->addWidget(new QLabel(stratifications[0][j].c_str()));
+            hBox->addWidget(spinBox);
+
+            // reduce layout spacing
+            hBox->setContentsMargins(QMargins(0,0,0,0));
+
+            // add to vertical layout of group box
+            vBox->addWidget(widget);
+        }
+
+        layout->addWidget(groupBox);
+    }
+
     // add group checkboxes widgets
     {
         groupGroupBox_ = new QGroupBox();

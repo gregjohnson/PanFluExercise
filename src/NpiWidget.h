@@ -24,6 +24,8 @@ class NpiWidget : public QGroupBox
         QLineEdit * nameLineEdit_;
         QComboBox locationTypeComboBox_;
 
+        std::vector<QDoubleSpinBox *> ageEffectivenessSpinBoxes_;
+
         QGroupBox * groupGroupBox_;
         std::vector<QCheckBox *> groupCheckBoxes_;
 
