@@ -23,7 +23,6 @@ class StochasticSEATIRD : public EpidemicSimulation
 
         // derived variables
         float getDerivedVarInfected(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
-        float getDerivedVarHospitalized(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getDerivedVarPopulationInVaccineLatencyPeriod(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getDerivedVarPopulationEffectiveVaccines(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
 

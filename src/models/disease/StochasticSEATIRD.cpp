@@ -41,7 +41,6 @@ StochasticSEATIRD::StochasticSEATIRD()
 
     // derived variables
     derivedVariables_["All infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
-    derivedVariables_["hospitalized"] = boost::bind(&StochasticSEATIRD::getDerivedVarHospitalized, this, _1, _2, _3);
     derivedVariables_["vaccinated in lag period"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod, this, _1, _2, _3);
     derivedVariables_["vaccinated effective"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines, this, _1, _2, _3);
 
@@ -188,18 +187,6 @@ float StochasticSEATIRD::getDerivedVarInfected(int time, int nodeId, std::vector
     infected += getValue("infectious", time, nodeId, stratificationValues);
 
     return infected;
-}
-
-float StochasticSEATIRD::getDerivedVarHospitalized(int time, int nodeId, std::vector<int> stratificationValues)
-{
-    float hospitalized = 0.;
-    hospitalized += getValue("treatable", time, nodeId, stratificationValues);
-    hospitalized += getValue("infectious", time, nodeId, stratificationValues);
-
-    // todo: this is just an example...
-    hospitalized *= 0.05;
-
-    return hospitalized;
 }
 
 float StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod(int time, int nodeId, std::vector<int> stratificationValues)
