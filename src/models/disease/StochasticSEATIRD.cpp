@@ -5,6 +5,7 @@
 #include "../../StockpileNetwork.h"
 #include "../../PriorityGroup.h"
 #include "../../PriorityGroupSelections.h"
+#include "../../Npi.h"
 #include "../../log.h"
 #include <boost/bind.hpp>
 
@@ -350,6 +351,15 @@ bool StochasticSEATIRD::processEvent(const int &nodeId, const StochasticSEATIRDE
             {
                 put_flog(LOG_ERROR, "incorrect event.toStratificationValues; size == %i", event.toStratificationValues.size());
                 return false;
+            }
+
+            // first, see if a Npi stops this contact from happening
+            bool npiEffective = Npi::isNpiEffective(g_parameters.getNpis(), nodeId, int(now_), event.fromStratificationValues[0], event.toStratificationValues[0]);
+
+            if(npiEffective == true)
+            {
+                // the Npis are effective
+                break;
             }
 
             // determine now if the target individual is vaccinated or not
@@ -937,8 +947,11 @@ void StochasticSEATIRD::travel()
 
                             double contactRate = contact[a][b];
 
-                            numberOfInfectiousContactsIJ += transmitting * beta * RHO * contactRate * sigma[a] / ageBasedFlowReductions[a];
-                            numberOfInfectiousContactsJI += asymptomatic * beta * RHO * contactRate * sigma[a] / ageBasedFlowReductions[b];
+                            double npiEffectivenessAtI = Npi::getNpiEffectiveness(g_parameters.getNpis(), sinkNodeId, int(now_), a, b);
+                            double npiEffectivenessAtJ = Npi::getNpiEffectiveness(g_parameters.getNpis(), sourceNodeId, int(now_), a, b);
+
+                            numberOfInfectiousContactsIJ += (1. - npiEffectivenessAtJ) * transmitting * beta * RHO * contactRate * sigma[a] / ageBasedFlowReductions[a];
+                            numberOfInfectiousContactsJI += (1. - npiEffectivenessAtI) * asymptomatic * beta * RHO * contactRate * sigma[a] / ageBasedFlowReductions[b];
                         }
 
                         unvaccinatedProbabilities[a] += travelFractionIJ * numberOfInfectiousContactsIJ / populationSource;
