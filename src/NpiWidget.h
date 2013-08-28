@@ -23,6 +23,8 @@ class NpiWidget : public QGroupBox
         // UI elements
         QLineEdit * nameLineEdit_;
 
+        QLabel executionTimeLabel_;
+
         QSpinBox * durationSpinBox_;
 
         std::vector<QDoubleSpinBox *> ageEffectivenessSpinBoxes_;

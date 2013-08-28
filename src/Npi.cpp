@@ -1,8 +1,9 @@
 #include "Npi.h"
 
-Npi::Npi(std::string name, int duration, std::vector<double> ageEffectiveness, std::vector<int> nodeIds)
+Npi::Npi(std::string name, int executionTime, int duration, std::vector<double> ageEffectiveness, std::vector<int> nodeIds)
 {
     name_ = name;
+    executionTime_ = executionTime;
     duration_ = duration;
     ageEffectiveness_= ageEffectiveness;
     nodeIds_ = nodeIds;
@@ -11,6 +12,11 @@ Npi::Npi(std::string name, int duration, std::vector<double> ageEffectiveness, s
 std::string Npi::getName()
 {
     return name_;
+}
+
+int Npi::getExecutionTime()
+{
+    return executionTime_;
 }
 
 int Npi::getDuration()

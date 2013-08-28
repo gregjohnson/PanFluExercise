@@ -31,6 +31,10 @@ void NpiWidget::initialize()
 
     // add other widgets
 
+    // add initially-hidden execution time label
+    layout->addWidget(&executionTimeLabel_);
+    executionTimeLabel_.hide();
+
     // add duration spinbox
     {
         durationSpinBox_ = new QSpinBox();
@@ -345,11 +349,19 @@ void NpiWidget::save()
         }
     }
 
+    // determine time of execution
+    int executionTime = dataSet_->getNumTimes();
+
+    // update the execution time label
+    QString label = "Executed at time = " + QString::number(executionTime);
+    executionTimeLabel_.setText(label);
+    executionTimeLabel_.show();
+
     // disable the widgets for further modification
     disable();
 
     // create the NPI
-    boost::shared_ptr<Npi> npi = boost::shared_ptr<Npi>(new Npi(nameLineEdit_->text().toStdString(), duration, ageEffectiveness, nodeIds));
+    boost::shared_ptr<Npi> npi = boost::shared_ptr<Npi>(new Npi(nameLineEdit_->text().toStdString(), executionTime, duration, ageEffectiveness, nodeIds));
 
     // add it to the parameters
     g_parameters.addNpi(npi);
