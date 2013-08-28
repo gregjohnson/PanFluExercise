@@ -31,23 +31,26 @@ void NpiWidget::initialize()
 
     // add other widgets
 
-    // add location type choices widget
+    // add duration spinbox
     {
-        locationTypeComboBox_.addItem("Statewide", "statewide");
-        locationTypeComboBox_.addItem("By region", "region");
-        locationTypeComboBox_.addItem("By county", "county");
+        durationSpinBox_ = new QSpinBox();
+        durationSpinBox_->setMinimum(1);
+        durationSpinBox_->setMaximum(365);
+        durationSpinBox_->setSuffix(" days");
 
         // add in horizontal layout with label
         QWidget * widget = new QWidget();
         QHBoxLayout * hBox = new QHBoxLayout();
         widget->setLayout(hBox);
 
-        hBox->addWidget(new QLabel("Location"));
-        hBox->addWidget(&locationTypeComboBox_);
+        hBox->addWidget(new QLabel("Duration"));
+        hBox->addWidget(durationSpinBox_);
 
+        // reduce layout spacing
+        hBox->setContentsMargins(QMargins(0,0,0,0));
+
+        // add to main layout
         layout->addWidget(widget);
-
-        connect(&locationTypeComboBox_, SIGNAL(currentIndexChanged(int)), this, SLOT(setLocationType(int)));
     }
 
     // add stratification effectiveness widgets (age group only)
@@ -86,6 +89,28 @@ void NpiWidget::initialize()
         }
 
         layout->addWidget(groupBox);
+    }
+
+    // add location type choices widget
+    {
+        locationTypeComboBox_.addItem("Statewide", "statewide");
+        locationTypeComboBox_.addItem("By region", "region");
+        locationTypeComboBox_.addItem("By county", "county");
+
+        // add in horizontal layout with label
+        QWidget * widget = new QWidget();
+        QHBoxLayout * hBox = new QHBoxLayout();
+        widget->setLayout(hBox);
+
+        hBox->addWidget(new QLabel("Location"));
+        hBox->addWidget(&locationTypeComboBox_);
+
+        // reduce layout spacing
+        hBox->setContentsMargins(QMargins(0,0,0,0));
+
+        layout->addWidget(widget);
+
+        connect(&locationTypeComboBox_, SIGNAL(currentIndexChanged(int)), this, SLOT(setLocationType(int)));
     }
 
     // add group checkboxes widgets
