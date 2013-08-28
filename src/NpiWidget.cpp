@@ -33,10 +33,19 @@ void NpiWidget::initialize()
 
     // add location type choices widget
     {
-        layout->addWidget(&locationTypeComboBox_);
         locationTypeComboBox_.addItem("Statewide", "statewide");
         locationTypeComboBox_.addItem("By region", "region");
         locationTypeComboBox_.addItem("By county", "county");
+
+        // add in horizontal layout with label
+        QWidget * widget = new QWidget();
+        QHBoxLayout * hBox = new QHBoxLayout();
+        widget->setLayout(hBox);
+
+        hBox->addWidget(new QLabel("Location"));
+        hBox->addWidget(&locationTypeComboBox_);
+
+        layout->addWidget(widget);
 
         connect(&locationTypeComboBox_, SIGNAL(currentIndexChanged(int)), this, SLOT(setLocationType(int)));
     }
