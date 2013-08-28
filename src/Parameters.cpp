@@ -101,6 +101,11 @@ std::vector<boost::shared_ptr<PriorityGroup> > Parameters::getPriorityGroups()
     return priorityGroups_;
 }
 
+std::vector<boost::shared_ptr<Npi> > Parameters::getNpis()
+{
+    return npis_;
+}
+
 boost::shared_ptr<PriorityGroupSelections> Parameters::getAntiviralPriorityGroupSelections()
 {
     return antiviralPriorityGroupSelections_;
@@ -214,6 +219,11 @@ void Parameters::addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup
     priorityGroups_.push_back(priorityGroup);
 
     emit(priorityGroupAdded(priorityGroup));
+}
+
+void Parameters::clearNpis()
+{
+    npis_.clear();
 }
 
 void Parameters::addNpi(boost::shared_ptr<Npi> npi)

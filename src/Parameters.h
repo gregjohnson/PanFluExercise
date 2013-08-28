@@ -34,6 +34,8 @@ class Parameters : public QObject
         // for parameters not exposed through ParametersWidget
         std::vector<boost::shared_ptr<PriorityGroup> > getPriorityGroups();
 
+        std::vector<boost::shared_ptr<Npi> > getNpis();
+
         boost::shared_ptr<PriorityGroupSelections> getAntiviralPriorityGroupSelections();
         boost::shared_ptr<PriorityGroupSelections> getVaccinePriorityGroupSelections();
 
@@ -64,6 +66,7 @@ class Parameters : public QObject
         // for parameters not exposed through ParametersWidget
         void addPriorityGroup(boost::shared_ptr<PriorityGroup> priorityGroup);
 
+        void clearNpis();
         void addNpi(boost::shared_ptr<Npi> npi);
 
         void setAntiviralPriorityGroupSelections(boost::shared_ptr<PriorityGroupSelections> priorityGroupSelections);

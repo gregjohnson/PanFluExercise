@@ -2,6 +2,7 @@
 #include "NpiWidget.h"
 #include "MainWindow.h"
 #include "EpidemicSimulation.h"
+#include "Parameters.h"
 #include "log.h"
 
 NpiDefinitionWidget::NpiDefinitionWidget(MainWindow * mainWindow)
@@ -30,6 +31,10 @@ void NpiDefinitionWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 
 void NpiDefinitionWidget::clearWidgets()
 {
+    // also, clear them from Parameters
+    // TODO: this may better be handled via separate signal-slot connections...
+    g_parameters.clearNpis();
+
     // delete all existing widgets
     for(unsigned int i=0; i<npiWidgets_.size(); i++)
     {
