@@ -26,9 +26,6 @@ class EpidemicInfoWidget : public QWidget {
         int time_;
 
         // UI elements
-        QLabel numTimesLabel_;
-        QLabel numNodesLabel_;
-
         QTableView tableView_;
         QStandardItemModel model_;
 

@@ -10,18 +10,6 @@ EpidemicInfoWidget::EpidemicInfoWidget(MainWindow * mainWindow)
     QVBoxLayout * layout = new QVBoxLayout();
     setLayout(layout);
 
-    // summary
-    QWidget * widget = new QWidget();
-    QFormLayout * summaryLayout = new QFormLayout();
-    widget->setLayout(summaryLayout);
-    layout->addWidget(widget);
-
-    numTimesLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    summaryLayout->addRow(new QLabel("Num timesteps"), &numTimesLabel_);
-
-    numNodesLabel_.setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    summaryLayout->addRow(new QLabel("Num counties"), &numNodesLabel_);
-
     // table view
     tableView_.horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     tableView_.setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -39,18 +27,6 @@ EpidemicInfoWidget::EpidemicInfoWidget(MainWindow * mainWindow)
 void EpidemicInfoWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     dataSet_ = dataSet;
-
-    // update summary info
-    if(dataSet_ != NULL)
-    {
-        numTimesLabel_.setNum(dataSet_->getNumTimes());
-        numNodesLabel_.setNum(dataSet_->getNumNodes());
-    }
-    else
-    {
-        numTimesLabel_.setNum(0);
-        numNodesLabel_.setNum(0);
-    }
 
     // update table
     updateModel();
