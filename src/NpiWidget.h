@@ -5,17 +5,30 @@
 #include <boost/shared_ptr.hpp>
 #include <QtGui>
 
+class EpidemicDataSet;
+
 class NpiWidget : public QGroupBox
 {
     Q_OBJECT
 
     public:
 
-        NpiWidget();
+        NpiWidget(boost::shared_ptr<EpidemicDataSet> dataSet);
 
     private:
 
+        // data set information
+        boost::shared_ptr<EpidemicDataSet> dataSet_;
+
+        // UI elements
         QLineEdit * nameLineEdit_;
+        QComboBox locationTypeComboBox_;
+
+        QGroupBox * groupGroupBox_;
+        std::vector<QCheckBox *> groupCheckBoxes_;
+
+        QGroupBox * nodeGroupBox_;
+        std::vector<QCheckBox *> nodeCheckBoxes_;
 
         QWidget * cancelSaveButtonsWidget_;
 
@@ -23,6 +36,8 @@ class NpiWidget : public QGroupBox
         void disable();
 
     private slots:
+
+        void setLocationType(int index);
 
         void cancel();
         void save();

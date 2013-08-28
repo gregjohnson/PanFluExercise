@@ -1,8 +1,10 @@
 #include "NpiDefinitionWidget.h"
 #include "NpiWidget.h"
+#include "MainWindow.h"
+#include "EpidemicSimulation.h"
 #include "log.h"
 
-NpiDefinitionWidget::NpiDefinitionWidget()
+NpiDefinitionWidget::NpiDefinitionWidget(MainWindow * mainWindow)
 {
     QWidget * widget = new QWidget();
     widget->setLayout(&layout_);
@@ -14,7 +16,16 @@ NpiDefinitionWidget::NpiDefinitionWidget()
     layout_.addWidget(addNpiButton);
 
     // make connections
+    connect((QObject *)mainWindow, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), this, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
+
     connect(addNpiButton, SIGNAL(clicked()), this, SLOT(addNpi()));
+}
+
+void NpiDefinitionWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
+{
+    dataSet_ = dataSet;
+
+    clearWidgets();
 }
 
 void NpiDefinitionWidget::clearWidgets()
@@ -30,8 +41,19 @@ void NpiDefinitionWidget::clearWidgets()
 
 void NpiDefinitionWidget::addNpi()
 {
-    NpiWidget * npiWidget = new NpiWidget();
+    boost::shared_ptr<EpidemicSimulation> simulation = boost::dynamic_pointer_cast<EpidemicSimulation>(dataSet_);
 
-    npiWidgets_.push_back(npiWidget);
-    layout_.insertWidget(1, npiWidget);
+    if(simulation != NULL)
+    {
+        NpiWidget * npiWidget = new NpiWidget(simulation);
+
+        npiWidgets_.push_back(npiWidget);
+        layout_.insertWidget(1, npiWidget);
+    }
+    else
+    {
+        put_flog(LOG_ERROR, "not a valid simulation");
+
+        QMessageBox::warning(this, "Error", "Not a valid simulation.", QMessageBox::Ok, QMessageBox::Ok);
+    }
 }

@@ -157,7 +157,7 @@ MainWindow::MainWindow()
 
     // NPI definition dock
     QDockWidget * npiDefinitionDockWidget = new QDockWidget("Non-pharmaceutical Interventions", this);
-    npiDefinitionDockWidget->setWidget(new NpiDefinitionWidget());
+    npiDefinitionDockWidget->setWidget(new NpiDefinitionWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, npiDefinitionDockWidget);
 
     // info dock

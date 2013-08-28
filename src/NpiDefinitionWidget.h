@@ -3,7 +3,10 @@
 
 #include <QtGui>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
+class MainWindow;
+class EpidemicDataSet;
 class NpiWidget;
 
 class NpiDefinitionWidget : public QScrollArea
@@ -12,9 +15,16 @@ class NpiDefinitionWidget : public QScrollArea
 
     public:
 
-        NpiDefinitionWidget();
+        NpiDefinitionWidget(MainWindow * mainWindow);
+
+    public slots:
+
+        void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
 
     private:
+
+        // data set information
+        boost::shared_ptr<EpidemicDataSet> dataSet_;
 
         // UI elements
         QVBoxLayout layout_;
