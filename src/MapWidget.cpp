@@ -217,7 +217,9 @@ void MapWidget::paintEvent(QPaintEvent* event)
     makeCurrent();
 
     // for antialiasing
+#ifndef WIN32
     glEnable(GL_MULTISAMPLE);
+#endif
     glEnable(GL_LINE_SMOOTH);
 
     QPainter painter(this);

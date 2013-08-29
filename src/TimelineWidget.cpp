@@ -52,7 +52,9 @@ void TimelineWidget::paintEvent(QPaintEvent* event)
 {
     makeCurrent();
 
+#ifndef WIN32
     glEnable(GL_MULTISAMPLE);
+#endif
     glEnable(GL_LINE_SMOOTH);
 
     QPainter painter(this);
