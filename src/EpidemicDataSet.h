@@ -41,6 +41,7 @@ class EpidemicDataSet
         float getPopulation(int nodeId);
         float getPopulation(std::vector<int> nodeIds);
         std::string getNodeName(int nodeId);
+        int getNodeIndex(int nodeId);
 
         std::vector<int> getNodeIds();
         std::vector<int> getNodeIds(std::string groupName);

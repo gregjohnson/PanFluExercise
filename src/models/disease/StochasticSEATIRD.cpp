@@ -264,6 +264,11 @@ float StochasticSEATIRD::getDerivedVarILI(int time, int nodeId, std::vector<int>
     return iliValues_[time][nodeIdToIndex_[nodeId]] * getPopulation(nodeId);
 }
 
+std::vector<Provider> StochasticSEATIRD::getIliProviders()
+{
+    return iliProviders_;
+}
+
 void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues)
 {
     // todo: beta should be age-specific considering PHA's

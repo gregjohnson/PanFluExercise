@@ -28,6 +28,9 @@ class StochasticSEATIRD : public EpidemicSimulation
         float getDerivedVarPopulationEffectiveVaccines(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getDerivedVarILI(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
 
+        // other ILI information
+        std::vector<Provider> getIliProviders();
+
     private:
 
         // dimensions of stratifications

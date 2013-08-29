@@ -154,6 +154,11 @@ std::string EpidemicDataSet::getNodeName(int nodeId)
     return nodeIdToName_[nodeId];
 }
 
+int EpidemicDataSet::getNodeIndex(int nodeId)
+{
+    return nodeIdToIndex_[nodeId];
+}
+
 std::vector<std::string> EpidemicDataSet::getVariableNames()
 {
     std::vector<std::string> variableNames;

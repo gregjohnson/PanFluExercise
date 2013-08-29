@@ -1,5 +1,6 @@
 #include "IliMapWidget.h"
 #include "EpidemicDataSet.h"
+#include "models/disease/StochasticSEATIRD.h"
 #include "MapShape.h"
 
 IliMapWidget::IliMapWidget()
@@ -20,14 +21,40 @@ void IliMapWidget::setTime(int time)
 
         for(iter=counties_.begin(); iter!=counties_.end(); iter++)
         {
-            // get ILI
-            float iliFraction = dataSet_->getValue("ILI", time_, iter->first) / dataSet_->getPopulation(iter->first);
+            // render grayed out if county has no providers
+            bool hasProvider = true;
 
-            // map to color
-            float r, g, b;
-            countiesColorMap_.getColor3(iliFraction / 0.01, r, g, b);
+            boost::shared_ptr<StochasticSEATIRD> simulation = boost::dynamic_pointer_cast<StochasticSEATIRD>(dataSet_);
 
-            iter->second->setColor(r, g, b);
+            if(simulation != NULL)
+            {
+                std::vector<Provider> providers = simulation->getIliProviders();
+
+                if(providers[simulation->getNodeIndex(iter->first)].status.size() == 0)
+                {
+                    hasProvider = false;
+                }
+            }
+
+            if(hasProvider == true)
+            {
+                // get ILI
+                float iliFraction = dataSet_->getValue("ILI", time_, iter->first) / dataSet_->getPopulation(iter->first);
+
+                // map to color
+                float r, g, b;
+                countiesColorMap_.getColor3(iliFraction / 0.01, r, g, b);
+
+                iter->second->setColor(r, g, b);
+            }
+            else
+            {
+                // no providers
+                float r, g, b;
+                r = g = b = 0.25;
+
+                iter->second->setColor(r, g, b);
+            }
         }
     }
 
