@@ -25,6 +25,8 @@ TimelineWidget::TimelineWidget(MainWindow* mainWindow, EventMonitor* monitor)
 
     connect((QObject *)mainWindow, SIGNAL(timeChanged(int)), this, SLOT(setTime(int)));
 
+    // for antialiasing
+    QGLWidget::setFormat(QGLFormat(QGL::SampleBuffers));
 }
 
 TimelineWidget::~TimelineWidget()
@@ -50,7 +52,14 @@ void TimelineWidget::paintEvent(QPaintEvent* event)
 {
     makeCurrent();
 
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_LINE_SMOOTH);
+
     QPainter painter(this);
+
+    painter.setBackgroundMode(Qt::TransparentMode);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::HighQualityAntialiasing);
 
     render(&painter);
 }
