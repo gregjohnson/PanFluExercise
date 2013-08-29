@@ -150,7 +150,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::LeftDockWidgetArea, stockpileNetworkDockWidget);
 
     // stockpile consumption dock
-    QDockWidget * stockpileConsumptionDockWidget = new QDockWidget("Policy", this);
+    QDockWidget * stockpileConsumptionDockWidget = new QDockWidget("Stockpile Priorities", this);
     stockpileConsumptionDockWidget->setWidget(new StockpileConsumptionWidget());
     addDockWidget(Qt::LeftDockWidgetArea, stockpileConsumptionDockWidget);
 
