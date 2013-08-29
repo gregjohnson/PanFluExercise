@@ -39,6 +39,10 @@ EpidemicCasesWidget::EpidemicCasesWidget(boost::shared_ptr<EpidemicDataSet> data
 
         layout->addWidget(stratificationValueComboBox);
     }
+
+    // hide last stratification (vaccination status)
+    // todo: could be handled better...
+    stratificationValueComboBoxes_[stratificationValueComboBoxes_.size()-1]->hide();
 }
 
 void EpidemicCasesWidget::setNumCases(int num)

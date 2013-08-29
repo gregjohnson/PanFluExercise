@@ -89,6 +89,13 @@ void PriorityGroupWidget::initialize()
         layout->addWidget(groupBox);
 
         stratificationVectorCheckBoxes_.push_back(checkBoxes);
+
+        // hide last stratification (vaccination status)
+        // todo: could be handled better...
+        if(i == stratificationNames.size() - 1)
+        {
+            groupBox->hide();
+        }
     }
 
     // cancel / save buttons
