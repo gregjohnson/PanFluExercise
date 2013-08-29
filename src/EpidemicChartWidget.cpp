@@ -390,6 +390,29 @@ void EpidemicChartWidget::setVariableChoice(int choiceIndex)
 {
     std::string variable = variableComboBox_.itemData(choiceIndex).toString().toStdString();
 
+    if(variable == "ILI")
+    {
+        // no stratifications,etc. allowed
+        stratifyByComboBox_.setCurrentIndex(0);
+        stratifyByComboBox_.setEnabled(false);
+
+        for(unsigned int i=0; i<stratificationValueComboBoxes_.size(); i++)
+        {
+            stratificationValueComboBoxes_[i]->setCurrentIndex(0);
+            stratificationValueComboBoxes_[i]->setEnabled(false);
+        }
+    }
+    else
+    {
+        // make sure widgets are enabled
+        stratifyByComboBox_.setEnabled(true);
+
+        for(unsigned int i=0; i<stratificationValueComboBoxes_.size(); i++)
+        {
+            stratificationValueComboBoxes_[i]->setEnabled(true);
+        }
+    }
+
     setVariable(variable);
 }
 
