@@ -390,7 +390,7 @@ void EpidemicChartWidget::setVariableChoice(int choiceIndex)
 {
     std::string variable = variableComboBox_.itemData(choiceIndex).toString().toStdString();
 
-    if(variable == "ILI")
+    if(variable == "ILI reports")
     {
         // no stratifications,etc. allowed
         stratifyByComboBox_.setCurrentIndex(0);

@@ -43,7 +43,7 @@ StochasticSEATIRD::StochasticSEATIRD()
     derivedVariables_["All infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
     derivedVariables_["vaccinated in lag period"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod, this, _1, _2, _3);
     derivedVariables_["vaccinated effective"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines, this, _1, _2, _3);
-    derivedVariables_["ILI"] = boost::bind(&StochasticSEATIRD::getDerivedVarILI, this, _1, _2, _3);
+    derivedVariables_["ILI reports"] = boost::bind(&StochasticSEATIRD::getDerivedVarILI, this, _1, _2, _3);
 
     // initialize ILI
     iliProviders_ = iliInit();

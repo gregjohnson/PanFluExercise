@@ -39,7 +39,7 @@ void IliMapWidget::setTime(int time)
             if(hasProvider == true)
             {
                 // get ILI
-                float iliFraction = dataSet_->getValue("ILI", time_, iter->first) / dataSet_->getPopulation(iter->first);
+                float iliFraction = dataSet_->getValue("ILI reports", time_, iter->first) / dataSet_->getPopulation(iter->first);
 
                 // map to color
                 float r, g, b;
