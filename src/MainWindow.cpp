@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "IliMapWidget.h"
 #include "EpidemicMapWidget.h"
 #include "StockpileMapWidget.h"
 #include "EventMonitor.h"
@@ -76,6 +77,9 @@ MainWindow::MainWindow()
 
     // make map widgets the main view
     QTabWidget * tabWidget = new QTabWidget();
+
+    IliMapWidget * iliMapWidget = new IliMapWidget();
+    tabWidget->addTab(iliMapWidget, "ILI View");
 
     EpidemicMapWidget * epidemicMapWidget = new EpidemicMapWidget();
     tabWidget->addTab(epidemicMapWidget, "Infectious");
@@ -186,6 +190,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::BottomDockWidgetArea, chartDockWidget);
 
     // make other signal / slot connections
+    connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), iliMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), epidemicMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), antiviralsStockpileMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
     connect(this, SIGNAL(dataSetChanged(boost::shared_ptr<EpidemicDataSet>)), vaccinesStockpileMapWidget, SLOT(setDataSet(boost::shared_ptr<EpidemicDataSet>)));
@@ -193,6 +198,7 @@ MainWindow::MainWindow()
     connect(this, SIGNAL(dataSetChanged()), this, SLOT(resetTimeSlider()));
     connect(this, SIGNAL(numberOfTimestepsChanged()), this, SLOT(resetTimeSlider()));
 
+    connect(this, SIGNAL(timeChanged(int)), iliMapWidget, SLOT(setTime(int)));
     connect(this, SIGNAL(timeChanged(int)), epidemicMapWidget, SLOT(setTime(int)));
     connect(this, SIGNAL(timeChanged(int)), antiviralsStockpileMapWidget, SLOT(setTime(int)));
     connect(this, SIGNAL(timeChanged(int)), vaccinesStockpileMapWidget, SLOT(setTime(int)));

@@ -97,6 +97,7 @@ set(SRCS ${SRCS}
     src/EventGroupThreshold.cpp
     src/EventMonitor.cpp
     src/EventMonitorWidget.cpp
+    src/IliMapWidget.cpp
     src/log.cpp
     src/main.cpp
     src/MainWindow.cpp
