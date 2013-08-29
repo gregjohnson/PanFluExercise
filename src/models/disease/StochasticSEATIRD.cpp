@@ -43,6 +43,20 @@ StochasticSEATIRD::StochasticSEATIRD()
     derivedVariables_["All infected"] = boost::bind(&StochasticSEATIRD::getDerivedVarInfected, this, _1, _2, _3);
     derivedVariables_["vaccinated in lag period"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationInVaccineLatencyPeriod, this, _1, _2, _3);
     derivedVariables_["vaccinated effective"] = boost::bind(&StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines, this, _1, _2, _3);
+    derivedVariables_["ILI"] = boost::bind(&StochasticSEATIRD::getDerivedVarILI, this, _1, _2, _3);
+
+    // initialize ILI
+    iliProviders_ = iliInit();
+
+    // initialize ILI values to zero
+    std::vector<float> iliValues;
+
+    for(unsigned int i=0; i<getNumNodes(); i++)
+    {
+        iliValues.push_back(0.);
+    }
+
+    iliValues_.push_back(iliValues);
 
     // initialize start time to 0
     time_ = 0;
@@ -175,6 +189,22 @@ void StochasticSEATIRD::simulate()
     // travel between nodes
     travel();
 
+    // ILI
+    std::vector<float> infectious;
+    std::vector<float> population;
+
+    std::vector<int> nodeIds = getNodeIds();
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        infectious.push_back(getDerivedVarInfected(time_, nodeIds[i]));
+        population.push_back(getPopulation(nodeIds[i]));
+    }
+
+    std::vector<float> iliValues = iliView(infectious, population, iliProviders_);
+
+    iliValues_.push_back(iliValues);
+
     // increment current time
     time_++;
 }
@@ -227,6 +257,11 @@ float StochasticSEATIRD::getDerivedVarPopulationEffectiveVaccines(int time, int 
     stratificationValues[2] = 1;
 
     return getValue("population", time, nodeId, stratificationValues) - getDerivedVarPopulationInVaccineLatencyPeriod(time, nodeId, stratificationValues);
+}
+
+float StochasticSEATIRD::getDerivedVarILI(int time, int nodeId, std::vector<int> stratificationValues)
+{
+    return iliValues_[time][nodeIdToIndex_[nodeId]] * getPopulation(nodeId);
 }
 
 void StochasticSEATIRD::initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues)

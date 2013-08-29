@@ -122,6 +122,7 @@ set(SRCS ${SRCS}
     src/StockpileChartWidget.cpp
     src/TimelineWidget.cpp
     src/models/random.cpp
+    src/models/disease/iliView.cpp
     src/models/disease/StochasticSEATIRD.cpp
     src/models/disease/StochasticSEATIRDSchedule.cpp
 )

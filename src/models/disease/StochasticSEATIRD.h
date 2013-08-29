@@ -4,6 +4,7 @@
 #include "../../EpidemicSimulation.h"
 #include "StochasticSEATIRDEvent.h"
 #include "StochasticSEATIRDSchedule.h"
+#include "iliView.h"
 #include <boost/heap/pairing_heap.hpp>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -25,6 +26,7 @@ class StochasticSEATIRD : public EpidemicSimulation
         float getDerivedVarInfected(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getDerivedVarPopulationInVaccineLatencyPeriod(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
         float getDerivedVarPopulationEffectiveVaccines(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
+        float getDerivedVarILI(int time, int nodeId, std::vector<int> stratificationValues=std::vector<int>());
 
     private:
 
@@ -50,6 +52,10 @@ class StochasticSEATIRD : public EpidemicSimulation
         int cachedTime_;
         blitz::Array<double, 1> populationNodes_;
         blitz::Array<double, 1+NUM_STRATIFICATION_DIMENSIONS> populations_;
+
+        // ILI information
+        std::vector<Provider> iliProviders_;
+        std::vector<std::vector<float> > iliValues_;
 
         // create contact events and insert them into the schedule
         void initializeContactEvents(StochasticSEATIRDSchedule &schedule, const int &nodeId, const std::vector<int> &stratificationValues);
