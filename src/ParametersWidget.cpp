@@ -18,11 +18,11 @@ ParametersWidget::ParametersWidget()
     // add widgets for all parameters
     constructParameterWidget("R0", "Basic reproduction number", g_parameters.getR0(), 0., WIDGET_MAX_VALUE, SLOT(setR0(double)), 3);
     // hide betaScale parameter: constructParameterWidget("betaScale", "Scaling factor for beta (transmission rate given contact). beta = R0 / betaScale", g_parameters.getBetaScale(), 0., WIDGET_MAX_VALUE, SLOT(setBetaScale(double)));
-    constructParameterWidget("tau", "Average latency period (days)", g_parameters.getTau(), 0.1, 10., SLOT(setTau(double)), 2);
-    constructParameterWidget("kappa", "Average asymptomatic infectious period (days)", g_parameters.getKappa(), 0.1, 10., SLOT(setKappa(double)), 2);
+    constructParameterWidget("Latency period", "Average latency period (days)", g_parameters.getTau(), 0.1, 10., SLOT(setTau(double)), 2);
+    constructParameterWidget("Asymptomatic period", "Average asymptomatic infectious period (days)", g_parameters.getKappa(), 0.1, 10., SLOT(setKappa(double)), 2);
     // treatment period is currently fixed to 1 day (required by antiviral distribution implemention)
     // constructParameterWidget("Treatment window", "number of days treatable with antivirals", g_parameters.getChi(), 0., WIDGET_MAX_VALUE, SLOT(setChi(double)));
-    constructParameterWidget("gamma", "Average total infectious period (days)", g_parameters.getGamma(), 0.1, 10., SLOT(setGamma(double)), 2);
+    constructParameterWidget("Infectious period", "Average total infectious period (days)", g_parameters.getGamma(), 0.1, 10., SLOT(setGamma(double)), 2);
 
     // stratified CFR
     std::vector<std::string> labels;
