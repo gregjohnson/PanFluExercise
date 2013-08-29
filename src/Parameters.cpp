@@ -27,11 +27,11 @@ Parameters::Parameters()
 
     antiviralEffectiveness_ = 0.15;
     antiviralAdherence_ = 0.8;
-    antiviralCapacity_ = 0.02;
+    antiviralCapacity_ = 0.001;
     vaccineEffectiveness_ = 0.8;
     vaccineLatencyPeriod_ = 14;
     vaccineAdherence_ = 0.8;
-    vaccineCapacity_ = 0.02;
+    vaccineCapacity_ = 0.001;
 }
 
 double Parameters::getR0()
