@@ -13,7 +13,7 @@ NpiDefinitionWidget::NpiDefinitionWidget(MainWindow * mainWindow)
     setWidget(widget);
 
     // add NPI button
-    QPushButton * addNpiButton = new QPushButton("&Add Intervention");
+    QPushButton * addNpiButton = new QPushButton("&Add NPI");
     layout_.addWidget(addNpiButton);
 
     // make connections

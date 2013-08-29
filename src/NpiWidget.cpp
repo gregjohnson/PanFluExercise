@@ -12,7 +12,7 @@ NpiWidget::NpiWidget(boost::shared_ptr<EpidemicDataSet> dataSet)
 
 void NpiWidget::initialize()
 {
-    setTitle("Intervention");
+    setTitle("Non-Pharmaceutical Intervention");
 
     QVBoxLayout * layout = new QVBoxLayout();
     setLayout(layout);
@@ -180,7 +180,7 @@ void NpiWidget::initialize()
     QPushButton * cancelButton = new QPushButton("&Cancel");
     hBox->addWidget(cancelButton);
 
-    QPushButton * saveButton = new QPushButton("&Save");
+    QPushButton * saveButton = new QPushButton("&Execute");
     hBox->addWidget(saveButton);
 
     // make connections

@@ -160,7 +160,7 @@ MainWindow::MainWindow()
     addDockWidget(Qt::LeftDockWidgetArea, priorityGroupDefinitionDockWidget);
 
     // NPI definition dock
-    QDockWidget * npiDefinitionDockWidget = new QDockWidget("Interventions", this);
+    QDockWidget * npiDefinitionDockWidget = new QDockWidget("NPI", this);
     npiDefinitionDockWidget->setWidget(new NpiDefinitionWidget(this));
     addDockWidget(Qt::LeftDockWidgetArea, npiDefinitionDockWidget);
 
