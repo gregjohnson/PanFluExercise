@@ -4,7 +4,7 @@
 
 EpidemicMapWidget::EpidemicMapWidget()
 {
-    setTitle("Infectious Population by County");
+    setTitle("Infected Population by County");
     setColorMapMinLabel("0%");
     setColorMapMaxLabel("1%");
 }
@@ -21,7 +21,7 @@ void EpidemicMapWidget::setTime(int time)
         for(iter=counties_.begin(); iter!=counties_.end(); iter++)
         {
             // get total infectious
-            float infectiousFraction = dataSet_->getValue("infectious", time_, iter->first) / dataSet_->getPopulation(iter->first);
+            float infectiousFraction = dataSet_->getValue("All infected", time_, iter->first) / dataSet_->getPopulation(iter->first);
 
             // map to color
             float r, g, b;

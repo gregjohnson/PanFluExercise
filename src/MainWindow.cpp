@@ -82,7 +82,7 @@ MainWindow::MainWindow()
     tabWidget->addTab(iliMapWidget, "ILI View");
 
     EpidemicMapWidget * epidemicMapWidget = new EpidemicMapWidget();
-    tabWidget->addTab(epidemicMapWidget, "Infectious");
+    tabWidget->addTab(epidemicMapWidget, "Infected");
 
     StockpileMapWidget * antiviralsStockpileMapWidget = new StockpileMapWidget();
     antiviralsStockpileMapWidget->setType(STOCKPILE_ANTIVIRALS);

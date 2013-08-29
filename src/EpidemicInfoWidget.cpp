@@ -56,7 +56,7 @@ void EpidemicInfoWidget::updateModel()
 
     // set headers
     QStringList headers;
-    headers << "County" << "Num infected";
+    headers << "County" << "Infected";
     model_.setHorizontalHeaderLabels(headers);
 
     QStandardItem * parentItem = model_.invisibleRootItem();
