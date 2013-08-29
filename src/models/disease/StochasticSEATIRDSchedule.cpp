@@ -26,7 +26,7 @@ StochasticSEATIRDSchedule::StochasticSEATIRDSchedule(const double &now, MTRand &
     eventQueue_.push(StochasticSEATIRDEvent(now, Ta, EtoA, stratificationValues, stratificationValues));
 
     // compute nu (rate) from nu (CFR)
-    double nu = -1./g_parameters.getGamma() * log(1. - g_parameters.getNu());
+    double nu = -1./g_parameters.getGamma() * log(1. - g_parameters.getNu(stratificationValues[0]));
 
     // asymptomatic transition: -> treatable, -> recovered, or -> deceased
     double Tt =  Ta + random_exponential(1. / g_parameters.getKappa(), &rand); // time to progress from asymptomatic to treatable

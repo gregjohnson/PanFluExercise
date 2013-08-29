@@ -22,7 +22,7 @@ class Parameters : public QObject
         double getKappa();
         double getChi();
         double getGamma();
-        double getNu();
+        double getNu(int index);
         double getAntiviralEffectiveness();
         double getAntiviralAdherence();
         double getAntiviralCapacity();
@@ -98,7 +98,7 @@ class Parameters : public QObject
         // transform: asymptomatic, treatable, or infectious -> deceased transition rate
         // => case fatality rate (CFR)
         // todo: this should be age stratified
-        double nu_;
+        std::vector<double> nu_;
 
         // antiviral effectiveness
         double antiviralEffectiveness_;

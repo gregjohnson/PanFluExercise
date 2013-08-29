@@ -20,7 +20,10 @@ Parameters::Parameters()
     // previous default nu = 0.0001
     // transform by CFR = 1 - exp(-nu / gamma) ... but note we have the inverse of gamma above
     // can get back to standard nu (rate) with: nu = -gamma * ln(1 - CFR). with transformations: nu = -1./gamma * ln(1 - CFR)
-    nu_ = 1 - exp(-0.0001 * gamma_);
+    for(unsigned int i=0; i<5; i++)
+    {
+        nu_.push_back(1 - exp(-0.0001 * gamma_));
+    }
 
     antiviralEffectiveness_ = 0.15;
     antiviralAdherence_ = 0.8;
@@ -61,9 +64,15 @@ double Parameters::getGamma()
     return gamma_;
 }
 
-double Parameters::getNu()
+double Parameters::getNu(int index)
 {
-    return nu_;
+    if(index >= nu_.size())
+    {
+        put_flog(LOG_ERROR, "index %i out of bounds", index);
+        return 0.;
+    }
+
+    return nu_[index];
 }
 
 double Parameters::getAntiviralEffectiveness()
@@ -165,9 +174,26 @@ void Parameters::setGamma(double value)
 
 void Parameters::setNu(double value)
 {
-    nu_ = value;
+    QObject * senderObject = sender();
 
-    put_flog(LOG_DEBUG, "%f", value);
+    if(senderObject != 0)
+    {
+        int index = senderObject->property("index").value<int>();
+
+        if(index >= nu_.size())
+        {
+            put_flog(LOG_ERROR, "index %i out of bounds", index);
+            return;
+        }
+
+        nu_[index] = value;
+
+        put_flog(LOG_DEBUG, "%i: %f", index, value);
+    }
+    else
+    {
+        put_flog(LOG_ERROR, "should not call this method directly");
+    }
 }
 
 void Parameters::setAntiviralEffectiveness(double value)

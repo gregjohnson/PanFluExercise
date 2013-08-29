@@ -20,6 +20,8 @@ class ParametersWidget : public QScrollArea
         void constructParameterWidget(std::string label, std::string description, double value, double min, double max, const char * setSlot, int numDecimals=WIDGET_NUM_DECIMALS);
         void constructParameterWidget(std::string label, std::string description, int value, int min, int max, const char * setSlot);
 
+        void constructStratifiedParameterWidget(std::vector<std::string> labels, std::string description, std::vector<double> values, double min, double max, const char * setSlot, int numDecimals=WIDGET_NUM_DECIMALS);
+
         QVBoxLayout * layout_;
 };
 
