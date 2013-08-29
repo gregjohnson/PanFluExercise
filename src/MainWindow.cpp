@@ -336,6 +336,10 @@ bool MainWindow::nextTimestep()
             return true;
         }
     }
+    else
+    {
+        QMessageBox::warning(this, "Error", "No active simulation. Click 'New Simulation' in the menu to begin.", QMessageBox::Ok, QMessageBox::Ok);
+    }
 
     return false;
 }
