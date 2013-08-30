@@ -18,11 +18,26 @@ Parameters::Parameters()
     gamma_ = 1. / 0.243902439024;
 
     // previous default nu = 0.0001
+
+    /* seasonal low-risk age-specific nus:
+    nu ( 0, 0 ) = 2.23193e-05;
+    nu ( 1, 0 ) = 4.09747056486e-05;
+    nu ( 2, 0 ) = 8.37293183202e-05;
+    nu ( 3, 0 ) = 6.18089564208e-05;
+    nu ( 4, 0 ) = 8.97814893927e-06;
+    */
+    std::vector<double> nuSeasonalUntransformed;
+    nuSeasonalUntransformed.push_back(2.23193e-05);
+    nuSeasonalUntransformed.push_back(4.09747056486e-05);
+    nuSeasonalUntransformed.push_back(8.37293183202e-05);
+    nuSeasonalUntransformed.push_back(6.18089564208e-05);
+    nuSeasonalUntransformed.push_back(8.97814893927e-06);
+
     // transform by CFR = 1 - exp(-nu / gamma) ... but note we have the inverse of gamma above
     // can get back to standard nu (rate) with: nu = -gamma * ln(1 - CFR). with transformations: nu = -1./gamma * ln(1 - CFR)
     for(unsigned int i=0; i<5; i++)
     {
-        nu_.push_back(1 - exp(-0.0001 * gamma_));
+        nu_.push_back(1 - exp(-nuSeasonalUntransformed[i] * gamma_));
     }
 
     antiviralEffectiveness_ = 0.15;
