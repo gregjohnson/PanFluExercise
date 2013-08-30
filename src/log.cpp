@@ -15,7 +15,7 @@ void put_log(int level, const char *format, ...)
     vsnprintf(log_string, MAX_LOG_LENGTH, format, ap);
     va_end(ap);
 
-    printf("%s\n", log_string);
+    fprintf(stderr, "%s\n", log_string);
 
     return;
 }
