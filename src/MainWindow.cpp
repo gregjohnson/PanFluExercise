@@ -39,9 +39,9 @@ MainWindow::MainWindow()
     connect(newSimulationAction, SIGNAL(triggered()), this, SLOT(newSimulation()));
 
     // open data set action
-    QAction * openDataSetAction = new QAction("Open Data Set", this);
+    /*QAction * openDataSetAction = new QAction("Open Data Set", this);
     openDataSetAction->setStatusTip("Open data set");
-    connect(openDataSetAction, SIGNAL(triggered()), this, SLOT(openDataSet()));
+    connect(openDataSetAction, SIGNAL(triggered()), this, SLOT(openDataSet()));*/
 
     // new chart action
     QAction * newChartAction = new QAction("New Chart", this);
@@ -62,7 +62,7 @@ MainWindow::MainWindow()
 
     // add actions to menus
     fileMenu->addAction(newSimulationAction);
-    fileMenu->addAction(openDataSetAction);
+    // fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
 
 #if USE_DISPLAYCLUSTER
@@ -72,7 +72,7 @@ MainWindow::MainWindow()
 
     // add actions to toolbar
     toolbar->addAction(newSimulationAction);
-    toolbar->addAction(openDataSetAction);
+    // toolbar->addAction(openDataSetAction);
     toolbar->addAction(newChartAction);
 
     // make map widgets the main view
