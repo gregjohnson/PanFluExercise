@@ -13,6 +13,13 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # path for additional modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
+# OpenGL antialiasing optional
+set(USE_OPENGL_ANTIALIASING ON CACHE BOOL "OpenGL antialiasing support.")
+
+if(USE_OPENGL_ANTIALIASING)
+    add_definitions(-DUSE_OPENGL_ANTIALIASING)
+endif(USE_OPENGL_ANTIALIASING)
+
 # find and setup Qt4
 # see http://cmake.org/cmake/help/cmake2.6docs.html#module:FindQt4 for details
 set(QT_USE_QTOPENGL TRUE)

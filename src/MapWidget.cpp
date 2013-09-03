@@ -39,8 +39,10 @@ MapWidget::MapWidget()
     // default counties color map
     countiesColorMap_.setColorMap(0., 1.);
 
+#if USE_OPENGL_ANTIALIASING
     // for antialiasing
     QGLWidget::setFormat(QGLFormat(QGL::SampleBuffers));
+#endif
 }
 
 MapWidget::~MapWidget()
@@ -216,17 +218,22 @@ void MapWidget::paintEvent(QPaintEvent* event)
 {
     makeCurrent();
 
+#if USE_OPENGL_ANTIALIASING
     // for antialiasing
-#ifndef WIN32
+    #ifndef WIN32
     glEnable(GL_MULTISAMPLE);
-#endif
+    #endif
     glEnable(GL_LINE_SMOOTH);
+#endif
 
     QPainter painter(this);
 
     painter.setBackgroundMode(Qt::TransparentMode);
+
+#if USE_OPENGL_ANTIALIASING
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::HighQualityAntialiasing);
+#endif
 
     painter.setWindow(viewRect_.toRect());
 
