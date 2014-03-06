@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
     dataDirectory.cdUp();
     dataDirectory.cd("Resources");
     dataDirectory.cd("data");
-#elif WIN32
+#else // WIN32 or Linux
     dataDirectory.cdUp();
     dataDirectory.cd("data");
 #endif
