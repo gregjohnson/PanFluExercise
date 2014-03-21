@@ -218,6 +218,35 @@ MainWindow::MainWindow()
 
     // show the window
     show();
+
+    // batch mode operations
+    if(g_batchMode == true)
+    {
+        put_flog(LOG_INFO, "starting batch mode");
+
+        newSimulation();
+
+        if(g_batchInitialCasesFilename.empty() != true)
+        {
+            initialCasesWidget_->loadXmlData(g_batchInitialCasesFilename);
+        }
+
+        for(unsigned int i=0; i<g_batchNumTimesteps; i++)
+        {
+            nextTimestep();
+        }
+
+        std::string out = dataSet_->getVariableSummaryNodeVsTime(g_batchOutputVariable);
+
+        {
+            std::ofstream ofs(g_batchOutputFilename.c_str());
+            ofs << out;
+        }
+
+        put_flog(LOG_INFO, "done with batch mode");
+
+        exit(0);
+    }
 }
 
 MainWindow::~MainWindow()

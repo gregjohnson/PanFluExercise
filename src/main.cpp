@@ -4,6 +4,13 @@
 #include <QtGui>
 #include <QtNetwork/QTcpSocket>
 #include <vtkObject.h>
+#include <boost/program_options.hpp>
+
+bool g_batchMode = false;
+int g_batchNumTimesteps = 240;
+std::string g_batchInitialCasesFilename;
+std::string g_batchOutputVariable = "deceased";
+std::string g_batchOutputFilename = "deceased.csv";
 
 MainWindow * g_mainWindow = NULL;
 std::string g_dataDirectory;
@@ -14,6 +21,61 @@ std::string g_dataDirectory;
 
 int main(int argc, char * argv[])
 {
+    // declare the supported options
+    boost::program_options::options_description programOptions("Allowed options");
+
+    programOptions.add_options()
+        ("help", "produce help message")
+        ("batch", "run in batch mode")
+        ("batch-numtimesteps", boost::program_options::value<int>(), "limit batch run to <n> time steps")
+        ("batch-initialcasesfilename", boost::program_options::value<std::string>(), "batch mode initial cases filename")
+        ("batch-outputvariable", boost::program_options::value<std::string>(), "batch output variable")
+        ("batch-outputfilename", boost::program_options::value<std::string>(), "batch output filename")
+    ;
+
+    boost::program_options::variables_map vm;
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, programOptions), vm);
+    boost::program_options::notify(vm);
+
+    if(vm.count("help"))
+    {
+        std::cout << programOptions << std::endl;
+        return 1;
+    }
+
+    if(vm.count("batch"))
+    {
+        put_flog(LOG_INFO, "enabling batch mode");
+
+        g_batchMode = true;
+    }
+
+    if(vm.count("batch-numtimesteps"))
+    {
+        g_batchNumTimesteps = vm["batch-numtimesteps"].as<int>();
+        put_flog(LOG_INFO, "got batch num time steps %i", g_batchNumTimesteps);
+    }
+
+    if(vm.count("batch-initialcasesfilename"))
+    {
+        g_batchInitialCasesFilename = vm["batch-initialcasesfilename"].as<std::string>();
+        put_flog(LOG_INFO, "got batch initial cases filename %s", g_batchInitialCasesFilename.c_str());
+    }
+
+    if(vm.count("batch-outputvariable"))
+    {
+        g_batchOutputVariable = vm["batch-outputvariable"].as<std::string>();
+        put_flog(LOG_INFO, "got batch output variable %s", g_batchOutputVariable.c_str());
+    }
+
+    if(vm.count("batch-outputfilename"))
+    {
+        g_batchOutputFilename = vm["batch-outputfilename"].as<std::string>();
+        put_flog(LOG_INFO, "got batch output filename %s", g_batchOutputFilename.c_str());
+    }
+
+    // end argument parsing
+
     QApplication * app = new QApplication(argc, argv);
 
     // get directory of application
