@@ -50,8 +50,12 @@ MainWindow::MainWindow()
     connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
 
     QAction * saveEpidemicDataCsvAction = new QAction("Save Epidemic Data (CSV)", this);
-    saveEpidemicDataCsvAction->setStatusTip("Save Epidemic Data (CSV)");
+    saveEpidemicDataCsvAction->setStatusTip("Save epidemic data (CSV)");
     connect(saveEpidemicDataCsvAction, SIGNAL(triggered()), this, SLOT(saveEpidemicDataCsv()));
+
+    QAction * loadInitialCasesAction = new QAction("Load Initial Cases", this);
+    loadInitialCasesAction->setStatusTip("Load initial cases");
+    connect(loadInitialCasesAction, SIGNAL(triggered()), this, SLOT(loadInitialCases()));
 
 #if USE_DISPLAYCLUSTER
     // connect to DisplayCluster action
@@ -70,6 +74,7 @@ MainWindow::MainWindow()
     // fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
     fileMenu->addAction(saveEpidemicDataCsvAction);
+    fileMenu->addAction(loadInitialCasesAction);
 
 #if USE_DISPLAYCLUSTER
     fileMenu->addAction(connectToDisplayClusterAction);
@@ -454,6 +459,16 @@ void MainWindow::saveEpidemicDataCsv()
 
     // write data to file stream
     ofs << out;
+}
+
+void MainWindow::loadInitialCases()
+{
+    QString filename = QFileDialog::getOpenFileName(this, "Load Initial Cases", "", "XML files (*.xml)");
+
+    if(!filename.isEmpty())
+    {
+        initialCasesWidget_->loadXmlData(filename.toStdString());
+    }
 }
 
 void MainWindow::resetTimeSlider()

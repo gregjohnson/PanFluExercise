@@ -51,6 +51,7 @@ class MainWindow : public QMainWindow {
         void openDataSet();
         void newChart();
         void saveEpidemicDataCsv();
+        void loadInitialCases();
         void resetTimeSlider();
 
 #if USE_DISPLAYCLUSTER

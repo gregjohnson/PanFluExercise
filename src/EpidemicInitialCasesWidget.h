@@ -22,6 +22,7 @@ class EpidemicInitialCasesWidget : public QScrollArea
     public slots:
 
         void setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet);
+        void loadXmlData(const std::string &filename);
 
     private:
 

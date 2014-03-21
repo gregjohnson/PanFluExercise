@@ -24,6 +24,8 @@ endif(USE_OPENGL_ANTIALIASING)
 # see http://cmake.org/cmake/help/cmake2.6docs.html#module:FindQt4 for details
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTSVG TRUE)
+set(QT_USE_QTXMLPATTERNS TRUE)
+set(QT_USE_QTXML TRUE)
 set(QT_USE_QTNETWORK TRUE)
 
 if(WIN32)
