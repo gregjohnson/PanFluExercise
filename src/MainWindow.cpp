@@ -18,6 +18,7 @@
 #include "StockpileChartWidget.h"
 #include "models/disease/StochasticSEATIRD.h"
 #include "main.h"
+#include "log.h"
 
 MainWindow::MainWindow()
 {
@@ -48,6 +49,10 @@ MainWindow::MainWindow()
     newChartAction->setStatusTip("New chart");
     connect(newChartAction, SIGNAL(triggered()), this, SLOT(newChart()));
 
+    QAction * saveEpidemicDataCsvAction = new QAction("Save Epidemic Data (CSV)", this);
+    saveEpidemicDataCsvAction->setStatusTip("Save Epidemic Data (CSV)");
+    connect(saveEpidemicDataCsvAction, SIGNAL(triggered()), this, SLOT(saveEpidemicDataCsv()));
+
 #if USE_DISPLAYCLUSTER
     // connect to DisplayCluster action
     QAction * connectToDisplayClusterAction = new QAction("Connect to DisplayCluster", this);
@@ -64,6 +69,7 @@ MainWindow::MainWindow()
     fileMenu->addAction(newSimulationAction);
     // fileMenu->addAction(openDataSetAction);
     fileMenu->addAction(newChartAction);
+    fileMenu->addAction(saveEpidemicDataCsvAction);
 
 #if USE_DISPLAYCLUSTER
     fileMenu->addAction(connectToDisplayClusterAction);
@@ -392,6 +398,62 @@ void MainWindow::newChart()
         epidemicChartWidget->setDataSet(dataSet_);
         epidemicChartWidget->setTime(time_);
     }
+}
+
+void MainWindow::saveEpidemicDataCsv()
+{
+    if(dataSet_ == NULL)
+    {
+        put_flog(LOG_INFO, "NULL dataSet");
+        QMessageBox::warning(this, "Error", "No active data set or simulation.", QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
+    // get variable name
+    std::vector<std::string> variableNames = dataSet_->getVariableNames();
+
+    QStringList items;
+
+    for(unsigned int i=0; i<variableNames.size(); i++)
+    {
+        items << variableNames[i].c_str();
+    }
+
+    bool ok;
+    QString item = QInputDialog::getItem(this, "Select variable", "Variable", items, 0, false, &ok);
+
+    std::string varName;
+
+    if(ok && !item.isEmpty())
+    {
+        varName = item.toStdString();
+    }
+    else
+    {
+        return;
+    }
+
+    std::string out = dataSet_->getVariableSummaryNodeVsTime(varName);
+
+    if(out.empty() == true)
+    {
+        put_flog(LOG_ERROR, "empty summary");
+        QMessageBox::warning(this, "Error", "Could not generate output.", QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
+    QString filename = QFileDialog::getSaveFileName(this, "Save Epidemic Data", "", "CSV files (*.csv)");
+
+    if(filename.isNull() == true)
+    {
+        return;
+    }
+
+    // create output file
+    std::ofstream ofs(filename.toStdString().c_str());
+
+    // write data to file stream
+    ofs << out;
 }
 
 void MainWindow::resetTimeSlider()

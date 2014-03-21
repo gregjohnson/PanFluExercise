@@ -444,6 +444,50 @@ boost::shared_ptr<StockpileNetwork> EpidemicDataSet::getStockpileNetwork()
     return stockpileNetwork_;
 }
 
+std::string EpidemicDataSet::getVariableSummaryNodeVsTime(const std::string &varName)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return std::string();
+    }
+
+    // nodeIds
+    std::vector<int> nodeIds = getNodeIds();
+
+    // generate the CSV
+    std::stringstream out;
+
+    // set maximum decimal precision for stringstream
+    out.precision(16);
+
+    // header
+    out << "t";
+
+    // header: for each node
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        out << "," << nodeIds[i];
+    }
+
+    out << std::endl;
+
+    // row for each time
+    for(unsigned t=0; t<getNumTimes(); t++)
+    {
+        out << t;
+
+        for(unsigned int n=0; n<nodeIds.size(); n++)
+        {
+            out << "," << getValue(varName, t, nodeIds[n]);
+        }
+
+        out << std::endl;
+    }
+
+    return out.str();
+}
+
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
 #if USE_NETCDF // TODO: should handle this differently

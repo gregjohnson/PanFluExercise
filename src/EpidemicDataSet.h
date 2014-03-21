@@ -64,6 +64,9 @@ class EpidemicDataSet
 
         boost::shared_ptr<StockpileNetwork> getStockpileNetwork();
 
+        // output
+        std::string getVariableSummaryNodeVsTime(const std::string &varName);
+
     protected:
 
         bool isValid_;
