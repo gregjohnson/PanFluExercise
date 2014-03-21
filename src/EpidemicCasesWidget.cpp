@@ -40,6 +40,9 @@ EpidemicCasesWidget::EpidemicCasesWidget(boost::shared_ptr<EpidemicDataSet> data
         layout->addWidget(stratificationValueComboBox);
     }
 
+    // default to second age group (first stratification)
+    stratificationValueComboBoxes_[0]->setCurrentIndex(1);
+
     // hide last stratification (vaccination status)
     // todo: could be handled better...
     stratificationValueComboBoxes_[stratificationValueComboBoxes_.size()-1]->hide();
