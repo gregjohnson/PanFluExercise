@@ -241,4 +241,7 @@ else()
 
     # install data files
     INSTALL(DIRECTORY data DESTINATION . COMPONENT Runtime)
+
+    # install utility files (Linux only)
+    INSTALL(DIRECTORY util DESTINATION . COMPONENT Runtime)
 endif()
