@@ -22,6 +22,9 @@ std::string g_dataDirectory;
 
 int main(int argc, char * argv[])
 {
+    // parse Qt commandline options first
+    QApplication * app = new QApplication(argc, argv);
+
     // declare the supported options
     boost::program_options::options_description programOptions("Allowed options");
 
@@ -83,8 +86,6 @@ int main(int argc, char * argv[])
     }
 
     // end argument parsing
-
-    QApplication * app = new QApplication(argc, argv);
 
     // get directory of application
     QDir appDirectory = QDir(QCoreApplication::applicationDirPath());
