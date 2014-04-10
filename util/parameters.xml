@@ -1,0 +1,17 @@
+<root>
+    <R0 value="1.200" />
+    <latencyPeriodDays value="1.20" />
+    <asymptomaticPeriodDays value="1.90" />
+    <infectiousPeriodDays value="4.10" />
+
+    <!-- value0 ... value4 = 0-4, 5-24, 25-49, 50-64, 65+ year age ranges -->
+    <caseFatalityRates value0="0.000092" value1="0.000168" value2="0.000343" value3="0.000253" value4="0.000037" />
+
+    <antiviralEffectiveness value="0.15" />
+    <antiviralAdherence value="0.8" />
+    <antiviralCapacity value="0.001" />
+    <vaccineEffectiveness value="0.8" />
+    <vaccineEffectivenessLagDays value="14" />
+    <vaccineAdherence value="0.8" />
+    <vaccineCapacity value="0.001" />
+</root>
