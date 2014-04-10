@@ -243,5 +243,5 @@ else()
     INSTALL(DIRECTORY data DESTINATION . COMPONENT Runtime)
 
     # install utility files (Linux only)
-    INSTALL(DIRECTORY util DESTINATION . COMPONENT Runtime)
+    INSTALL(DIRECTORY util DESTINATION . COMPONENT Runtime USE_SOURCE_PERMISSIONS)
 endif()
