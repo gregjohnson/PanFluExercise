@@ -48,6 +48,8 @@ class Parameters : public QObject
 
     public slots:
 
+        void loadXmlData(const std::string &filename);
+
         void setR0(double value);
         void setBetaScale(double value);
         void setTau(double value);
@@ -55,6 +57,7 @@ class Parameters : public QObject
         void setChi(double value);
         void setGamma(double value);
         void setNu(double value);
+        void setNu(std::vector<double> values);
         void setAntiviralEffectiveness(double value);
         void setAntiviralAdherence(double value);
         void setAntiviralCapacity(double value);

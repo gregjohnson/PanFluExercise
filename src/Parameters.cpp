@@ -4,6 +4,7 @@
 #include "Npi.h"
 #include "PriorityGroupSelections.h"
 #include "log.h"
+#include <QtXmlPatterns>
 
 Parameters g_parameters;
 
@@ -145,6 +146,155 @@ boost::shared_ptr<PriorityGroupSelections> Parameters::getVaccinePriorityGroupSe
     return vaccinePriorityGroupSelections_;
 }
 
+void Parameters::loadXmlData(const std::string &filename)
+{
+    QXmlQuery query;
+
+    if(query.setFocus(QUrl(filename.c_str())) == false)
+    {
+        put_flog(LOG_ERROR, "failed to load %s", filename.c_str());
+        QMessageBox::warning(NULL, "Error", "Could not load file", QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
+    // temp values
+    char string[1024];
+    QString qstring;
+    double value;
+
+    // R0
+    sprintf(string, "string(//R0/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setR0(value);
+    }
+
+    // latencyPeriodDays
+    sprintf(string, "string(//latencyPeriodDays/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setTau(value);
+    }
+
+    // asymptomaticPeriodDays
+    sprintf(string, "string(//asymptomaticPeriodDays/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setKappa(value);
+    }
+
+    // infectiousPeriodDays
+    sprintf(string, "string(//infectiousPeriodDays/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setGamma(value);
+    }
+
+    // caseFatalityRates
+    std::vector<double> values;
+
+    sprintf(string, "string(//caseFatalityRates/@value0)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+        values.push_back(qstring.toDouble());
+
+    sprintf(string, "string(//caseFatalityRates/@value1)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+        values.push_back(qstring.toDouble());
+
+    sprintf(string, "string(//caseFatalityRates/@value2)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+        values.push_back(qstring.toDouble());
+
+    sprintf(string, "string(//caseFatalityRates/@value3)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+        values.push_back(qstring.toDouble());
+
+    sprintf(string, "string(//caseFatalityRates/@value4)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+        values.push_back(qstring.toDouble());
+
+    if(values.size() > 0)
+    {
+        setNu(values);
+    }
+
+    // antiviralEffectiveness
+    sprintf(string, "string(//antiviralEffectiveness/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setAntiviralEffectiveness(value);
+    }
+
+    // antiviralAdherence
+    sprintf(string, "string(//antiviralAdherence/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setAntiviralAdherence(value);
+    }
+
+    // antiviralCapacity
+    sprintf(string, "string(//antiviralCapacity/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setAntiviralCapacity(value);
+    }
+
+    // vaccineEffectiveness
+    sprintf(string, "string(//vaccineEffectiveness/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setVaccineEffectiveness(value);
+    }
+
+    // vaccineEffectivenessLagDays
+    sprintf(string, "string(//vaccineEffectivenessLagDays/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setVaccineLatencyPeriod(value);
+    }
+
+    // vaccineAdherence
+    sprintf(string, "string(//vaccineAdherence/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setVaccineAdherence(value);
+    }
+
+    // vaccineCapacity
+    sprintf(string, "string(//vaccineCapacity/@value)");
+    query.setQuery(string);
+    if(query.evaluateTo(&qstring) == true)
+    {
+        value = qstring.toDouble();
+        setVaccineCapacity(value);
+    }
+}
+
 void Parameters::setR0(double value)
 {
     R0_ = value;
@@ -209,6 +359,21 @@ void Parameters::setNu(double value)
     {
         put_flog(LOG_ERROR, "should not call this method directly");
     }
+}
+
+void Parameters::setNu(std::vector<double> values)
+{
+    if(values.size() != 5)
+    {
+        put_flog(LOG_ERROR, "expected vector of size 5, got size %i", values.size());
+    }
+
+    for(unsigned int i=0; i<5; i++)
+    {
+        put_flog(LOG_DEBUG, "value %i = %f", i, values[i]);
+    }
+
+    nu_ = values;
 }
 
 void Parameters::setAntiviralEffectiveness(double value)

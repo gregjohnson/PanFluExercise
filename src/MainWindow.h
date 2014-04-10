@@ -43,6 +43,7 @@ class MainWindow : public QMainWindow {
         QAction * playTimestepsAction_;
         QTimer playTimestepsTimer_;
 
+        QDockWidget * parametersDockWidget_;
         EpidemicInitialCasesWidget * initialCasesWidget_;
 
     private slots:
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow {
         void newChart();
         void saveEpidemicDataCsv();
         void loadInitialCases();
+        void loadParameters();
         void resetTimeSlider();
 
 #if USE_DISPLAYCLUSTER

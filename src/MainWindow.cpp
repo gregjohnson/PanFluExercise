@@ -8,6 +8,7 @@
 #include "EpidemicSimulation.h"
 #include "EpidemicDataSet.h"
 #include "ParametersWidget.h"
+#include "Parameters.h"
 #include "EpidemicInitialCasesWidget.h"
 #include "StockpileNetworkWidget.h"
 #include "StockpileConsumptionWidget.h"
@@ -57,6 +58,10 @@ MainWindow::MainWindow()
     loadInitialCasesAction->setStatusTip("Load initial cases");
     connect(loadInitialCasesAction, SIGNAL(triggered()), this, SLOT(loadInitialCases()));
 
+    QAction * loadParametersAction = new QAction("Load Parameters", this);
+    loadParametersAction->setStatusTip("Load parameters");
+    connect(loadParametersAction, SIGNAL(triggered()), this, SLOT(loadParameters()));
+
 #if USE_DISPLAYCLUSTER
     // connect to DisplayCluster action
     QAction * connectToDisplayClusterAction = new QAction("Connect to DisplayCluster", this);
@@ -75,6 +80,7 @@ MainWindow::MainWindow()
     fileMenu->addAction(newChartAction);
     fileMenu->addAction(saveEpidemicDataCsvAction);
     fileMenu->addAction(loadInitialCasesAction);
+    fileMenu->addAction(loadParametersAction);
 
 #if USE_DISPLAYCLUSTER
     fileMenu->addAction(connectToDisplayClusterAction);
@@ -145,9 +151,9 @@ MainWindow::MainWindow()
     toolbarBottom->addAction(nextTimestepAction);
 
     // parameters dock
-    QDockWidget * parametersDockWidget = new QDockWidget("Parameters", this);
-    parametersDockWidget->setWidget(new ParametersWidget());
-    addDockWidget(Qt::LeftDockWidgetArea, parametersDockWidget);
+    parametersDockWidget_ = new QDockWidget("Parameters", this);
+    parametersDockWidget_->setWidget(new ParametersWidget());
+    addDockWidget(Qt::LeftDockWidgetArea, parametersDockWidget_);
 
     // initial cases dock
     initialCasesWidget_ = new EpidemicInitialCasesWidget(this);
@@ -181,12 +187,12 @@ MainWindow::MainWindow()
     addDockWidget(Qt::LeftDockWidgetArea, infoDockWidget);
 
     // tabify parameters, initial cases, stockpile network, and info docks
-    tabifyDockWidget(parametersDockWidget, initialCasesDockWidget);
-    tabifyDockWidget(parametersDockWidget, stockpileNetworkDockWidget);
-    tabifyDockWidget(parametersDockWidget, stockpileConsumptionDockWidget);
-    tabifyDockWidget(parametersDockWidget, priorityGroupDefinitionDockWidget);
-    tabifyDockWidget(parametersDockWidget, npiDefinitionDockWidget);
-    tabifyDockWidget(parametersDockWidget, infoDockWidget);
+    tabifyDockWidget(parametersDockWidget_, initialCasesDockWidget);
+    tabifyDockWidget(parametersDockWidget_, stockpileNetworkDockWidget);
+    tabifyDockWidget(parametersDockWidget_, stockpileConsumptionDockWidget);
+    tabifyDockWidget(parametersDockWidget_, priorityGroupDefinitionDockWidget);
+    tabifyDockWidget(parametersDockWidget_, npiDefinitionDockWidget);
+    tabifyDockWidget(parametersDockWidget_, infoDockWidget);
 
     // chart docks
 
@@ -231,9 +237,23 @@ MainWindow::MainWindow()
             initialCasesWidget_->loadXmlData(g_batchInitialCasesFilename);
         }
 
+        if(g_batchParametersFilename.empty() != true)
+        {
+            g_parameters.loadXmlData(g_batchParametersFilename);
+
+            // create a new ParametersWidget to reload these values in the UI
+            parametersDockWidget_->setWidget(new ParametersWidget());
+        }
+
+        // wait for any GUI events to be processed
+        QCoreApplication::processEvents();
+
         for(unsigned int i=0; i<g_batchNumTimesteps; i++)
         {
             nextTimestep();
+
+            // wait for any GUI events to be processed
+            QCoreApplication::processEvents();
         }
 
         std::string out = dataSet_->getVariableSummaryNodeVsTime(g_batchOutputVariable);
@@ -497,6 +517,19 @@ void MainWindow::loadInitialCases()
     if(!filename.isEmpty())
     {
         initialCasesWidget_->loadXmlData(filename.toStdString());
+    }
+}
+
+void MainWindow::loadParameters()
+{
+    QString filename = QFileDialog::getOpenFileName(this, "Load Parameters", "", "XML files (*.xml)");
+
+    if(!filename.isEmpty())
+    {
+        g_parameters.loadXmlData(filename.toStdString());
+
+        // create a new ParametersWidget to reload these values in the UI
+        parametersDockWidget_->setWidget(new ParametersWidget());
     }
 }
 

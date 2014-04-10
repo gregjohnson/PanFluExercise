@@ -9,6 +9,7 @@
 bool g_batchMode = false;
 int g_batchNumTimesteps = 240;
 std::string g_batchInitialCasesFilename;
+std::string g_batchParametersFilename;
 std::string g_batchOutputVariable = "deceased";
 std::string g_batchOutputFilename = "deceased.csv";
 
@@ -29,6 +30,7 @@ int main(int argc, char * argv[])
         ("batch", "run in batch mode")
         ("batch-numtimesteps", boost::program_options::value<int>(), "limit batch run to <n> time steps")
         ("batch-initialcasesfilename", boost::program_options::value<std::string>(), "batch mode initial cases filename")
+        ("batch-parametersfilename", boost::program_options::value<std::string>(), "batch mode parameters filename")
         ("batch-outputvariable", boost::program_options::value<std::string>(), "batch output variable")
         ("batch-outputfilename", boost::program_options::value<std::string>(), "batch output filename")
     ;
@@ -60,6 +62,12 @@ int main(int argc, char * argv[])
     {
         g_batchInitialCasesFilename = vm["batch-initialcasesfilename"].as<std::string>();
         put_flog(LOG_INFO, "got batch initial cases filename %s", g_batchInitialCasesFilename.c_str());
+    }
+
+    if(vm.count("batch-parametersfilename"))
+    {
+        g_batchParametersFilename = vm["batch-parametersfilename"].as<std::string>();
+        put_flog(LOG_INFO, "got batch parameters filename %s", g_batchParametersFilename.c_str());
     }
 
     if(vm.count("batch-outputvariable"))
