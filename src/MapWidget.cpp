@@ -94,7 +94,7 @@ void MapWidget::exportSVGToDisplayCluster()
 
         // draw a black background
         painter.setBrush(QBrush(QColor::fromRgbF(0,0,0,1)));
-        painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,25)));
+        painter.drawRect(QRect(QPoint(-107,37), QPoint(-93,20)));
 
         renderAll(&painter, false);
 
