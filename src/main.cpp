@@ -147,7 +147,7 @@ bool sendSVGToDisplayCluster(std::string filename, std::string name)
 
     QByteArray imageData = file.readAll();
 
-    bool success = dcStreamSendSVG(g_dcSocket, name, imageData.constData(), imageData.size());
+    bool success = dcStreamSendSVG(g_dcSocket, "svgStream://" + name, imageData.constData(), imageData.size());
 
     if(success != true)
     {
