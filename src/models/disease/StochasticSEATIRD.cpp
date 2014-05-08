@@ -10,7 +10,7 @@
 #include <boost/bind.hpp>
 
 const int StochasticSEATIRD::numAgeGroups_ = 5;
-const int StochasticSEATIRD::numRiskGroups_ = 2;
+const int StochasticSEATIRD::numRiskGroups_ = 4;
 const int StochasticSEATIRD::numVaccinatedGroups_ = 2;
 
 StochasticSEATIRD::StochasticSEATIRD()

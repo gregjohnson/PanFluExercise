@@ -35,19 +35,11 @@ EpidemicDataSet::EpidemicDataSet(const char * filename)
     }
 
     // population data
-    std::string nodePopulationFilename = g_dataDirectory + "/fips_age_group_populations.csv";
+    std::string nodePopulationFilename = g_dataDirectory + "/fips_populations_stratified.csv";
 
     if(loadNodePopulationFile(nodePopulationFilename.c_str()) != true)
     {
         put_flog(LOG_ERROR, "could not load file %s", nodePopulationFilename.c_str());
-        return;
-    }
-
-    std::string nodePopulationSecondStratificationFilename = g_dataDirectory + "/age_groups_low_risk_fraction.csv";
-
-    if(loadNodePopulationSecondStratificationFile(nodePopulationSecondStratificationFilename.c_str()) != true)
-    {
-        put_flog(LOG_ERROR, "could not load file %s", nodePopulationSecondStratificationFilename.c_str());
         return;
     }
 
@@ -687,9 +679,9 @@ bool EpidemicDataSet::loadNodeNameGroupFile(const char * filename)
 bool EpidemicDataSet::loadNodePopulationFile(const char * filename)
 {
     // make sure we have appropriate number of stratifications
-    if(stratifications_.size() < 1)
+    if(stratifications_.size() < 2)
     {
-        put_flog(LOG_ERROR, "need at least 1 stratification, got %i", stratifications_.size());
+        put_flog(LOG_ERROR, "need at least 2 stratification, got %i", stratifications_.size());
         return false;
     }
 
@@ -715,7 +707,7 @@ bool EpidemicDataSet::loadNodePopulationFile(const char * filename)
 
     population = 0.;
 
-    // the data file contains population data stratified only by the first stratification
+    // the data file contains population data stratified only by the first two stratifications
     // stratification values of 0 are assumed for all other stratifications
 
     // use boost tokenizer to parse the file
@@ -733,14 +725,15 @@ bool EpidemicDataSet::loadNodePopulationFile(const char * filename)
 
         vec.assign(tok.begin(), tok.end());
 
-        if(vec.size() != 1+stratifications_[0].size())
+        // each line is: county, fips, <population data>...
+        if(vec.size() != 2+stratifications_[0].size()*stratifications_[1].size())
         {
-            put_flog(LOG_ERROR, "number of values != %i, == %i", 1+stratifications_[0].size(), vec.size());
+            put_flog(LOG_ERROR, "number of values != %i, == %i", 2+stratifications_[0].size()*stratifications_[1].size(), vec.size());
             return false;
         }
 
         int time = 0;
-        int nodeId = atoi(vec[0].c_str());
+        int nodeId = atoi(vec[1].c_str());
 
         if(nodeIdToIndex_.count(nodeId) == 0)
         {
@@ -750,117 +743,28 @@ bool EpidemicDataSet::loadNodePopulationFile(const char * filename)
 
         int nodeIndex = nodeIdToIndex_[nodeId];
 
-        for(int i=0; i<(int)stratifications_[0].size(); i++)
+        // the CSV orders by the second stratification, then first stratification... (first stratification varies fastest)
+        for(int j=0; j<(int)stratifications_[1].size(); j++)
         {
-            // array position; all indices initialized to 0
-            blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> index(0);
+            for(int i=0; i<(int)stratifications_[0].size(); i++)
+            {
+                // array position; all indices initialized to 0
+                blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> index(0);
 
-            index(0) = time;
-            index(1) = nodeIndex;
-            index(2) = i;
+                index(0) = time;
+                index(1) = nodeIndex;
+                index(2) = i;
+                index(3) = j;
 
-            // all other stratification indices are zero
+                // all other stratification indices are zero
 
-            population(index) = atof(vec[1+i].c_str());
+                population(index) = atof(vec[2+j*(int)stratifications_[0].size() + i].c_str());
+            }
         }
     }
 
     // add to regular variables map
     variables_["population"].reference(population);
-
-    return true;
-}
-
-bool EpidemicDataSet::loadNodePopulationSecondStratificationFile(const char * filename)
-{
-    // load data file indicating fractional split for the second stratification
-    // stratification values of 0 are assumed for all subsequent stratifications
-
-    // make sure we have appropriate number of stratifications
-    if(stratifications_.size() < 2)
-    {
-        put_flog(LOG_ERROR, "need at least 2 stratifications, got %i", stratifications_.size());
-        return false;
-    }
-
-    // the second stratification should be of size 2
-    if(stratifications_[1].size() != 2)
-    {
-        put_flog(LOG_ERROR, "expected 2 stratifications, got %i", stratifications_[1].size());
-        return false;
-    }
-
-    std::ifstream in(filename);
-
-    if(in.is_open() != true)
-    {
-        put_flog(LOG_ERROR, "could not load file %s", filename);
-        return false;
-    }
-
-    // use boost tokenizer to parse the file
-    typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
-
-    std::vector<std::string> vec;
-    std::string line;
-
-    // read (and ignore) header
-    getline(in, line);
-
-    // read data (one line)
-    getline(in, line);
-
-    Tokenizer tok(line);
-
-    vec.assign(tok.begin(), tok.end());
-
-    if(vec.size() != stratifications_[0].size())
-    {
-        put_flog(LOG_ERROR, "number of values != %i, == %i", stratifications_[0].size(), vec.size());
-        return false;
-    }
-
-    int time = 0;
-
-    for(int i=0; i<(int)nodeIds_.size(); i++)
-    {
-        int nodeId = nodeIds_[i];
-
-        if(nodeIdToIndex_.count(nodeId) == 0)
-        {
-            put_flog(LOG_ERROR, "could not map nodeId %i to an index", nodeId);
-            return false;
-        }
-
-        int nodeIndex = nodeIdToIndex_[nodeId];
-
-        for(int j=0; j<(int)stratifications_[0].size(); j++)
-        {
-            // get total value over the first stratification
-            std::vector<int> stratificationValues(NUM_STRATIFICATION_DIMENSIONS, STRATIFICATIONS_ALL);
-            stratificationValues[0] = j;
-
-            float total = getValue("population", time, nodeId, stratificationValues);
-
-            float fraction0 = atof(vec[j].c_str());
-
-            float value0 = total * fraction0;
-            float value1 = total * (1. - fraction0);
-
-            // array position; all indices initialized to 0
-            blitz::TinyVector<int, 2+NUM_STRATIFICATION_DIMENSIONS> index(0);
-
-            index(0) = time;
-            index(1) = nodeIndex;
-            index(2) = j;
-
-            index(3) = 0;
-            variables_["population"](index) = value0;
-
-            index(3) = 1;
-            variables_["population"](index) = value1;
-        }
-    }
 
     return true;
 }

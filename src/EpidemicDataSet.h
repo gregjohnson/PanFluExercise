@@ -110,7 +110,6 @@ class EpidemicDataSet
         static bool loadStratificationsFile();
         bool loadNodeNameGroupFile(const char * filename);
         bool loadNodePopulationFile(const char * filename);
-        bool loadNodePopulationSecondStratificationFile(const char * filename);
         bool loadNodeTravelFile(const char * filename);
 };
 
