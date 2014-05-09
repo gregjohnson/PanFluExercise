@@ -246,14 +246,14 @@ MainWindow::MainWindow()
         }
 
         // wait for any GUI events to be processed
-        QCoreApplication::processEvents();
+        // ignore: QCoreApplication::processEvents();
 
         for(unsigned int i=0; i<g_batchNumTimesteps; i++)
         {
             nextTimestep();
 
             // wait for any GUI events to be processed
-            QCoreApplication::processEvents();
+            // ignore: QCoreApplication::processEvents();
         }
 
         std::string out = dataSet_->getVariableStratified2NodeVsTime(g_batchOutputVariable);
