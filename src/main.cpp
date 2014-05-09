@@ -10,8 +10,8 @@ bool g_batchMode = false;
 int g_batchNumTimesteps = 240;
 std::string g_batchInitialCasesFilename;
 std::string g_batchParametersFilename;
-std::string g_batchOutputVariable = "deceased";
-std::string g_batchOutputFilename = "deceased.csv";
+std::string g_batchOutputVariable = "treatable";
+std::string g_batchOutputFilename = "treatable.csv";
 
 MainWindow * g_mainWindow = NULL;
 std::string g_dataDirectory;
