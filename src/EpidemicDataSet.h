@@ -65,7 +65,12 @@ class EpidemicDataSet
         boost::shared_ptr<StockpileNetwork> getStockpileNetwork();
 
         // output
+
+        // aggregated over all stratifications
         std::string getVariableSummaryNodeVsTime(const std::string &varName);
+
+        // variable value enumerated over first two stratifications (age group, risk group)
+        std::string getVariableStratified2NodeVsTime(const std::string &varName);
 
     protected:
 

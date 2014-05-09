@@ -480,6 +480,74 @@ std::string EpidemicDataSet::getVariableSummaryNodeVsTime(const std::string &var
     return out.str();
 }
 
+std::string EpidemicDataSet::getVariableStratified2NodeVsTime(const std::string &varName)
+{
+    if(variables_.count(varName) == 0)
+    {
+        put_flog(LOG_ERROR, "no such variable %s", varName.c_str());
+        return std::string();
+    }
+
+    // make sure we have at least two stratifications
+    std::vector<std::vector<std::string> > stratifications = getStratifications();
+
+    if(stratifications.size() < 2)
+    {
+        put_flog(LOG_ERROR, "need at least 2 stratifications");
+        return std::string();
+    }
+
+    // nodeIds
+    std::vector<int> nodeIds = getNodeIds();
+
+    // generate the CSV
+    std::stringstream out;
+
+    // set maximum decimal precision for stringstream
+    out.precision(16);
+
+    // header
+    out << "t,group";
+
+    // header: for each node
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        out << "," << nodeIds[i];
+    }
+
+    out << std::endl;
+
+    // row for each time and stratification value combination
+    std::vector<int> stratificationValues(2, 0);
+
+    for(unsigned t=0; t<getNumTimes(); t++)
+    {
+        for(unsigned int s1=0; s1<stratifications[0].size(); s1++)
+        {
+            stratificationValues[0] = s1;
+
+            for(unsigned int s2=0; s2<stratifications[1].size(); s2++)
+            {
+                stratificationValues[1] = s2;
+
+                // group name
+                std::string groupName = stratifications[0][s1] + " " + stratifications[1][s2];
+
+                out << t << "," << groupName;
+
+                for(unsigned int n=0; n<nodeIds.size(); n++)
+                {
+                    out << "," << getValue(varName, t, nodeIds[n], stratificationValues);
+                }
+
+                out << std::endl;
+            }
+        }
+    }
+
+    return out.str();
+}
+
 bool EpidemicDataSet::loadNetCdfFile(const char * filename)
 {
 #if USE_NETCDF // TODO: should handle this differently

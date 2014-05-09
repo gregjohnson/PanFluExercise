@@ -256,7 +256,7 @@ MainWindow::MainWindow()
             QCoreApplication::processEvents();
         }
 
-        std::string out = dataSet_->getVariableSummaryNodeVsTime(g_batchOutputVariable);
+        std::string out = dataSet_->getVariableStratified2NodeVsTime(g_batchOutputVariable);
 
         {
             std::ofstream ofs(g_batchOutputFilename.c_str());
@@ -487,11 +487,11 @@ void MainWindow::saveEpidemicDataCsv()
         return;
     }
 
-    std::string out = dataSet_->getVariableSummaryNodeVsTime(varName);
+    std::string out = dataSet_->getVariableStratified2NodeVsTime(varName);
 
     if(out.empty() == true)
     {
-        put_flog(LOG_ERROR, "empty summary");
+        put_flog(LOG_ERROR, "empty");
         QMessageBox::warning(this, "Error", "Could not generate output.", QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
