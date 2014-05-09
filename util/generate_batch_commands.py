@@ -1,32 +1,76 @@
 import sys
+import random
 import numpy as np
+import xml.etree.ElementTree as ET
 import argparse
 
 parser = argparse.ArgumentParser(description='launch exercise tool.')
-parser.add_argument('initialcases', type=str, help='initial cases XML filename')
-parser.add_argument('parameters', type=str, help='parameters XML filename')
+parser.add_argument('initialcasestype', type=str, help='initial cases type (randomall, populationweightedall, bordercrossingweighted)')
+parser.add_argument('parameters', type=str, help='input parameters XML filename')
+parser.add_argument('R0range', type=float, nargs=2, help='minimum R0')
+parser.add_argument('CFRs', type=float, nargs=5, help='case fatality rates (5 age groups)')
 parser.add_argument('days', type=int, help='number of days (time steps)')
-parser.add_argument('numPerScreen', type=int, help='number of processes per screen')
+parser.add_argument('num', type=int, help='number of runs')
 
 args = parser.parse_args()
 
-nodes = range(1, 20+1, 1)
-screens = range(4)
+# static parameters
+numCountiesMin = 1
+numCountiesMax = 10
 
-index = 0
+numCasesPerCountyMin = 1
+numCasesPerCountyMax = 20
 
-for n in nodes:
-    for s in screens:
-        screenLines = '( '
+# load population data for generation of initial cases
+data = np.genfromtxt('scenario_counties-' + args.initialcasestype + '.csv', delimiter=',', names=True)
 
-        for j in range(args.numPerScreen):
-            screenLine = 'ssh s' + "{0:02d}".format(n) + ' DISPLAY=:0 `which exercise` -geometry 2560x1600+' + str(2560*s) + '+0 --batch --batch-numtimesteps ' + str(args.days) + ' --batch-initialcasesfilename $PWD/' + args.initialcases + ' --batch-parametersfilename $PWD/' + args.parameters + ' --batch-outputvariable deceased --batch-outputfilename $PWD/deceased-' + str(index) + '.csv > /dev/null 2>&1'
+for i in range(args.num):
+    # filenames for this case
+    runInitialCasesFilename = 'initialcases-' + '{0:03d}'.format(i) + '.xml'
+    runParametersFilename = 'parameters-' + '{0:03d}'.format(i) + '.xml'
+    outputFilename = 'treatable-' + '{0:03d}'.format(i) + '.csv'
 
-            if j < args.numPerScreen-1:
-                screenLines += screenLine + '; '
-            else:
-                screenLines += screenLine + ' ) &'
+    # generate initial cases XML
+    root = ET.fromstring('<root> </root>')
 
-            index = index + 1
+    # select counties (sampling without replacement, weighted based on weight column)
+    countiesFips = np.random.choice(data['fips'], size=random.randint(numCountiesMin, numCountiesMax), replace=False, p=data['weight'] / np.sum(data['weight']))
 
-        print screenLines
+    for fips in countiesFips:
+        numCases = random.randint(numCasesPerCountyMin, numCasesPerCountyMax)
+
+        sub = ET.SubElement(root, 'cases')
+        sub.set('num', str(numCases))
+        sub.set('nodeId', str(int(fips)))
+
+    tree = ET.ElementTree(root)
+    tree.write(runInitialCasesFilename)
+
+    # random R0 within range
+    R0 = random.uniform(args.R0range[0], args.R0range[1])
+
+    # modify parameters XML for new R0 and CFRs
+    tree = ET.parse(args.parameters)
+    root = tree.getroot()
+
+    elementR0 = root.findall('.//R0')
+
+    for e in elementR0:
+        e.set('value', str(R0))
+
+    elementCFRs = root.findall('.//caseFatalityRates')
+
+    for e in elementCFRs:
+        e.set('value0', str(args.CFRs[0]))
+        e.set('value1', str(args.CFRs[1]))
+        e.set('value2', str(args.CFRs[2]))
+        e.set('value3', str(args.CFRs[3]))
+        e.set('value4', str(args.CFRs[4]))
+
+    # write scenario parameters file
+    tree.write(runParametersFilename)
+
+    # batch command
+    line = './exercise --batch --batch-numtimesteps ' + str(args.days) + ' --batch-initialcasesfilename ' + args.initialcasestype + ' --batch-parametersfilename ' + runParametersFilename + ' --batch-outputvariable treatable --batch-outputfilename ' + outputFilename + ' > /dev/null 2>&1'
+
+    print line

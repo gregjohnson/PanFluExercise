@@ -1,2 +1,0 @@
-dsh -ca killall exercise
-
