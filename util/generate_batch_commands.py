@@ -71,6 +71,6 @@ for i in range(args.num):
     tree.write(runParametersFilename)
 
     # batch command
-    line = './exercise --batch --batch-numtimesteps ' + str(args.days) + ' --batch-initialcasesfilename ' + args.initialcasestype + ' --batch-parametersfilename ' + runParametersFilename + ' --batch-outputvariable treatable --batch-outputfilename ' + outputFilename + ' > /dev/null 2>&1'
+    line = 'DISPLAY=:0 exercise --batch --batch-numtimesteps ' + str(args.days) + ' --batch-initialcasesfilename ' + runInitialCasesFilename + ' --batch-parametersfilename ' + runParametersFilename + ' --batch-outputvariable treatable --batch-outputfilename ' + outputFilename + ' > /dev/null 2>&1'
 
     print line
