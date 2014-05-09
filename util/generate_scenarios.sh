@@ -23,50 +23,50 @@
 # ic3 - random border counties, weighted by migrating population
 
 # C1: 0.000092 0.000168 0.000343 0.000253 0.000037 1.4 1.55
-mkdir c1
-mkdir c1/ic1
-mkdir c1/ic2
-mkdir c1/ic3
-python generate_batch_commands.py randomall                parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 c1/ic1
-python generate_batch_commands.py populationweightedall    parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 c1/ic2
-python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 c1/ic3
+mkdir /scratch/00019/gregj/panflu_scenarios/c1
+mkdir /scratch/00019/gregj/panflu_scenarios/c1/ic1
+mkdir /scratch/00019/gregj/panflu_scenarios/c1/ic2
+mkdir /scratch/00019/gregj/panflu_scenarios/c1/ic3
+python generate_batch_commands.py randomall                parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 /scratch/00019/gregj/panflu_scenarios/c1/ic1
+python generate_batch_commands.py populationweightedall    parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 /scratch/00019/gregj/panflu_scenarios/c1/ic2
+python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.4 1.55   0.000092 0.000168 0.000343 0.000253 0.000037   450   150 /scratch/00019/gregj/panflu_scenarios/c1/ic3
 
 
 # C2: 0.000096 0.000134 0.0002215 0.0013765 0.0100185 1.55 1.75
-mkdir c2
-mkdir c2/ic1
-mkdir c2/ic2
-mkdir c2/ic3
-python generate_batch_commands.py randomall                parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 c2/ic1
-python generate_batch_commands.py populationweightedall    parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 c2/ic2
-python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 c2/ic3
+mkdir /scratch/00019/gregj/panflu_scenarios/c2
+mkdir /scratch/00019/gregj/panflu_scenarios/c2/ic1
+mkdir /scratch/00019/gregj/panflu_scenarios/c2/ic2
+mkdir /scratch/00019/gregj/panflu_scenarios/c2/ic3
+python generate_batch_commands.py randomall                parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 /scratch/00019/gregj/panflu_scenarios/c2/ic1
+python generate_batch_commands.py populationweightedall    parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 /scratch/00019/gregj/panflu_scenarios/c2/ic2
+python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.55 1.75   0.000096 0.000134 0.0002215 0.0013765 0.0100185   450   150 /scratch/00019/gregj/panflu_scenarios/c2/ic3
 
 
 # C3: 0.0001 0.0001 0.0001 0.0025 0.02 1.55 1.75
-mkdir c3
-mkdir c3/ic1
-mkdir c3/ic2
-mkdir c3/ic3
-python generate_batch_commands.py randomall                parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 c3/ic1
-python generate_batch_commands.py populationweightedall    parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 c3/ic2
-python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 c3/ic3
+mkdir /scratch/00019/gregj/panflu_scenarios/c3
+mkdir /scratch/00019/gregj/panflu_scenarios/c3/ic1
+mkdir /scratch/00019/gregj/panflu_scenarios/c3/ic2
+mkdir /scratch/00019/gregj/panflu_scenarios/c3/ic3
+python generate_batch_commands.py randomall                parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 /scratch/00019/gregj/panflu_scenarios/c3/ic1
+python generate_batch_commands.py populationweightedall    parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 /scratch/00019/gregj/panflu_scenarios/c3/ic2
+python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.55 1.75   0.0001 0.0001 0.0001 0.0025 0.02   450   150 /scratch/00019/gregj/panflu_scenarios/c3/ic3
 
 
 # C4: 0.0087 0.0011 0.003 0.0098 0.0403 1.75 2.3
-mkdir c4
-mkdir c4/ic1
-mkdir c4/ic2
-mkdir c4/ic3
-python generate_batch_commands.py randomall                parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 c4/ic1
-python generate_batch_commands.py populationweightedall    parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 c4/ic2
-python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 c4/ic3
+mkdir /scratch/00019/gregj/panflu_scenarios/c4
+mkdir /scratch/00019/gregj/panflu_scenarios/c4/ic1
+mkdir /scratch/00019/gregj/panflu_scenarios/c4/ic2
+mkdir /scratch/00019/gregj/panflu_scenarios/c4/ic3
+python generate_batch_commands.py randomall                parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 /scratch/00019/gregj/panflu_scenarios/c4/ic1
+python generate_batch_commands.py populationweightedall    parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 /scratch/00019/gregj/panflu_scenarios/c4/ic2
+python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.75 2.3   0.0087 0.0011 0.003 0.0098 0.0403   450   150 /scratch/00019/gregj/panflu_scenarios/c4/ic3
 
 
 # C5: 0.0196 0.0156 0.016 0.0068 0.0151 1.75 2.3
-mkdir c5
-mkdir c5/ic1
-mkdir c5/ic2
-mkdir c5/ic3
-python generate_batch_commands.py randomall                parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 c5/ic1
-python generate_batch_commands.py populationweightedall    parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 c5/ic2
-python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 c5/ic3
+mkdir /scratch/00019/gregj/panflu_scenarios/c5
+mkdir /scratch/00019/gregj/panflu_scenarios/c5/ic1
+mkdir /scratch/00019/gregj/panflu_scenarios/c5/ic2
+mkdir /scratch/00019/gregj/panflu_scenarios/c5/ic3
+python generate_batch_commands.py randomall                parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 /scratch/00019/gregj/panflu_scenarios/c5/ic1
+python generate_batch_commands.py populationweightedall    parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 /scratch/00019/gregj/panflu_scenarios/c5/ic2
+python generate_batch_commands.py bordercrossingweighted   parameters.xml   1.75 2.3   0.0196 0.0156 0.016 0.0068 0.0151   450   150 /scratch/00019/gregj/panflu_scenarios/c5/ic3
