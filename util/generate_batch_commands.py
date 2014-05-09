@@ -11,6 +11,7 @@ parser.add_argument('R0range', type=float, nargs=2, help='minimum R0')
 parser.add_argument('CFRs', type=float, nargs=5, help='case fatality rates (5 age groups)')
 parser.add_argument('days', type=int, help='number of days (time steps)')
 parser.add_argument('num', type=int, help='number of runs')
+parser.add_argument('outputdir', type=str, help='output directory')
 
 args = parser.parse_args()
 
@@ -26,9 +27,9 @@ data = np.genfromtxt('scenario_counties-' + args.initialcasestype + '.csv', deli
 
 for i in range(args.num):
     # filenames for this case
-    runInitialCasesFilename = 'initialcases-' + '{0:03d}'.format(i) + '.xml'
-    runParametersFilename = 'parameters-' + '{0:03d}'.format(i) + '.xml'
-    outputFilename = 'treatable-' + '{0:03d}'.format(i) + '.csv'
+    runInitialCasesFilename = args.outputdir + '/initialcases-' + '{0:03d}'.format(i) + '.xml'
+    runParametersFilename = args.outputdir + '/parameters-' + '{0:03d}'.format(i) + '.xml'
+    outputFilename = args.outputdir + '/treatable-' + '{0:03d}'.format(i) + '.csv'
 
     # generate initial cases XML
     root = ET.fromstring('<root> </root>')
