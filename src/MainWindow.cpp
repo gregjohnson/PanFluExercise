@@ -230,6 +230,9 @@ MainWindow::MainWindow()
     {
         put_flog(LOG_INFO, "starting batch mode");
 
+        // activate other map view
+        tabWidget->setCurrentIndex(1);
+
         newSimulation();
 
         if(g_batchInitialCasesFilename.empty() != true)
