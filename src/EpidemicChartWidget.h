@@ -16,6 +16,8 @@ class EpidemicChartWidget : public QMainWindow
 
         EpidemicChartWidget(MainWindow * mainWindow);
 
+        ChartWidget * getChartWidget();
+
     signals:
 
         // these signals can be used to connect epidemic charts to each other, for example with the streaming charts

@@ -81,6 +81,11 @@ EpidemicChartWidget::EpidemicChartWidget(MainWindow * mainWindow)
     connect((QObject *)mainWindow, SIGNAL(timeChanged(int)), this, SLOT(setTime(int)));
 }
 
+ChartWidget * EpidemicChartWidget::getChartWidget()
+{
+    return &chartWidget_;
+}
+
 void EpidemicChartWidget::setDataSet(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     // keep track of old selections
