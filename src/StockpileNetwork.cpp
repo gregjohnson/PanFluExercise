@@ -12,7 +12,7 @@ StockpileNetwork::StockpileNetwork(EpidemicDataSet * dataSet)
 
     for(unsigned int i=0; i<nodeIds.size(); i++)
     {
-        boost::shared_ptr<Stockpile> stockpile(new Stockpile(boost::lexical_cast<std::string>(nodeIds[i])));
+        boost::shared_ptr<Stockpile> stockpile(new Stockpile(dataSet->getNodeName(nodeIds[i])));
 
         nodeStockpiles_[nodeIds[i]] = stockpile;
     }

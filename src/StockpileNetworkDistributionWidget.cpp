@@ -34,6 +34,17 @@ StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::sh
         sourceComboBox_.addItem(stockpiles[i]->getName().c_str(), stockpileVariant);
     }
 
+    // also add node stockpiles
+    std::vector<int> nodeIds = dataSet->getNodeIds();
+
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        boost::shared_ptr<Stockpile> stockpile = dataSet->getStockpileNetwork()->getNodeStockpile(nodeIds[i]);
+
+        QVariant stockpileVariant = QVariant::fromValue(stockpile);
+        sourceComboBox_.addItem(stockpile->getName().c_str(), stockpileVariant);
+    }
+
     layout->addRow("Source", &sourceComboBox_);
 
     // destination stockpile
@@ -47,6 +58,15 @@ StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::sh
     {
         QVariant stockpileVariant = QVariant::fromValue(stockpiles[i]);
         destinationComboBox_.addItem(stockpiles[i]->getName().c_str(), stockpileVariant);
+    }
+
+    // also add node stockpiles
+    for(unsigned int i=0; i<nodeIds.size(); i++)
+    {
+        boost::shared_ptr<Stockpile> stockpile = dataSet->getStockpileNetwork()->getNodeStockpile(nodeIds[i]);
+
+        QVariant stockpileVariant = QVariant::fromValue(stockpile);
+        destinationComboBox_.addItem(stockpile->getName().c_str(), stockpileVariant);
     }
 
     layout->addRow("Destination", &destinationComboBox_);
