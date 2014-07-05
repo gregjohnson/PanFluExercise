@@ -35,6 +35,7 @@ class ChartWidget : public QVTKWidget
         boost::shared_ptr<ChartWidgetLine> getLine(int index = NEW_LINE, CHART_WIDGET_LINE_TYPE lineType = LINE);
         void clear();
 
+        void setSVGExportAspectRatio(float value);
         void exportSVGToDisplayCluster();
 
     private:

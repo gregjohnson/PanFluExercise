@@ -46,6 +46,7 @@ ChartWidget::ChartWidget()
     svgExporter_ = vtkSmartPointer<vtkGL2PSExporter>::New();
 
     // use an off-screen constant-sized render window for SVG export
+    // this can be modified in aspect ratio setting
     svgRenderWindow_ = vtkSmartPointer<vtkRenderWindow>::New();
     svgRenderWindow_->OffScreenRenderingOn();
     svgRenderWindow_->SetSize(480, 300);
@@ -139,6 +140,21 @@ boost::shared_ptr<ChartWidgetLine> ChartWidget::getLine(int index, CHART_WIDGET_
 void ChartWidget::clear()
 {
     lines_.clear();
+}
+
+void ChartWidget::setSVGExportAspectRatio(float value)
+{
+    // use an off-screen constant-sized render window for SVG export
+    svgRenderWindow_ = vtkSmartPointer<vtkRenderWindow>::New();
+    svgRenderWindow_->OffScreenRenderingOn();
+    svgRenderWindow_->SetSize(value * 480, 300);
+
+    svgExporter_->SetRenderWindow(svgRenderWindow_);
+
+    svgExporter_->SetFileFormatToSVG();
+    svgExporter_->CompressOff();
+    svgExporter_->SetSortToOff();
+    svgExporter_->TextAsPathOn();
 }
 
 #if USE_DISPLAYCLUSTER
