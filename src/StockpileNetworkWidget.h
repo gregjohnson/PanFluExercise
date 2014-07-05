@@ -36,6 +36,7 @@ class StockpileNetworkWidget : public QScrollArea
 
     private slots:
 
+        void importAntiviralDistributions();
         void addDistribution();
 };
 

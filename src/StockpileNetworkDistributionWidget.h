@@ -18,14 +18,23 @@ class StockpileNetworkDistributionWidget : public QGroupBox
         StockpileNetworkDistributionWidget(boost::shared_ptr<EpidemicDataSet> dataSet);
         ~StockpileNetworkDistributionWidget();
 
+        void setSource(std::string name);
+        void setDestination(std::string name);
+        void setQuantity(int quantity);
+        void setExecutionTime(int time);
+
     public slots:
 
         void applied(int clampedQuantity);
+        void execute();
 
     private:
 
         // data set information
         boost::shared_ptr<EpidemicDataSet> dataSet_;
+
+        // override the "now" execution time
+        int executionTime_;
 
         // UI elements
         QComboBox sourceComboBox_;
@@ -34,10 +43,6 @@ class StockpileNetworkDistributionWidget : public QGroupBox
         QSpinBox quantitySpinBox_;
         QSpinBox transferTimeSpinBox_;
         QLabel resultLabel_;
-
-    private slots:
-
-        void execute();
 };
 
 #endif

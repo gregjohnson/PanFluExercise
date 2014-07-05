@@ -11,6 +11,7 @@ Q_DECLARE_METATYPE(boost::shared_ptr<Stockpile>)
 StockpileNetworkDistributionWidget::StockpileNetworkDistributionWidget(boost::shared_ptr<EpidemicDataSet> dataSet)
 {
     dataSet_ = dataSet;
+    executionTime_ = 0;
 
     setTitle("Distribution");
 
@@ -106,6 +107,44 @@ StockpileNetworkDistributionWidget::~StockpileNetworkDistributionWidget()
 
 }
 
+void StockpileNetworkDistributionWidget::setSource(std::string name)
+{
+    int index = sourceComboBox_.findText(name.c_str());
+
+    if(index == -1)
+    {
+        put_flog(LOG_ERROR, "could not find %s", name.c_str());
+    }
+    else
+    {
+        sourceComboBox_.setCurrentIndex(index);
+    }
+}
+
+void StockpileNetworkDistributionWidget::setDestination(std::string name)
+{
+    int index = destinationComboBox_.findText(name.c_str());
+
+    if(index == -1)
+    {
+        put_flog(LOG_ERROR, "could not find %s", name.c_str());
+    }
+    else
+    {
+        destinationComboBox_.setCurrentIndex(index);
+    }
+}
+
+void StockpileNetworkDistributionWidget::setQuantity(int quantity)
+{
+    quantitySpinBox_.setValue(quantity);
+}
+
+void StockpileNetworkDistributionWidget::setExecutionTime(int time)
+{
+    executionTime_ = time;
+}
+
 void StockpileNetworkDistributionWidget::applied(int clampedQuantity)
 {
     resultLabel_.setText(resultLabel_.text() + "\nActual quantity: " + QString::number(clampedQuantity));
@@ -121,6 +160,12 @@ void StockpileNetworkDistributionWidget::execute()
     // the "now" time
     int time = dataSet_->getNumTimes();
 
+    // override execution time if set
+    if(executionTime_ != 0)
+    {
+        time = executionTime_;
+    }
+
     // source and destination stockpiles
     boost::shared_ptr<Stockpile> sourceStockpile = sourceComboBox_.itemData(sourceComboBox_.currentIndex()).value<boost::shared_ptr<Stockpile> >();
     boost::shared_ptr<Stockpile> destinationStockpile = destinationComboBox_.itemData(destinationComboBox_.currentIndex()).value<boost::shared_ptr<Stockpile> >();
@@ -132,7 +177,7 @@ void StockpileNetworkDistributionWidget::execute()
     dataSet_->getStockpileNetwork()->addDistribution(distribution);
 
     // update the result label
-    QString label = "Executed at time = " + QString::number(time);
+    QString label = "Distribution at time = " + QString::number(time);
     resultLabel_.setText(label);
 
     // connect signal so we get the clamped quantity when the transfer occurs
